@@ -1,0 +1,76 @@
+{
+  "name": "@yakuzaa/jade-runtime",
+  "version": "0.1.0",
+  "description": "Runtime da linguagem JADE — event loop, gerenciamento de memória, UI engine e APIs empresariais",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./core/*": {
+      "import": "./dist/core/*.js",
+      "types": "./dist/core/*.d.ts"
+    },
+    "./apis/*": {
+      "import": "./dist/apis/*.js",
+      "types": "./dist/apis/*.d.ts"
+    },
+    "./stdlib/*": {
+      "import": "./dist/stdlib/*.js",
+      "types": "./dist/stdlib/*.d.ts"
+    },
+    "./ui/*": {
+      "import": "./dist/ui/*.js",
+      "types": "./dist/ui/*.d.ts"
+    },
+    "./pwa/*": {
+      "import": "./dist/pwa/*.js",
+      "types": "./dist/pwa/*.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.0"
+  },
+  "keywords": [
+    "jade",
+    "runtime",
+    "webassembly",
+    "event-loop",
+    "ui-engine",
+    "enterprise",
+    "portuguese"
+  ],
+  "author": "yakuzaa",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrielsymb/jade-language.git",
+    "directory": "jade-runtime"
+  },
+  "homepage": "https://github.com/gabrielsymb/jade-language",
+  "bugs": {
+    "url": "https://github.com/gabrielsymb/jade-language/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

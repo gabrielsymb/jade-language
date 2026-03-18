@@ -1,0 +1,40 @@
+{
+  "comments": {
+    "lineComment": "//",
+    "blockComment": ["/*", "*/"]
+  },
+  "brackets": [
+    ["[", "]"],
+    ["(", ")"],
+    ["{", "}"]
+  ],
+  "autoClosingPairs": [
+    { "open": "[", "close": "]" },
+    { "open": "(", "close": ")" },
+    { "open": "{", "close": "}" },
+    { "open": "\"", "close": "\"", "notIn": ["string"] }
+  ],
+  "surroundingPairs": [
+    ["[", "]"],
+    ["(", ")"],
+    ["{", "}"],
+    ["\"", "\""]
+  ],
+  "wordPattern": "[a-zA-ZÀ-ÿ_][a-zA-ZÀ-ÿ0-9_]*",
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(modulo|classe|entidade|servico|funcao|evento|regra|interface|enum|se|enquanto|para|senao|escutar)\\b.*$",
+    "decreaseIndentPattern": "^\\s*(fim|senao)\\b"
+  },
+  "onEnterRules": [
+    {
+      "beforeText": "^\\s*(modulo|classe|entidade|servico|funcao|evento|regra|se|enquanto|para|senao|escutar)\\b.*",
+      "action": { "indent": "indent" }
+    }
+  ],
+  "folding": {
+    "markers": {
+      "start": "^\\s*(modulo|classe|entidade|servico|funcao|evento|regra|interface|enum)\\b",
+      "end": "^\\s*fim\\b"
+    }
+  }
+}

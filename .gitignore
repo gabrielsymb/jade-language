@@ -1,0 +1,50 @@
+# Compiled output
+jade-compiler/dist/
+jade-runtime/dist/
+jade-vscode/dist/
+jade-book/.vitepress/dist/
+jade-book/.vitepress/cache/
+jade-book/docs/.vitepress/cache/
+jade-book/docs/.vitepress/dist/
+
+# Dependencies
+node_modules/
+jade-compiler/node_modules/
+jade-runtime/node_modules/
+jade-vscode/node_modules/
+jade-book/node_modules/
+
+# VSCode extension package
+*.vsix
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+jade-compiler/coverage/
+jade-runtime/coverage/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.bak

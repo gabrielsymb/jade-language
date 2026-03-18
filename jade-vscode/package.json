@@ -1,0 +1,118 @@
+{
+  "name": "jade-lang-vscode",
+  "displayName": "JADE Language",
+  "description": "Suporte à linguagem JADE — DSL empresarial em português compilada para WebAssembly",
+  "version": "0.1.0",
+  "publisher": "yakuzaa",
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jade-lang/jade-vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters",
+    "Snippets"
+  ],
+  "keywords": [
+    "jade",
+    "dsl",
+    "portuguese",
+    "enterprise",
+    "webassembly",
+    "compilador"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "jd",
+        "aliases": ["JADE", "jade", "jd"],
+        "extensions": [".jd"],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./assets/icon-file.svg",
+          "dark": "./assets/icon-file.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "jd",
+        "scopeName": "source.jade",
+        "path": "./syntaxes/jade.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "jd",
+        "path": "./snippets/jade.json"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "jade-icons",
+        "label": "JADE Icons",
+        "path": "./jade-icon-theme.json"
+      }
+    ],
+    "configuration": {
+      "title": "JADE Language",
+      "properties": {
+        "jade.format.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Habilita formatação automática de arquivos JADE (Format on Save)"
+        },
+        "jade.format.indentSize": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 8,
+          "description": "Tamanho da indentação em espaços"
+        },
+        "jade.diagnostics.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Habilita diagnósticos em tempo real (erros de sintaxe e semântica)"
+        },
+        "jade.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Rastreamento da comunicação com o servidor LSP"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "compile": "tsc -p tsconfig.json --noEmit",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.0.0",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "jade-compiler": "file:../jade-compiler"
+  },
+  "engines_node": {
+    "node": ">=20.0.0"
+  }
+}

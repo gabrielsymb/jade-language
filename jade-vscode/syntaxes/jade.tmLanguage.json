@@ -1,0 +1,185 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "JADE",
+  "scopeName": "source.jade",
+  "fileTypes": ["jd"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#declaration-keywords" },
+    { "include": "#control-keywords" },
+    { "include": "#types" },
+    { "include": "#constants" },
+    { "include": "#operators" },
+    { "include": "#punctuation" },
+    { "include": "#type-references" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.jade",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.jade",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.comment.begin.jade" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.comment.end.jade" }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.jade",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.jade",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.decimal.jade",
+          "match": "\\b\\d+\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.jade",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "declaration-keywords": {
+      "patterns": [
+        {
+          "name": "storage.type.class.jade",
+          "match": "\\b(classe|entidade|servico|evento|interface|enum|modulo)\\b"
+        },
+        {
+          "name": "storage.type.function.jade",
+          "match": "\\b(funcao)\\b"
+        },
+        {
+          "name": "keyword.declaration.jade",
+          "match": "\\b(regra|fim|importar|como|extends|implements|escutar|quando|emitir)\\b"
+        },
+        {
+          "name": "keyword.other.variable.jade",
+          "match": "\\b(variavel)\\b"
+        }
+      ]
+    },
+    "control-keywords": {
+      "name": "keyword.control.jade",
+      "match": "\\b(se|entao|senao|enquanto|para|em|retornar|erro)\\b"
+    },
+    "types": {
+      "name": "support.type.primitive.jade",
+      "match": "\\b(texto|numero|decimal|booleano|data|hora|id|lista|mapa|objeto)\\b"
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.jade",
+          "match": "\\b(verdadeiro|falso)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.logical.jade",
+          "match": "\\b(e|ou|nao)\\b"
+        },
+        {
+          "name": "keyword.operator.comparison.jade",
+          "match": "(==|!=|<=|>=)"
+        },
+        {
+          "name": "keyword.operator.arrow.jade",
+          "match": "->"
+        },
+        {
+          "name": "keyword.operator.assignment.jade",
+          "match": "(?<![=!<>])=(?!=)"
+        },
+        {
+          "name": "keyword.operator.arithmetic.jade",
+          "match": "[+\\-*/]"
+        },
+        {
+          "name": "keyword.operator.comparison.jade",
+          "match": "[<>]"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.comma.jade",
+          "match": ","
+        },
+        {
+          "name": "punctuation.separator.colon.jade",
+          "match": ":"
+        },
+        {
+          "name": "punctuation.terminator.semicolon.jade",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.accessor.dot.jade",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.definition.optional.jade",
+          "match": "\\?"
+        },
+        {
+          "name": "punctuation.definition.required.jade",
+          "match": "!"
+        },
+        {
+          "name": "punctuation.section.parens.jade",
+          "match": "[()]"
+        },
+        {
+          "name": "punctuation.section.brackets.jade",
+          "match": "[\\[\\]]"
+        },
+        {
+          "name": "punctuation.section.braces.jade",
+          "match": "[{}]"
+        }
+      ]
+    },
+    "type-references": {
+      "patterns": [
+        {
+          "comment": "PascalCase = nome de tipo/classe/entidade",
+          "name": "entity.name.type.jade",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "comment": "camelCase/snake_case identifiers",
+          "name": "variable.other.jade",
+          "match": "\\b[a-z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    }
+  }
+}

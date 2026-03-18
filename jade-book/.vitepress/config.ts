@@ -1,0 +1,124 @@
+import { defineConfig } from 'vitepress'
+
+export default defineConfig({
+  title: 'A Linguagem JADE',
+  description: 'O guia completo da linguagem JADE — DSL empresarial em português compilada para WebAssembly',
+  lang: 'pt-BR',
+
+  themeConfig: {
+    logo: '/icon-file.svg',
+    siteTitle: 'A Linguagem JADE',
+
+    nav: [
+      { text: 'Início', link: '/' },
+      { text: 'Guia', link: '/introducao/o-que-e-jade' },
+      { text: 'Referência', link: '/estruturas/entidades' },
+    ],
+
+    sidebar: [
+      {
+        text: '📖 Introdução',
+        items: [
+          { text: 'O que é JADE?', link: '/introducao/o-que-e-jade' },
+          { text: 'Instalação e Configuração', link: '/introducao/instalacao' },
+          { text: 'Olá, Mundo!', link: '/introducao/ola-mundo' },
+        ],
+      },
+      {
+        text: '🧱 Fundamentos',
+        items: [
+          { text: 'Tipos e Variáveis', link: '/fundamentos/tipos-e-variaveis' },
+          { text: 'Operadores', link: '/fundamentos/operadores' },
+          { text: 'Controle de Fluxo', link: '/fundamentos/controle-de-fluxo' },
+          { text: 'Funções', link: '/fundamentos/funcoes' },
+        ],
+      },
+      {
+        text: '🏗️ Estruturas da Linguagem',
+        items: [
+          { text: 'Entidades', link: '/estruturas/entidades' },
+          { text: 'Classes', link: '/estruturas/classes' },
+          { text: 'Serviços', link: '/estruturas/servicos' },
+          { text: 'Eventos', link: '/estruturas/eventos' },
+          { text: 'Regras de Negócio', link: '/estruturas/regras' },
+          { text: 'Interfaces', link: '/estruturas/interfaces' },
+          { text: 'Enumerações', link: '/estruturas/enums' },
+          { text: 'Módulos e Importações', link: '/estruturas/modulos' },
+        ],
+      },
+      {
+        text: '📦 Coleções e Texto',
+        items: [
+          { text: 'Listas', link: '/colecoes/listas' },
+          { text: 'Mapas', link: '/colecoes/mapas' },
+          { text: 'Texto e String', link: '/colecoes/texto' },
+        ],
+      },
+      {
+        text: '💾 Persistência',
+        items: [
+          { text: 'Como o JADE salva dados', link: '/persistencia/visao-geral' },
+          { text: 'EntityManager', link: '/persistencia/entity-manager' },
+          { text: 'Sincronização Offline', link: '/persistencia/offline-sync' },
+        ],
+      },
+      {
+        text: '🔌 Runtime e APIs',
+        items: [
+          { text: 'HTTP e Redes', link: '/runtime/http' },
+          { text: 'Autenticação', link: '/runtime/autenticacao' },
+          { text: 'Data e Hora', link: '/runtime/datetime' },
+          { text: 'Criptografia', link: '/runtime/crypto' },
+          { text: 'Console', link: '/runtime/console' },
+          { text: 'Matemática e Estatística', link: '/runtime/matematica' },
+          { text: 'Moeda e Financeiro', link: '/runtime/moeda' },
+          { text: 'XML e NF-e', link: '/runtime/xml' },
+        ],
+      },
+      {
+        text: '🖥️ Interface de Usuário',
+        items: [
+          { text: 'Telas (tela)', link: '/ui/tela' },
+        ],
+      },
+      {
+        text: '💡 Padrões e Boas Práticas',
+        items: [
+          { text: 'Padrões de Design', link: '/padroes/design' },
+          { text: 'Erros Comuns', link: '/padroes/erros-comuns' },
+        ],
+      },
+      {
+        text: '🚀 Projeto Completo',
+        items: [
+          { text: 'Sistema de Estoque', link: '/projeto/sistema-estoque' },
+        ],
+      },
+    ],
+
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/jade-lang' },
+    ],
+
+    footer: {
+      message: 'Feito com ❤️ para desenvolvedores brasileiros.',
+      copyright: 'JADE Language — Licença MIT',
+    },
+
+    search: {
+      provider: 'local',
+    },
+
+    editLink: {
+      pattern: 'https://github.com/jade-lang/jade-book/edit/main/docs/:path',
+      text: 'Editar esta página',
+    },
+  },
+
+  markdown: {
+    theme: {
+      light: 'github-light',
+      dark: 'github-dark',
+    },
+  },
+})

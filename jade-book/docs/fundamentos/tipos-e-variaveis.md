@@ -1,0 +1,218 @@
+# Tipos e Variáveis
+
+JADE é uma linguagem de **tipagem estática** — todo valor tem um tipo conhecido em tempo de compilação. Isso significa que o compilador encontra erros de tipo antes do código rodar.
+
+## Tipos primitivos
+
+| Tipo | Descrição | Exemplo |
+|------|-----------|---------|
+| `texto` | Sequência de caracteres (string) | `"João da Silva"` |
+| `numero` | Número inteiro | `42`, `-10`, `0` |
+| `decimal` | Número com casas decimais | `3.14`, `99.90` |
+| `booleano` | Verdadeiro ou falso | `verdadeiro`, `falso` |
+| `data` | Data no formato AAAA-MM-DD | `2024-03-15` |
+| `hora` | Hora no formato HH:MM | `14:30` |
+| `id` | Identificador único (UUID) | Gerado automaticamente |
+
+## Declarando variáveis
+
+Use a palavra-chave `variavel` seguida do nome, tipo e opcionalmente um valor:
+
+```jd
+variavel nome: texto
+variavel idade: numero = 30
+variavel preco: decimal = 99.90
+variavel ativo: booleano = verdadeiro
+variavel hoje: data = 2024-03-15
+variavel abertura: hora = 08:00
+```
+
+### Com inferência de tipo
+
+Quando você fornece um valor inicial, pode omitir o tipo — o compilador descobre sozinho:
+
+```jd
+variavel nome = "Maria"      // texto (inferido)
+variavel idade = 25          // numero (inferido)
+variavel preco = 149.99      // decimal (inferido)
+variavel ativo = verdadeiro  // booleano (inferido)
+```
+
+::: warning Atenção
+Se não fornecer valor inicial, o tipo é obrigatório:
+```jd
+variavel nome: texto    // OK — tipo declarado
+variavel nome           // ERRO — sem tipo e sem valor
+```
+:::
+
+## Atribuição
+
+Depois de declarada, atribua valores com `=`:
+
+```jd
+variavel contador: numero = 0
+
+contador = contador + 1
+contador = contador + 1
+Console.log(contador)  // 2
+```
+
+## O tipo `texto`
+
+Textos são delimitados por aspas duplas:
+
+```jd
+variavel saudacao = "Olá, mundo!"
+variavel vazio = ""
+variavel com_numero = "Produto n° 42"
+```
+
+### Concatenação
+
+Use `+` para juntar textos:
+
+```jd
+variavel nome = "Ana"
+variavel sobrenome = "Costa"
+variavel nome_completo = nome + " " + sobrenome
+// "Ana Costa"
+```
+
+Você pode concatenar texto com outros tipos — o compilador converte automaticamente:
+
+```jd
+variavel idade = 30
+variavel msg = "Você tem " + idade + " anos."
+// "Você tem 30 anos."
+```
+
+## O tipo `numero`
+
+Representa inteiros (sem casas decimais):
+
+```jd
+variavel estoque = 100
+variavel temperatura = -5
+variavel zero = 0
+```
+
+::: tip Quando usar `numero` vs `decimal`
+- `numero` para contagens, quantidades inteiras, idades, anos
+- `decimal` para preços, percentuais, medidas com casas decimais
+:::
+
+## O tipo `decimal`
+
+Para valores com casas decimais (ponto como separador):
+
+```jd
+variavel preco = 49.90
+variavel taxa = 0.10         // 10%
+variavel temperatura = 36.8
+```
+
+::: warning Cuidado com arredondamento
+`decimal` usa ponto flutuante de 64 bits. Para cálculos financeiros críticos, sempre arredonde o resultado final:
+```jd
+variavel valor = 0.1 + 0.2   // pode ser 0.30000000000000004
+```
+:::
+
+## O tipo `booleano`
+
+Só dois valores possíveis:
+
+```jd
+variavel ativo = verdadeiro
+variavel deletado = falso
+```
+
+Muito usado em condicionais:
+
+```jd
+variavel logado = verdadeiro
+
+se logado
+  Console.log("Bem-vindo!")
+fim
+```
+
+## O tipo `data`
+
+Datas no formato `AAAA-MM-DD`:
+
+```jd
+variavel aniversario: data = 1995-08-20
+variavel lancamento: data = 2024-01-01
+```
+
+Use `DateTime.today()` para a data de hoje:
+
+```jd
+variavel hoje = DateTime.today()
+```
+
+## O tipo `hora`
+
+Horas no formato `HH:MM`:
+
+```jd
+variavel abertura: hora = 08:00
+variavel fechamento: hora = 18:00
+```
+
+## O tipo `id`
+
+Identificador único. Normalmente não é atribuído manualmente — o runtime gera automaticamente quando você cria uma entidade:
+
+```jd
+entidade Produto
+  id: id      // preenchido automaticamente ao criar
+  nome: texto
+fim
+```
+
+## Tipos compostos
+
+Para coleções e estruturas complexas (detalhados nos capítulos seguintes):
+
+| Tipo | Descrição | Exemplo |
+|------|-----------|---------|
+| `lista<T>` | Sequência ordenada de elementos | `lista<Produto>` |
+| `mapa<K, V>` | Chave-valor | `mapa<texto, numero>` |
+| `objeto` | Estrutura dinâmica | `{ nome: "João", idade: 30 }` |
+
+## Escopo de variáveis
+
+Variáveis declaradas dentro de uma função existem somente naquela função:
+
+```jd
+funcao calcular(a: numero, b: numero) -> numero
+  variavel resultado = a + b   // só existe aqui dentro
+  retornar resultado
+fim
+
+// 'resultado' não existe aqui fora
+```
+
+## Resumo
+
+```jd
+// Declaração com tipo
+variavel nome: texto
+
+// Declaração com valor (tipo inferido)
+variavel idade = 25
+
+// Declaração com tipo e valor
+variavel preco: decimal = 99.90
+
+// Tipos disponíveis
+// texto, numero, decimal, booleano, data, hora, id
+// lista<T>, mapa<K,V>, objeto
+```
+
+## Próximo passo
+
+→ [Operadores](/fundamentos/operadores)

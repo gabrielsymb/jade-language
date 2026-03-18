@@ -1,0 +1,84 @@
+{
+  "name": "@yakuzaa/jade-compiler",
+  "version": "0.1.0",
+  "description": "Compilador da linguagem JADE — DSL empresarial com sintaxe em português compilada para WebAssembly",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "bin": {
+    "jadec": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./lexer": {
+      "import": "./dist/lexer/lexer.js",
+      "types": "./dist/lexer/lexer.d.ts"
+    },
+    "./parser": {
+      "import": "./dist/parser/parser.js",
+      "types": "./dist/parser/parser.d.ts"
+    },
+    "./semantic": {
+      "import": "./dist/semantic/semantic_analyzer.js",
+      "types": "./dist/semantic/semantic_analyzer.d.ts"
+    },
+    "./codegen": {
+      "import": "./dist/codegen/ir_generator.js",
+      "types": "./dist/codegen/ir_generator.d.ts"
+    },
+    "./ast": {
+      "import": "./dist/ast/nodes.js",
+      "types": "./dist/ast/nodes.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/index.js",
+    "validate": "bash validar.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.0",
+    "wabt": "^1.0.39"
+  },
+  "keywords": [
+    "compiler",
+    "lexer",
+    "parser",
+    "dsl",
+    "jade",
+    "typescript",
+    "portuguese",
+    "webassembly",
+    "enterprise"
+  ],
+  "author": "yakuzaa",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrielsymb/jade-language.git",
+    "directory": "jade-compiler"
+  },
+  "homepage": "https://github.com/gabrielsymb/jade-language",
+  "bugs": {
+    "url": "https://github.com/gabrielsymb/jade-language/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

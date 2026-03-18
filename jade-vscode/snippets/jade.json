@@ -1,0 +1,434 @@
+{
+  "Entidade simples": {
+    "prefix": "entidade",
+    "body": [
+      "entidade ${1:Nome}",
+      "  id: id",
+      "  ${2:campo}: ${3:texto}",
+      "fim"
+    ],
+    "description": "Declara uma entidade de domínio"
+  },
+  "Entidade completa": {
+    "prefix": "entidade-completa",
+    "body": [
+      "entidade ${1:Nome}",
+      "  id: id",
+      "  ${2:nome}: texto",
+      "  ${3:descricao}: texto",
+      "  ativo: booleano",
+      "  criadoEm: data",
+      "  atualizadoEm: data",
+      "fim"
+    ],
+    "description": "Entidade com campos padrão de auditoria"
+  },
+  "Classe": {
+    "prefix": "classe",
+    "body": [
+      "classe ${1:Nome}",
+      "  ${2:campo}: ${3:texto}",
+      "",
+      "  funcao ${4:metodo}(${5:param}: ${6:tipo}) -> ${7:tipo}",
+      "    retornar ${8:valor}",
+      "  fim",
+      "fim"
+    ],
+    "description": "Declara uma classe"
+  },
+  "Serviço": {
+    "prefix": "servico",
+    "body": [
+      "servico ${1:Nome}Service",
+      "  funcao ${2:acao}(${3:param}: ${4:tipo}) -> ${5:tipo}",
+      "    ${6:retornar ${7:valor}}",
+      "  fim",
+      "fim"
+    ],
+    "description": "Declara um serviço"
+  },
+  "Serviço CRUD completo": {
+    "prefix": "servico-crud",
+    "body": [
+      "servico ${1:Nome}Service",
+      "  funcao criar(${2:param}: ${3:tipo}) -> ${1:Nome}",
+      "    obj = ${1:Nome}()",
+      "    obj.${2:param} = ${2:param}",
+      "    salvar obj",
+      "    retornar obj",
+      "  fim",
+      "",
+      "  funcao buscar(id: id) -> ${1:Nome}",
+      "    obj = EntityManager.find(${1:Nome}, id)",
+      "    se nao obj",
+      "      erro \"${1:Nome} não encontrado\"",
+      "    fim",
+      "    retornar obj",
+      "  fim",
+      "",
+      "  funcao listar() -> lista<${1:Nome}>",
+      "    retornar EntityManager.findAll(${1:Nome}, {",
+      "      onde: { ativo: verdadeiro },",
+      "      ordenarPor: { ${4:nome}: \"asc\" }",
+      "    })",
+      "  fim",
+      "fim"
+    ],
+    "description": "Serviço com CRUD completo"
+  },
+  "Serviço com ouvinte": {
+    "prefix": "servico-ouvinte",
+    "body": [
+      "servico ${1:Nome}Service",
+      "  escutar ${2:Evento}",
+      "    ${3:// processar evento}",
+      "  fim",
+      "fim"
+    ],
+    "description": "Serviço com ouvinte de evento"
+  },
+  "Função": {
+    "prefix": "funcao",
+    "body": [
+      "funcao ${1:nome}(${2:param}: ${3:tipo}) -> ${4:tipo}",
+      "  ${5:retornar ${6:valor}}",
+      "fim"
+    ],
+    "description": "Declara uma função"
+  },
+  "Função sem retorno": {
+    "prefix": "funcao-void",
+    "body": [
+      "funcao ${1:nome}(${2:param}: ${3:tipo})",
+      "  ${4:// corpo}",
+      "fim"
+    ],
+    "description": "Função sem valor de retorno"
+  },
+  "Evento": {
+    "prefix": "evento",
+    "body": [
+      "evento ${1:Nome}",
+      "  ${2:campo}: ${3:tipo}",
+      "fim"
+    ],
+    "description": "Declara um evento de domínio"
+  },
+  "Regra de negócio": {
+    "prefix": "regra",
+    "body": [
+      "regra ${1:Nome}",
+      "  quando ${2:condicao}",
+      "  entao",
+      "    ${3:// ação}",
+      "  fim",
+      "fim"
+    ],
+    "description": "Declara uma regra de negócio declarativa"
+  },
+  "Interface": {
+    "prefix": "interface",
+    "body": [
+      "interface ${1:Nome}",
+      "  funcao ${2:metodo}(${3:param}: ${4:tipo}) -> ${5:tipo}",
+      "fim"
+    ],
+    "description": "Declara uma interface"
+  },
+  "Enum": {
+    "prefix": "enum",
+    "body": [
+      "enum ${1:Nome}",
+      "  ${2:VALOR1}",
+      "  ${3:VALOR2}",
+      "fim"
+    ],
+    "description": "Declara um enumerador"
+  },
+  "Módulo": {
+    "prefix": "modulo",
+    "body": [
+      "modulo ${1:Nome}",
+      "",
+      "  ${2:// declarações}",
+      "",
+      "fim"
+    ],
+    "description": "Declara um módulo"
+  },
+  "Tela": {
+    "prefix": "tela",
+    "body": [
+      "tela ${1:Nome} \"${2:Título}\"",
+      "  ${3:tabela ${4:Lista}}",
+      "    entidade: ${5:Entidade}",
+      "    colunas: ${6:campo1}, ${7:campo2}",
+      "    filtravel: verdadeiro",
+      "  fim",
+      "fim"
+    ],
+    "description": "Declara uma tela com interface declarativa"
+  },
+  "Tela com formulário": {
+    "prefix": "tela-form",
+    "body": [
+      "tela ${1:Cadastro} \"${2:Título}\"",
+      "  formulario ${3:Form}",
+      "    entidade: ${4:Entidade}",
+      "    campos: ${5:campo1}, ${6:campo2}",
+      "  fim",
+      "  botao Salvar",
+      "    acao: ${7:salvar}()",
+      "  fim",
+      "  botao Cancelar",
+      "    acao: ${8:voltar}()",
+      "  fim",
+      "fim"
+    ],
+    "description": "Tela com formulário e botões"
+  },
+  "Importar": {
+    "prefix": "importar",
+    "body": ["importar ${1:modulo}.${2:Item}"],
+    "description": "Importa um item de outro módulo"
+  },
+  "Importar com alias": {
+    "prefix": "importar-como",
+    "body": ["importar ${1:modulo} como ${2:alias}"],
+    "description": "Importa módulo com alias"
+  },
+  "Variável tipada": {
+    "prefix": "variavel",
+    "body": ["variavel ${1:nome}: ${2:tipo} = ${3:valor}"],
+    "description": "Declara uma variável com tipo"
+  },
+  "Variável inferida": {
+    "prefix": "var",
+    "body": ["variavel ${1:nome} = ${2:valor}"],
+    "description": "Declara uma variável com tipo inferido"
+  },
+  "Se": {
+    "prefix": "se",
+    "body": [
+      "se ${1:condicao}",
+      "  ${2:// ação}",
+      "fim"
+    ],
+    "description": "Condicional se (sem entao)"
+  },
+  "Se/Senão": {
+    "prefix": "se-senao",
+    "body": [
+      "se ${1:condicao}",
+      "  ${2:// ação}",
+      "senao",
+      "  ${3:// alternativa}",
+      "fim"
+    ],
+    "description": "Condicional se/senão"
+  },
+  "Se/Senão se": {
+    "prefix": "se-senao-se",
+    "body": [
+      "se ${1:condicao1}",
+      "  ${2:// ação 1}",
+      "senao se ${3:condicao2}",
+      "  ${4:// ação 2}",
+      "senao",
+      "  ${5:// alternativa}",
+      "fim"
+    ],
+    "description": "Condicional encadeado se/senão se/senão"
+  },
+  "Enquanto": {
+    "prefix": "enquanto",
+    "body": [
+      "enquanto ${1:condicao}",
+      "  ${2:// corpo}",
+      "fim"
+    ],
+    "description": "Loop enquanto"
+  },
+  "Para em": {
+    "prefix": "para",
+    "body": [
+      "para ${1:item} em ${2:lista}",
+      "  ${3:// corpo}",
+      "fim"
+    ],
+    "description": "Loop para/em"
+  },
+  "Retornar": {
+    "prefix": "retornar",
+    "body": ["retornar ${1:valor}"],
+    "description": "Instrução de retorno"
+  },
+  "Erro": {
+    "prefix": "erro",
+    "body": ["erro \"${1:mensagem de erro}\""],
+    "description": "Lança um erro"
+  },
+  "Emitir evento": {
+    "prefix": "emitir",
+    "body": ["emitir ${1:Evento}(${2:campo}: ${3:valor})"],
+    "description": "Emite um evento de domínio"
+  },
+  "Salvar entidade": {
+    "prefix": "salvar",
+    "body": ["salvar ${1:objeto}"],
+    "description": "Persiste uma entidade no banco"
+  },
+  "EntityManager.find": {
+    "prefix": "find",
+    "body": ["${1:obj} = EntityManager.find(${2:Entidade}, ${3:id})"],
+    "description": "Busca uma entidade por id"
+  },
+  "EntityManager.findAll": {
+    "prefix": "findAll",
+    "body": [
+      "${1:lista} = EntityManager.findAll(${2:Entidade}, {",
+      "  onde: { ${3:campo}: ${4:valor} },",
+      "  ordenarPor: { ${5:campo}: \"asc\" }",
+      "})"
+    ],
+    "description": "Busca múltiplas entidades com filtro"
+  },
+  "EntityManager.count": {
+    "prefix": "count",
+    "body": ["${1:total} = EntityManager.count(${2:Entidade}, { onde: { ${3:campo}: ${4:valor} } })"],
+    "description": "Conta entidades com filtro"
+  },
+  "Console.log": {
+    "prefix": "log",
+    "body": ["Console.log(${1:\"mensagem\"})"],
+    "description": "Exibe mensagem no console"
+  },
+  "Console.warn": {
+    "prefix": "warn",
+    "body": ["Console.warn(${1:\"aviso\"})"],
+    "description": "Exibe aviso no console"
+  },
+  "Console.error": {
+    "prefix": "cerror",
+    "body": ["Console.error(${1:\"erro\"})"],
+    "description": "Exibe erro no console"
+  },
+  "Lista vazia": {
+    "prefix": "lista",
+    "body": ["${1:nome}: lista<${2:tipo}> = lista()"],
+    "description": "Declara uma lista vazia"
+  },
+  "HttpClient.get": {
+    "prefix": "http-get",
+    "body": [
+      "${1:dados} = HttpClient.get(\"${2:https://api.exemplo.com/endpoint}\")"
+    ],
+    "description": "Requisição HTTP GET"
+  },
+  "HttpClient.post": {
+    "prefix": "http-post",
+    "body": [
+      "${1:resposta} = HttpClient.post(\"${2:https://api.exemplo.com/endpoint}\", {",
+      "  ${3:campo}: ${4:valor}",
+      "})"
+    ],
+    "description": "Requisição HTTP POST"
+  },
+  "DateTime.today": {
+    "prefix": "hoje",
+    "body": ["${1:hoje} = DateTime.today()"],
+    "description": "Data atual"
+  },
+  "Matematica.media": {
+    "prefix": "media",
+    "body": ["${1:resultado} = Matematica.media(${2:lista})"],
+    "description": "Calcula a média aritmética de uma lista"
+  },
+  "Matematica.soma": {
+    "prefix": "soma",
+    "body": ["${1:total} = Matematica.soma(${2:lista})"],
+    "description": "Soma todos os valores de uma lista"
+  },
+  "Matematica.desvioPadrao": {
+    "prefix": "desvioPadrao",
+    "body": ["${1:dp} = Matematica.desvioPadrao(${2:lista})"],
+    "description": "Calcula o desvio padrão de uma lista"
+  },
+  "Matematica.curvaABC": {
+    "prefix": "curvaABC",
+    "body": [
+      "${1:classificacao} = Matematica.curvaABC(${2:itens})",
+      "para item em ${1:classificacao}",
+      "  Console.log(item.id + \" — Classe \" + item.classe)",
+      "fim"
+    ],
+    "description": "Curva ABC (classificação de Pareto)"
+  },
+  "XML.parse": {
+    "prefix": "xml-parse",
+    "body": ["${1:doc} = XML.parse(${2:xmlTexto})"],
+    "description": "Faz parse de uma string XML"
+  },
+  "XML.buscar": {
+    "prefix": "xml-buscar",
+    "body": ["${1:no} = XML.buscar(${2:doc}, \"${3:tag}\")"],
+    "description": "Busca o primeiro elemento com a tag informada"
+  },
+  "XML.parsarNFe": {
+    "prefix": "nfe",
+    "body": [
+      "${1:nota} = XML.parsarNFe(${2:xmlNFe})",
+      "Console.log(\"NF-e \" + ${1:nota}.numero + \" — R$ \" + ${1:nota}.valorTotal)"
+    ],
+    "description": "Extrai dados de uma NF-e (Nota Fiscal Eletrônica)"
+  },
+  "lista.filtrar": {
+    "prefix": "filtrar",
+    "body": ["${1:resultado} = ${2:lista}.filtrar(${3:condicao})"],
+    "description": "Filtra elementos de uma lista por condição"
+  },
+  "lista.ordenar": {
+    "prefix": "ordenar",
+    "body": ["${1:resultado} = ${2:lista}.ordenar(${3:campo})"],
+    "description": "Ordena uma lista por campo"
+  },
+  "Template JADE completo": {
+    "prefix": "jade-template",
+    "body": [
+      "entidade ${1:Produto}",
+      "  id: id",
+      "  nome: texto",
+      "  preco: decimal",
+      "  ativo: booleano",
+      "  criadoEm: data",
+      "fim",
+      "",
+      "evento ${2:ProdutoCriado}",
+      "  produtoId: id",
+      "  nome: texto",
+      "fim",
+      "",
+      "servico ${1:Produto}Service",
+      "  funcao criar(nome: texto, preco: decimal) -> ${1:Produto}",
+      "    obj = ${1:Produto}()",
+      "    obj.nome = nome",
+      "    obj.preco = preco",
+      "    obj.ativo = verdadeiro",
+      "    obj.criadoEm = DateTime.today()",
+      "    salvar obj",
+      "    emitir ${2:ProdutoCriado}(obj.id, obj.nome)",
+      "    retornar obj",
+      "  fim",
+      "",
+      "  funcao buscar(id: id) -> ${1:Produto}",
+      "    obj = EntityManager.find(${1:Produto}, id)",
+      "    se nao obj",
+      "      erro \"${1:Produto} não encontrado\"",
+      "    fim",
+      "    retornar obj",
+      "  fim",
+      "fim"
+    ],
+    "description": "Template completo JADE com entidade, evento e serviço"
+  }
+}

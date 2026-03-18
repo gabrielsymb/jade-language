@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # ── jade-compiler ──────────────────────────────────────
+      - name: Install compiler dependencies
+        working-directory: jade-compiler
+        run: npm ci
+
+      - name: Type check — compiler
+        working-directory: jade-compiler
+        run: npm run typecheck
+
+      - name: Build — compiler
+        working-directory: jade-compiler
+        run: npm run build
+
+      - name: Test — compiler
+        working-directory: jade-compiler
+        run: npm test
+
+      # ── jade-runtime ───────────────────────────────────────
+      - name: Install runtime dependencies
+        working-directory: jade-runtime
+        run: npm ci
+
+      - name: Type check — runtime
+        working-directory: jade-runtime
+        run: npm run typecheck
+
+      - name: Build — runtime
+        working-directory: jade-runtime
+        run: npm run build
+
+      - name: Test — runtime
+        working-directory: jade-runtime
+        run: npm test
+
+  # Validação completa (equivalente ao validar.sh)
+  validate:
+    name: Full Validation
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install all dependencies
+        run: |
+          cd jade-compiler && npm ci
+          cd ../jade-runtime && npm ci
+
+      - name: Run full validation
+        run: bash jade-compiler/validar.sh

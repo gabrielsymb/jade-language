@@ -1,0 +1,13 @@
+{
+  "iconDefinitions": {
+    "_jade_file": {
+      "iconPath": "./assets/icon-file.svg"
+    }
+  },
+  "fileExtensions": {
+    "jd": "_jade_file"
+  },
+  "languageIds": {
+    "jd": "_jade_file"
+  }
+}

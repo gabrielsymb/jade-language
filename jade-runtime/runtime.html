@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JADE — Teste UI</title>
+</head>
+<body>
+<div id="app" style="min-height:100vh;"></div>
+<script type="module">
+  import { UIEngine } from './dist/ui/ui_engine.js';
+  import { MemoryManager } from './dist/core/memory_manager.js';
+  import { Signal } from './dist/ui/reactive.js';
+
+  const mem = new MemoryManager();
+  const engine = new UIEngine(mem, {
+    cor_primaria: '#2563eb',
+    fonte_principal: 'system-ui, sans-serif'
+  });
+
+  const app = document.getElementById('app');
+
+  // ── Layout principal ──────────────────────────────────────────────────────
+  const layoutApp = document.createElement('div');
+  layoutApp.className = 'jade-app';
+  app.appendChild(layoutApp);
+
+  const layoutInner = document.createElement('div');
+  layoutInner.className = 'jade-layout';
+  layoutApp.appendChild(layoutInner);
+
+  const menu = document.createElement('nav');
+  menu.className = 'jade-menu';
+  layoutInner.appendChild(menu);
+
+  const conteudo = document.createElement('main');
+  conteudo.className = 'jade-conteudo';
+  layoutInner.appendChild(conteudo);
+
+  function menuItem(label, onClick) {
+    const a = document.createElement('a');
+    a.className = 'jade-menu-item';
+    a.textContent = label;
+    a.href = '#';
+    a.addEventListener('click', e => { e.preventDefault(); onClick(); });
+    menu.appendChild(a);
+    return a;
+  }
+
+  // ── Tela: Produtos ────────────────────────────────────────────────────────
+  function telaProdutos() {
+    const tela = engine.montarTela({ nome: 'tela-produtos', titulo: 'Produtos' }, conteudo);
+
+    // Skeleton enquanto "carrega" (simula requisição de dados)
+    const skeleton = engine.mostrarCarregando(tela, 4);
+
+    setTimeout(() => {
+      engine.ocultarCarregando(skeleton);
+
+      // Cards de métricas
+      const grid = document.createElement('div');
+      grid.className = 'jade-grid';
+      tela.appendChild(grid);
+
+      const totalProdutos = new Signal(200);
+      const estoqueBaixo  = new Signal(7);
+      engine.criarCard('Total de produtos', totalProdutos, grid);
+      engine.criarCard('Estoque baixo',     estoqueBaixo,  grid);
+
+      // Tabela com filtro, ordenação e paginação
+      const dados = Array.from({ length: 200 }, (_, i) => ({
+        nome:    `Produto ${String(i + 1).padStart(3, '0')}`,
+        preco:   `R$ ${(Math.random() * 1000).toFixed(2)}`,
+        estoque: Math.floor(Math.random() * 100),
+        status:  Math.random() > 0.3 ? 'Ativo' : 'Inativo',
+      }));
+
+      engine.criarTabela({
+        entidade: 'Produto',
+        colunas: [
+          { campo: 'nome',    titulo: 'Nome' },
+          { campo: 'preco',   titulo: 'Preço' },
+          { campo: 'estoque', titulo: 'Estoque' },
+          { campo: 'status',  titulo: 'Status' },
+        ],
+        filtravel: true,
+        ordenavel: true,
+        paginacao: 15,
+      }, tela, dados);
+
+      // Formulário de cadastro
+      const tituloForm = document.createElement('h2');
+      tituloForm.style.cssText = 'font-size:16px;font-weight:500;margin:24px 0 12px;';
+      tituloForm.textContent = 'Cadastrar produto';
+      tela.appendChild(tituloForm);
+
+      const signals = engine.criarFormulario({
+        entidade: 'Produto',
+        campos: [
+          { nome: 'nome',    titulo: 'Nome',    tipo: 'texto',   obrigatorio: true,  ref: 'campoNome', placeholder: 'Ex: Notebook Dell' },
+          { nome: 'preco',   titulo: 'Preço',   tipo: 'decimal', obrigatorio: true,  placeholder: '0.00' },
+          { nome: 'estoque', titulo: 'Estoque', tipo: 'numero',  obrigatorio: false, placeholder: '0' },
+        ]
+      }, tela);
+
+      const botoes = document.createElement('div');
+      botoes.className = 'jade-botoes';
+      tela.appendChild(botoes);
+
+      engine.criarBotao('Salvar', () => {
+        const nome = signals.nome.peek();
+        if (!nome) {
+          engine.mostrarNotificacao('Preencha o nome do produto.', 'aviso');
+          engine.focar('campoNome');
+          return;
+        }
+        engine.mostrarNotificacao(
+          `Produto "${nome}" salvo! Preço: ${signals.preco.peek()}, Estoque: ${signals.estoque.peek()}`,
+          'sucesso'
+        );
+      }, botoes, { tipo: 'primario' });
+
+      engine.criarBotao('Cancelar', () => {
+        engine.mostrarNotificacao('Operação cancelada.', 'info');
+      }, botoes, { tipo: 'secundario' });
+
+      engine.focar('campoNome');
+    }, 600);
+  }
+
+  // ── Tela: Pedidos ─────────────────────────────────────────────────────────
+  function telaPedidos() {
+    const tela = engine.montarTela({ nome: 'tela-pedidos', titulo: 'Pedidos' }, conteudo);
+
+    const pedidos = Array.from({ length: 50 }, (_, i) => ({
+      id:      `#${String(i + 1).padStart(4, '0')}`,
+      cliente: `Cliente ${i + 1}`,
+      total:   `R$ ${(Math.random() * 5000).toFixed(2)}`,
+      status:  ['Pendente', 'Confirmado', 'Enviado', 'Entregue'][Math.floor(Math.random() * 4)],
+    }));
+
+    engine.criarTabela({
+      entidade: 'Pedido',
+      colunas: [
+        { campo: 'id',      titulo: 'Nº' },
+        { campo: 'cliente', titulo: 'Cliente' },
+        { campo: 'total',   titulo: 'Total' },
+        { campo: 'status',  titulo: 'Status' },
+      ],
+      filtravel: true,
+      paginacao: 10,
+    }, tela, pedidos);
+
+    engine.mostrarNotificacao('Tela de pedidos carregada.', 'info', 2000);
+  }
+
+  // ── Navegação ─────────────────────────────────────────────────────────────
+  menuItem('Produtos', telaProdutos);
+  menuItem('Pedidos',  telaPedidos);
+
+  telaProdutos();
+</script>
+</body>
+</html>

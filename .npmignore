@@ -1,0 +1,38 @@
+# Arquivos internos de desenvolvimento — não publicar no npm
+contrato.md
+CLAUDE.md
+ANALISE_DOCUMENTACAO.md
+.claude/
+.github/
+*.sh
+
+# Fontes TypeScript (distribuir apenas dist/)
+jade-compiler/lexer/
+jade-compiler/ast/
+jade-compiler/parser/
+jade-compiler/semantic/
+jade-compiler/codegen/
+jade-compiler/tests/
+jade-compiler/vitest.config.ts
+jade-compiler/tsconfig.json
+jade-compiler/*.js
+jade-compiler/*.ts
+
+jade-runtime/core/
+jade-runtime/apis/
+jade-runtime/stdlib/
+jade-runtime/ui/
+jade-runtime/pwa/
+jade-runtime/persistence/
+jade-runtime/tests/
+jade-runtime/vitest.config.ts
+jade-runtime/tsconfig.json
+jade-runtime/*.js
+jade-runtime/*.ts
+jade-runtime/*.html
+
+# Dev
+node_modules/
+*.log
+*.tsbuildinfo
+coverage/

@@ -1,0 +1,10 @@
+src/
+node_modules/
+.git/
+**/*.ts
+**/*.map
+tsconfig.json
+esbuild.mjs
+.vscodeignore
+**/.DS_Store
+assets/icon.svg
