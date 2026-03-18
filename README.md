@@ -2,9 +2,9 @@
 
 > Escreva código em português. Compile para WebAssembly. Rode no browser e no servidor.
 
-[![CI](https://github.com/jade-lang/jade/actions/workflows/ci.yml/badge.svg)](https://github.com/jade-lang/jade/actions/workflows/ci.yml)
-[![npm jade-compiler](https://img.shields.io/npm/v/jade-compiler)](https://www.npmjs.com/package/jade-compiler)
-[![npm jade-runtime](https://img.shields.io/npm/v/jade-runtime)](https://www.npmjs.com/package/jade-runtime)
+[![CI](https://github.com/gabrielsymb/jade-language/actions/workflows/ci.yml/badge.svg)](https://github.com/gabrielsymb/jade-language/actions/workflows/ci.yml)
+[![npm @yakuzaa/jade-compiler](https://img.shields.io/npm/v/@yakuzaa/jade-compiler)](https://www.npmjs.com/package/@yakuzaa/jade-compiler)
+[![npm @yakuzaa/jade-runtime](https://img.shields.io/npm/v/@yakuzaa/jade-runtime)](https://www.npmjs.com/package/@yakuzaa/jade-runtime)
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)](LICENSE)
 
 ---
@@ -44,11 +44,12 @@ fim
 ## Instalação
 
 ```bash
-# Compilador (CLI + API)
-npm install jade-compiler
+# Instalação completa (compilador + runtime)
+npm install @yakuzaa/jade
 
-# Runtime (browser + Node.js)
-npm install jade-runtime
+# Ou separadamente:
+npm install @yakuzaa/jade-compiler   # compilador (CLI + API)
+npm install @yakuzaa/jade-runtime    # runtime (browser + Node.js)
 ```
 
 ## CLI
@@ -65,21 +66,21 @@ npx jadec --check meu_sistema.jd
 
 | Pacote | Descrição | npm |
 |--------|-----------|-----|
-| [`jade-compiler`](./jade-compiler) | Compilador: lexer, parser, type checker, IR → WAT → WASM | [![npm](https://img.shields.io/npm/v/jade-compiler)](https://www.npmjs.com/package/jade-compiler) |
-| [`jade-runtime`](./jade-runtime) | Runtime: event loop, UI Engine, APIs, stdlib | [![npm](https://img.shields.io/npm/v/jade-runtime)](https://www.npmjs.com/package/jade-runtime) |
-| [`jade-vscode`](./jade-vscode) | Extensão VSCode: syntax highlighting, snippets | [Marketplace](https://marketplace.visualstudio.com/items?itemName=jade-lang.jade-lang-vscode) |
-| [`jade-book`](./jade-book) | Documentação completa (VitePress) | [jade-lang.github.io/jade-book](https://jade-lang.github.io/jade-book) |
+| [`jade-compiler`](./jade-compiler) | Compilador: lexer, parser, type checker, IR → WAT → WASM | [![npm](https://img.shields.io/npm/v/@yakuzaa/jade-compiler)](https://www.npmjs.com/package/@yakuzaa/jade-compiler) |
+| [`jade-runtime`](./jade-runtime) | Runtime: event loop, UI Engine, APIs, stdlib | [![npm](https://img.shields.io/npm/v/@yakuzaa/jade-runtime)](https://www.npmjs.com/package/@yakuzaa/jade-runtime) |
+| [`jade-vscode`](./jade-vscode) | Extensão VSCode: syntax highlighting, snippets, LSP | [Marketplace](https://marketplace.visualstudio.com/items?itemName=yakuzaa.jade-lang-vscode) |
+| [`jade-book`](./jade-book) | Documentação completa (VitePress) | [gabrielsymb.github.io/jade-language](https://gabrielsymb.github.io/jade-language) |
 
 ## Documentação
 
-A documentação completa está em **[jade-lang.github.io/jade-book](https://jade-lang.github.io/jade-book)** e cobre:
+A documentação completa cobre:
 
-- [Introdução e instalação](https://jade-lang.github.io/jade-book/introducao/o-que-e-jade)
-- [Fundamentos da linguagem](https://jade-lang.github.io/jade-book/fundamentos/tipos-e-variaveis)
-- [Estruturas: entidades, serviços, eventos](https://jade-lang.github.io/jade-book/estruturas/entidades)
-- [Interface de usuário com `tela`](https://jade-lang.github.io/jade-book/ui/tela)
-- [Persistência offline-first](https://jade-lang.github.io/jade-book/persistencia/visao-geral)
-- [APIs do runtime](https://jade-lang.github.io/jade-book/runtime/http)
+- [Introdução e instalação](./jade-book/docs/introducao/o-que-e-jade.md)
+- [Fundamentos da linguagem](./jade-book/docs/fundamentos/tipos-e-variaveis.md)
+- [Estruturas: entidades, serviços, eventos](./jade-book/docs/estruturas/entidades.md)
+- [Interface de usuário com `tela`](./jade-book/docs/ui/tela.md)
+- [Persistência offline-first](./jade-book/docs/persistencia/visao-geral.md)
+- [APIs do runtime](./jade-book/docs/runtime/http.md)
 
 ## Desenvolvimento
 
@@ -91,10 +92,10 @@ A documentação completa está em **[jade-lang.github.io/jade-book](https://jad
 ### Setup
 
 ```bash
-git clone https://github.com/jade-lang/jade.git
-cd jade
+git clone https://github.com/gabrielsymb/jade-language.git
+cd jade-language
 
-# Instalar dependências de todos os pacotes
+# Instalar dependências
 cd jade-compiler && npm install
 cd ../jade-runtime && npm install
 ```
@@ -120,7 +121,7 @@ cd jade-book && npm run dev
 | Suíte | Testes | Ferramenta |
 |-------|--------|------------|
 | Compiler (lexer, parser, type checker, IR, WASM) | 72 | Vitest |
-| Runtime (core, APIs, UI/PWA, stdlib) | 65 | Vitest |
+| Runtime (core, APIs, UI/PWA, stdlib) | 163 | Vitest |
 
 ## Status v0.1.0
 
@@ -135,7 +136,7 @@ cd jade-book && npm run dev
 | Runtime Core | ✅ Completo |
 | APIs Runtime | ✅ Completo |
 | UI Engine + `tela` | ✅ Completo |
-| Stdlib Texto | ✅ Completo |
+| Stdlib (Texto, Matemática, Moeda, XML) | ✅ Completo |
 | LSP / VSCode completo | ⏳ v0.2.0 |
 | Resolução de módulos | ⏳ v0.2.0 |
 
