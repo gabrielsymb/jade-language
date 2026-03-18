@@ -17,12 +17,17 @@ Retorna um nó raiz navegável com as propriedades:
 | `filhos` | lista<XMLNode> | Elementos filhos |
 | `texto` | texto | Conteúdo de texto do nó |
 
-```jd
-xmlTexto = "<produto><nome>Notebook</nome><preco>3500.00</preco></produto>"
+```xml
+<produto>
+  <nome>Notebook</nome>
+  <preco>3500.00</preco>
+</produto>
+```
 
+```jd
 doc = XML.parse(xmlTexto)
-Console.log(doc.tag)       // "produto"
-Console.log(doc.filhos.tamanho())  // 2
+Console.log(doc.tag)              // "produto"
+Console.log(doc.filhos.tamanho()) // 2
 ```
 
 ## Navegação
@@ -140,15 +145,17 @@ fim
 
 ## Parse manual (XML genérico)
 
-```jd
-xmlPedido = "<pedido id=\"1001\">
+```xml
+<pedido id="1001">
   <cliente>João Silva</cliente>
   <itens>
     <item><produto>Notebook</produto><qtd>2</qtd></item>
     <item><produto>Mouse</produto><qtd>5</qtd></item>
   </itens>
-</pedido>"
+</pedido>
+```
 
+```jd
 doc = XML.parse(xmlPedido)
 
 // Acessar atributo
