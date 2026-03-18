@@ -1,4 +1,10 @@
 import { defineConfig } from 'vitepress'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
+
+const jdGrammar = JSON.parse(
+  readFileSync(resolve(__dirname, '../../jade-vscode/syntaxes/jade.tmLanguage.json'), 'utf-8')
+)
 
 export default defineConfig({
   title: 'A Linguagem JADE',
@@ -120,5 +126,13 @@ export default defineConfig({
       light: 'github-light',
       dark: 'github-dark',
     },
+    languages: [
+      {
+        name: 'jd',
+        scopeName: 'source.jade',
+        aliases: ['jade'],
+        ...jdGrammar,
+      },
+    ],
   },
 })
