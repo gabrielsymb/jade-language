@@ -43,7 +43,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: jade-book/.vitepress/dist
+          path: jade-book/docs/.vitepress/dist
 
   deploy:
     name: Deploy to GitHub Pages
