@@ -11,9 +11,9 @@
  *   jadec --help                     → exibe ajuda
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { resolve, basename, dirname, join } from 'path';
-import { compile } from './index.js';
+import { compileFile } from './index.js';
 
 const VERSION = '0.1.0';
 
@@ -66,18 +66,9 @@ async function main() {
     ? args[oIdx + 1]
     : join(dirname(resolve(inputFile)), basename(inputFile, '.jd'));
 
-  // Ler arquivo fonte
-  let source: string;
-  try {
-    source = readFileSync(resolve(inputFile), 'utf-8');
-  } catch {
-    console.error(`Erro: Não foi possível ler o arquivo '${inputFile}'.`);
-    process.exit(1);
-  }
-
   console.log(`jadec ${VERSION} — Compilando ${inputFile}...\n`);
 
-  const result = await compile(source, basename(inputFile, '.jd'));
+  const result = await compileFile(resolve(inputFile), basename(inputFile, '.jd'));
 
   if (!result.success) {
     console.error('Erros encontrados:\n');
