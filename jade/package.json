@@ -1,6 +1,6 @@
 {
   "name": "@yakuzaa/jade",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JADE — DSL empresarial em português compilada para WebAssembly. Instala compilador + runtime.",
   "type": "module",
   "files": [
@@ -11,8 +11,8 @@
     "postinstall": "node postinstall.js"
   },
   "dependencies": {
-    "@yakuzaa/jade-compiler": "0.1.0",
-    "@yakuzaa/jade-runtime": "0.1.0"
+    "@yakuzaa/jade-compiler": "0.1.1",
+    "@yakuzaa/jade-runtime": "0.1.1"
   },
   "keywords": [
     "jade",
@@ -29,7 +29,7 @@
     "type": "git",
     "url": "https://github.com/gabrielsymb/jade-language.git"
   },
-  "homepage": "https://github.com/gabrielsymb/jade-language",
+  "homepage": "https://gabrielsymb.github.io/jade-language",
   "bugs": {
     "url": "https://github.com/gabrielsymb/jade-language/issues"
   },

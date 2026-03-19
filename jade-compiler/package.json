@@ -1,6 +1,6 @@
 {
   "name": "@yakuzaa/jade-compiler",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compilador da linguagem JADE — DSL empresarial com sintaxe em português compilada para WebAssembly",
   "type": "module",
   "main": "./dist/index.js",
@@ -71,7 +71,7 @@
     "url": "https://github.com/gabrielsymb/jade-language.git",
     "directory": "jade-compiler"
   },
-  "homepage": "https://github.com/gabrielsymb/jade-language",
+  "homepage": "https://gabrielsymb.github.io/jade-language",
   "bugs": {
     "url": "https://github.com/gabrielsymb/jade-language/issues"
   },
