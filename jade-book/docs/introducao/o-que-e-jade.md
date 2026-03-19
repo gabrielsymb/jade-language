@@ -89,7 +89,7 @@ servico EstoqueService
   fim
 
   escutar EstoqueBaixo
-    Console.warn("Estoque crítico: " + produtoId)
+    Console.avisar("Estoque crítico: " + produtoId)
   fim
 fim
 ```

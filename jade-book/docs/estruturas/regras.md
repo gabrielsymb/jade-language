@@ -84,7 +84,7 @@ fim
 regra limiteCredito quando cliente.debitoAberto > cliente.limiteCredito entao
   cliente.bloqueado = verdadeiro
   emitir ClienteBloqueado(cliente.id, cliente.debitoAberto)
-  Console.warn("Cliente bloqueado por limite de crédito: " + cliente.nome)
+  Console.avisar("Cliente bloqueado por limite de crédito: " + cliente.nome)
 senao
   se cliente.bloqueado e cliente.debitoAberto == 0
     cliente.bloqueado = falso
@@ -110,7 +110,7 @@ regra promocaoExpirada quando promocao.dataFim < DateTime.today() e promocao.ati
   promocao.ativa = falso
   salvar promocao
   emitir PromocaoEncerrada(promocao.id)
-  Console.log("Promoção encerrada: " + promocao.nome)
+  Console.escrever("Promoção encerrada: " + promocao.nome)
 fim
 ```
 

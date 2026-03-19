@@ -17,7 +17,7 @@ salvar usuario
 
 ```jd
 funcao autenticar(email: texto, senha: texto) -> booleano
-  usuario = EntityManager.findAll(Usuario, { onde: { email: email } }).obter(0)
+  usuario = EntityManager.buscar(Usuario, { onde: { email: email } }).obter(0)
 
   se nao usuario
     retornar falso
@@ -64,9 +64,9 @@ assinatura = Crypto.sign(documentoJSON, chavePrivada)
 valido = Crypto.verify(documentoJSON, assinatura, chavePublica)
 
 se valido
-  Console.log("Documento autêntico")
+  Console.escrever("Documento autêntico")
 senao
-  Console.log("Assinatura inválida!")
+  Console.escrever("Assinatura inválida!")
 fim
 ```
 

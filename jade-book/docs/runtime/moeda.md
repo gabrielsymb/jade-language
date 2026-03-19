@@ -21,10 +21,10 @@ texto = Moeda.formatarBRL(valor)
 Formata um número como moeda brasileira.
 
 ```jd
-Console.log(Moeda.formatarBRL(1234.50))   // "R$ 1.234,50"
-Console.log(Moeda.formatarBRL(1000000))   // "R$ 1.000.000,00"
-Console.log(Moeda.formatarBRL(-500))      // "-R$ 500,00"
-Console.log(Moeda.formatarBRL(0))         // "R$ 0,00"
+Console.escrever(Moeda.formatarBRL(1234.50))   // "R$ 1.234,50"
+Console.escrever(Moeda.formatarBRL(1000000))   // "R$ 1.000.000,00"
+Console.escrever(Moeda.formatarBRL(-500))      // "-R$ 500,00"
+Console.escrever(Moeda.formatarBRL(0))         // "R$ 0,00"
 ```
 
 ### `formatarCompacto`
@@ -36,11 +36,11 @@ texto = Moeda.formatarCompacto(valor)
 Formato abreviado para dashboards.
 
 ```jd
-Console.log(Moeda.formatarCompacto(1_500_000))  // "R$ 1,5mi"
-Console.log(Moeda.formatarCompacto(2_000_000))  // "R$ 2mi"
-Console.log(Moeda.formatarCompacto(45_000))     // "R$ 45mil"
-Console.log(Moeda.formatarCompacto(1_500))      // "R$ 1,5mil"
-Console.log(Moeda.formatarCompacto(500))        // "R$ 500,00"
+Console.escrever(Moeda.formatarCompacto(1_500_000))  // "R$ 1,5mi"
+Console.escrever(Moeda.formatarCompacto(2_000_000))  // "R$ 2mi"
+Console.escrever(Moeda.formatarCompacto(45_000))     // "R$ 45mil"
+Console.escrever(Moeda.formatarCompacto(1_500))      // "R$ 1,5mil"
+Console.escrever(Moeda.formatarCompacto(500))        // "R$ 500,00"
 ```
 
 ---

@@ -24,9 +24,9 @@ Para o usuário, parece que os dados salvam instantaneamente. A sincronização 
 
 ```jd
 se SyncManager.online()
-  Console.log("Conectado — dados sincronizando em tempo real")
+  Console.escrever("Conectado — dados sincronizando em tempo real")
 senao
-  Console.log("Offline — trabalhando localmente")
+  Console.escrever("Offline — trabalhando localmente")
 fim
 ```
 
@@ -34,14 +34,14 @@ fim
 
 ```jd
 pendentes = SyncManager.pendentes()
-Console.log("Operações aguardando sincronização: " + pendentes)
+Console.escrever("Operações aguardando sincronização: " + pendentes)
 ```
 
 ## Forçar sincronização
 
 ```jd
 SyncManager.sincronizar()
-Console.log("Sincronização forçada iniciada")
+Console.escrever("Sincronização forçada iniciada")
 ```
 
 ## Lidando com conflitos

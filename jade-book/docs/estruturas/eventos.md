@@ -44,7 +44,7 @@ Use `escutar` dentro de um serviço:
 ```jd
 servico NotificacaoService
   escutar ProdutoCriado
-    Console.log("Novo produto: " + nome + " (categoria: " + categoria + ")")
+    Console.escrever("Novo produto: " + nome + " (categoria: " + categoria + ")")
     enviarNotificacaoAdmin(produtoId)
   fim
 fim
@@ -89,7 +89,7 @@ fim
 
 servico NotificacaoService
   escutar PedidoRealizado
-    cliente = EntityManager.find(Cliente, clienteId)
+    cliente = EntityManager.buscarPorId(Cliente, clienteId)
     enviarEmailConfirmacao(cliente.email, pedidoId, valorTotal)
   fim
 fim
@@ -124,7 +124,7 @@ fim
 
 servico FaturaService
   funcao emitir(pedidoId: id) -> Fatura
-    pedido = EntityManager.find(Pedido, pedidoId)
+    pedido = EntityManager.buscarPorId(Pedido, pedidoId)
 
     fatura = Fatura()
     fatura.pedidoId = pedidoId
@@ -200,7 +200,7 @@ fim
 // Qualquer serviço emite quando faz algo importante
 servico ProdutoService
   funcao excluir(produtoId: id)
-    produto = EntityManager.find(Produto, produtoId)
+    produto = EntityManager.buscarPorId(Produto, produtoId)
     produto.ativo = falso
     salvar produto
 
@@ -227,7 +227,7 @@ servico CacheService
   escutar DadosAlterados
     chave = tabela + "_" + registroId
     Cache.invalidar(chave)
-    Console.log("Cache invalidado: " + chave)
+    Console.escrever("Cache invalidado: " + chave)
   fim
 fim
 ```
@@ -244,12 +244,12 @@ fim
 servico RetryService
   escutar ProcessamentoFalhou
     se tentativa < 3
-      Console.log("Tentativa " + tentativa + " falhou. Reagendando...")
+      Console.escrever("Tentativa " + tentativa + " falhou. Reagendando...")
       EventLoop.schedule(() ->
         reprocessar(operacaoId, tentativa + 1)
       , 5000)
     senao
-      Console.error("Operação falhou após 3 tentativas: " + operacaoId)
+      Console.erro("Operação falhou após 3 tentativas: " + operacaoId)
       emitir OperacaoAbortada(operacaoId, motivo)
     fim
   fim

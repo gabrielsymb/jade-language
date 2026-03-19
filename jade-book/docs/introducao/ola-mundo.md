@@ -8,7 +8,7 @@ Crie um arquivo `ola.jd` com o seguinte conteúdo:
 
 ```jd
 funcao principal()
-  Console.log("Olá, Mundo!")
+  Console.escrever("Olá, Mundo!")
 fim
 ```
 
@@ -23,7 +23,7 @@ jadec ola.jd --check
 
 ```jd
 funcao principal()   // declara uma função chamada "principal" sem parâmetros
-  Console.log("Olá, Mundo!")   // chama o método log do Console
+  Console.escrever("Olá, Mundo!")   // chama o método escrever do Console
 fim                  // toda declaração termina com "fim"
 ```
 
@@ -40,7 +40,7 @@ Vamos criar algo que demonstra os tipos básicos da linguagem:
 ```jd
 funcao apresentar(nome: texto, idade: numero)
   mensagem = "Olá, " + nome + "! Você tem " + idade + " anos."
-  Console.log(mensagem)
+  Console.escrever(mensagem)
 fim
 
 funcao calcularAnoNascimento(idade: numero) -> numero
@@ -50,7 +50,7 @@ fim
 funcao principal()
   apresentar("Ana", 28)
   ano = calcularAnoNascimento(28)
-  Console.log("Nasceu por volta de " + ano)
+  Console.escrever("Nasceu por volta de " + ano)
 fim
 ```
 
@@ -78,8 +78,8 @@ funcao principal()
   p.idade = 35
   p.ativo = verdadeiro
 
-  Console.log("Nome: " + p.nome)
-  Console.log("Idade: " + p.idade)
+  Console.escrever("Nome: " + p.nome)
+  Console.escrever("Idade: " + p.idade)
 fim
 ```
 

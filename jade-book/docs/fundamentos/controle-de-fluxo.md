@@ -8,7 +8,7 @@ Executa um bloco de código somente se uma condição for verdadeira.
 
 ```jd
 se estoque < 10
-  Console.log("Estoque baixo!")
+  Console.escrever("Estoque baixo!")
 fim
 ```
 
@@ -18,9 +18,9 @@ fim
 variavel estoque = 15
 
 se estoque == 0
-  Console.log("Produto esgotado")
+  Console.escrever("Produto esgotado")
 senao
-  Console.log("Disponível: " + estoque + " unidades")
+  Console.escrever("Disponível: " + estoque + " unidades")
 fim
 ```
 
@@ -31,11 +31,11 @@ variavel preco: decimal = 250.00
 variavel categoria = "eletronicos"
 
 se preco > 200 e categoria == "eletronicos"
-  Console.log("Produto premium de eletrônicos")
+  Console.escrever("Produto premium de eletrônicos")
 fim
 
 se preco < 50 ou categoria == "promocao"
-  Console.log("Produto acessível")
+  Console.escrever("Produto acessível")
 fim
 ```
 
@@ -47,13 +47,13 @@ Use `senao se` para verificar múltiplas condições em sequência, sem aninhame
 variavel nota = 85
 
 se nota >= 90
-  Console.log("Excelente")
+  Console.escrever("Excelente")
 senao se nota >= 70
-  Console.log("Bom")
+  Console.escrever("Bom")
 senao se nota >= 50
-  Console.log("Regular")
+  Console.escrever("Regular")
 senao
-  Console.log("Insuficiente")
+  Console.escrever("Insuficiente")
 fim
 ```
 
@@ -97,7 +97,7 @@ Repete um bloco enquanto a condição for verdadeira.
 variavel contador = 1
 
 enquanto contador <= 5
-  Console.log("Contagem: " + contador)
+  Console.escrever("Contagem: " + contador)
   contador = contador + 1
 fim
 ```
@@ -122,14 +122,14 @@ enquanto nao conectado e tentativas < 3
   tentativas = tentativas + 1
 
   se nao conectado
-    Console.log("Tentativa " + tentativas + " falhou. Tentando novamente...")
+    Console.escrever("Tentativa " + tentativas + " falhou. Tentando novamente...")
   fim
 fim
 
 se conectado
-  Console.log("Conectado com sucesso!")
+  Console.escrever("Conectado com sucesso!")
 senao
-  Console.log("Não foi possível conectar após " + tentativas + " tentativas.")
+  Console.escrever("Não foi possível conectar após " + tentativas + " tentativas.")
 fim
 ```
 
@@ -138,7 +138,7 @@ Certifique-se de que a condição do `enquanto` eventualmente se tornará falsa.
 ```jd
 // PERIGO — loop infinito!
 enquanto verdadeiro
-  Console.log("isso nunca para")
+  Console.escrever("isso nunca para")
 fim
 ```
 :::
@@ -154,7 +154,7 @@ nomes.adicionar("Bruno")
 nomes.adicionar("Carlos")
 
 para nome em nomes
-  Console.log("Olá, " + nome + "!")
+  Console.escrever("Olá, " + nome + "!")
 fim
 ```
 
@@ -170,7 +170,7 @@ Olá, Carlos!
 ```jd
 funcao listarProdutos(produtos: lista<Produto>)
   para produto em produtos
-    Console.log(produto.nome + " — R$ " + produto.preco)
+    Console.escrever(produto.nome + " — R$ " + produto.preco)
   fim
 fim
 ```
@@ -215,11 +215,11 @@ funcao processarPedidos(pedidos: lista<Pedido>)
       processados = processados + 1
       emitir PedidoProcessado(pedido.id)
     senao
-      Console.log("Pedido " + pedido.id + " já processado — ignorando")
+      Console.escrever("Pedido " + pedido.id + " já processado — ignorando")
     fim
   fim
 
-  Console.log("Total processado: " + processados + " pedidos")
+  Console.escrever("Total processado: " + processados + " pedidos")
 fim
 ```
 
@@ -230,17 +230,17 @@ Use `retornar` sem valor para sair de uma função antes do fim:
 ```jd
 funcao processar(produto: Produto)
   se nao produto.ativo
-    Console.log("Produto inativo — ignorando")
+    Console.escrever("Produto inativo — ignorando")
     retornar
   fim
 
   se produto.estoque == 0
-    Console.log("Sem estoque — ignorando")
+    Console.escrever("Sem estoque — ignorando")
     retornar
   fim
 
   // Chega aqui somente se produto está ativo e tem estoque
-  Console.log("Processando " + produto.nome)
+  Console.escrever("Processando " + produto.nome)
 fim
 ```
 

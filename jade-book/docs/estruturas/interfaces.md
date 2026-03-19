@@ -17,21 +17,21 @@ fim
 ```jd
 classe ProdutoRepositorio implements Repositorio
   funcao salvar(entidade: objeto) -> booleano
-    EntityManager.save(entidade)
+    EntityManager.criar(entidade)
     retornar verdadeiro
   fim
 
   funcao buscar(id: id) -> objeto
-    retornar EntityManager.find(Produto, id)
+    retornar EntityManager.buscarPorId(Produto, id)
   fim
 
   funcao excluir(id: id) -> booleano
-    produto = EntityManager.find(Produto, id)
+    produto = EntityManager.buscarPorId(Produto, id)
     se nao produto
       retornar falso
     fim
     produto.ativo = falso
-    EntityManager.save(produto)
+    EntityManager.atualizar(produto)
     retornar verdadeiro
   fim
 fim
@@ -92,7 +92,7 @@ form.senha = "123"
 
 se nao form.validar()
   para erro em form.erros()
-    Console.log("Erro: " + erro)
+    Console.escrever("Erro: " + erro)
   fim
 fim
 ```

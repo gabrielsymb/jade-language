@@ -14,7 +14,7 @@ resultado = AuthService.login({
 Session.set("token", resultado.accessToken)
 Session.set("usuario", resultado.user)
 
-Console.log("Bem-vindo, " + resultado.user.nome)
+Console.escrever("Bem-vindo, " + resultado.user.nome)
 ```
 
 ## Verificar usuário logado
@@ -23,12 +23,12 @@ Console.log("Bem-vindo, " + resultado.user.nome)
 usuario = AuthService.getCurrentUser()
 
 se nao usuario
-  Console.log("Não autenticado. Redirecionando...")
+  Console.escrever("Não autenticado. Redirecionando...")
   redirecionarPara("/login")
   retornar
 fim
 
-Console.log("Logado como: " + usuario.nome)
+Console.escrever("Logado como: " + usuario.nome)
 ```
 
 ## Logout
@@ -67,7 +67,7 @@ servico ProdutoService
       erro "Sem permissão para excluir produtos"
     fim
 
-    produto = EntityManager.find(Produto, id)
+    produto = EntityManager.buscarPorId(Produto, id)
     produto.ativo = falso
     salvar produto
     emitir ProdutoExcluido(produto.id)
@@ -79,14 +79,14 @@ fim
 
 ```jd
 AuthService.changePassword("senhaAtual", "novaSenha")
-Console.log("Senha alterada com sucesso")
+Console.escrever("Senha alterada com sucesso")
 ```
 
 ## Recuperação de senha
 
 ```jd
 AuthService.resetPassword("usuario@email.com")
-Console.log("Email de recuperação enviado")
+Console.escrever("Email de recuperação enviado")
 ```
 
 ## Próximo passo

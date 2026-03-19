@@ -28,7 +28,7 @@ pedido = Pedido()
 pedido.status = StatusPedido.PENDENTE
 
 se pedido.status == StatusPedido.PENDENTE
-  Console.log("Pedido aguardando confirmação")
+  Console.escrever("Pedido aguardando confirmação")
 fim
 ```
 

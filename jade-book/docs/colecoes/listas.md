@@ -19,14 +19,14 @@ frutas.adicionar("Maçã")
 frutas.adicionar("Banana")
 frutas.adicionar("Uva")
 
-Console.log(frutas.tamanho())  // 3
+Console.escrever(frutas.tamanho())  // 3
 ```
 
 ## Iterando com `para/em`
 
 ```jd
 para fruta em frutas
-  Console.log(fruta)
+  Console.escrever(fruta)
 fim
 // Maçã
 // Banana
@@ -54,15 +54,15 @@ nums.adicionar(10)
 nums.adicionar(20)
 nums.adicionar(30)
 
-Console.log(nums.tamanho())     // 3
-Console.log(nums.contem(20))    // verdadeiro
-Console.log(nums.obter(0))      // 10
-Console.log(nums.primeiro())    // 10
-Console.log(nums.ultimo())      // 30
-Console.log(nums.vazia())       // falso
+Console.escrever(nums.tamanho())     // 3
+Console.escrever(nums.contem(20))    // verdadeiro
+Console.escrever(nums.obter(0))      // 10
+Console.escrever(nums.primeiro())    // 10
+Console.escrever(nums.ultimo())      // 30
+Console.escrever(nums.vazia())       // falso
 
 nums.remover(20)
-Console.log(nums.tamanho())     // 2
+Console.escrever(nums.tamanho())     // 2
 ```
 
 ## Lista de entidades
@@ -82,7 +82,7 @@ clientes.adicionar(c1)
 clientes.adicionar(c2)
 
 para cliente em clientes
-  Console.log(cliente.nome + " — " + cliente.email)
+  Console.escrever(cliente.nome + " — " + cliente.email)
 fim
 ```
 
@@ -156,7 +156,7 @@ permissoes.adicionar("produtos.criar")
 permissoes.adicionar("clientes.ver")
 
 se permissoes.contem("produtos.criar")
-  Console.log("Pode criar produtos")
+  Console.escrever("Pode criar produtos")
 fim
 ```
 

@@ -143,7 +143,7 @@ importar produtos.Produto
   servico PedidoService
     funcao criar(clienteId: id) -> Pedido
       // verifica se cliente existe
-      cliente = EntityManager.find(Cliente, clienteId)
+      cliente = EntityManager.buscarPorId(Cliente, clienteId)
       se nao cliente
         erro "Cliente não encontrado"
       fim
@@ -167,7 +167,7 @@ importar pedidos.PedidoService
 funcao principal()
   cliente = ClienteService.cadastrar("Ana Lima", "123.456.789-09", "ana@email.com")
   pedido = PedidoService.criar(cliente.id)
-  Console.log("Pedido " + pedido.id + " criado para " + cliente.nome)
+  Console.escrever("Pedido " + pedido.id + " criado para " + cliente.nome)
 fim
 ```
 

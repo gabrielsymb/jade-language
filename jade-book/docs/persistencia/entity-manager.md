@@ -4,37 +4,37 @@ O `EntityManager` é a API principal para operações de dados em JADE. Ele abst
 
 ## Referência completa
 
-### `find` — buscar por ID
+### `buscarPorId` — buscar por ID
 
 ```jd
-produto = EntityManager.find(Produto, produtoId)
+produto = EntityManager.buscarPorId(Produto, produtoId)
 
 se produto
-  Console.log("Encontrado: " + produto.nome)
+  Console.escrever("Encontrado: " + produto.nome)
 senao
-  Console.log("Não encontrado")
+  Console.escrever("Não encontrado")
 fim
 ```
 
-### `findAll` — buscar vários
+### `buscar` — buscar vários
 
 ```jd
 // Todos os registros
-todos = EntityManager.findAll(Produto)
+todos = EntityManager.buscar(Produto)
 
 // Com filtros
-ativos = EntityManager.findAll(Produto, {
+ativos = EntityManager.buscar(Produto, {
   onde: { ativo: verdadeiro }
 })
 
 // Com ordenação
-ordenados = EntityManager.findAll(Produto, {
+ordenados = EntityManager.buscar(Produto, {
   onde: { ativo: verdadeiro },
   ordenarPor: { nome: "asc" }
 })
 
 // Com limite e paginação
-pagina = EntityManager.findAll(Produto, {
+pagina = EntityManager.buscar(Produto, {
   onde: { categoria: "eletronicos" },
   ordenarPor: { preco: "desc" },
   limite: 10,
@@ -42,34 +42,34 @@ pagina = EntityManager.findAll(Produto, {
 })
 ```
 
-### `count` — contar registros
+### `contar` — contar registros
 
 ```jd
-total = EntityManager.count(Produto)
-ativos = EntityManager.count(Produto, { onde: { ativo: verdadeiro } })
-Console.log(ativos + " de " + total + " produtos ativos")
+total = EntityManager.contar(Produto)
+ativos = EntityManager.contar(Produto, { onde: { ativo: verdadeiro } })
+Console.escrever(ativos + " de " + total + " produtos ativos")
 ```
 
-### `save` — salvar (criar ou atualizar)
+### `criar` / `atualizar` — salvar registros
 
 ```jd
 // Criar novo
 p = Produto()
 p.nome = "Mouse"
 p.preco = 89.90
-EntityManager.save(p)  // equivale a: salvar p
+EntityManager.criar(p)  // equivale a: salvar p
 
 // Atualizar existente
-p = EntityManager.find(Produto, id)
+p = EntityManager.buscarPorId(Produto, id)
 p.preco = 99.90
-EntityManager.save(p)
+EntityManager.atualizar(p)
 ```
 
-### `delete` — excluir fisicamente
+### `remover` — excluir fisicamente
 
 ```jd
-produto = EntityManager.find(Produto, id)
-EntityManager.delete(produto)
+produto = EntityManager.buscarPorId(Produto, id)
+EntityManager.remover(produto)
 ```
 
 ::: warning Prefer soft delete
@@ -98,14 +98,14 @@ servico ClienteService
   fim
 
   funcao listar() -> lista<Cliente>
-    retornar EntityManager.findAll(Cliente, {
+    retornar EntityManager.buscar(Cliente, {
       onde: { ativo: verdadeiro },
       ordenarPor: { nome: "asc" }
     })
   fim
 
   funcao buscar(id: id) -> Cliente
-    c = EntityManager.find(Cliente, id)
+    c = EntityManager.buscarPorId(Cliente, id)
     se nao c
       erro "Cliente não encontrado"
     fim
@@ -132,9 +132,9 @@ fim
 
 ```jd
 funcao gerarResumoEstoque() -> texto
-  total = EntityManager.count(Produto)
-  ativos = EntityManager.count(Produto, { onde: { ativo: verdadeiro } })
-  semEstoque = EntityManager.count(Produto, { onde: { estoque: 0 } })
+  total = EntityManager.contar(Produto)
+  ativos = EntityManager.contar(Produto, { onde: { ativo: verdadeiro } })
+  semEstoque = EntityManager.contar(Produto, { onde: { estoque: 0 } })
 
   resumo = "=== ESTOQUE ===\n"
   resumo = resumo + "Total de produtos: " + total + "\n"
@@ -151,7 +151,7 @@ fim
 funcao listarPaginado(pagina: numero, tamPagina: numero) -> lista<Produto>
   offset = (pagina - 1) * tamPagina
 
-  retornar EntityManager.findAll(Produto, {
+  retornar EntityManager.buscar(Produto, {
     onde: { ativo: verdadeiro },
     ordenarPor: { nome: "asc" },
     limite: tamPagina,

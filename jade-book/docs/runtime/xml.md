@@ -26,8 +26,8 @@ Retorna um nó raiz navegável com as propriedades:
 
 ```jd
 doc = XML.parse(xmlTexto)
-Console.log(doc.tag)              // "produto"
-Console.log(doc.filhos.tamanho()) // 2
+Console.escrever(doc.tag)              // "produto"
+Console.escrever(doc.filhos.tamanho()) // 2
 ```
 
 ## Navegação
@@ -38,7 +38,7 @@ Busca o **primeiro** elemento com a tag informada (busca em profundidade).
 
 ```jd
 no = XML.buscar(doc, "nome")
-Console.log(no.texto)  // "Notebook"
+Console.escrever(no.texto)  // "Notebook"
 ```
 
 ### `XML.buscarTodos`
@@ -48,7 +48,7 @@ Busca **todos** os elementos com a tag informada.
 ```jd
 itens = XML.buscarTodos(doc, "item")
 para item em itens
-  Console.log(XML.texto(item, "descricao"))
+  Console.escrever(XML.texto(item, "descricao"))
 fim
 ```
 
@@ -110,17 +110,17 @@ servico FiscalService
   funcao importarNFe(xmlNFe: texto)
     nota = XML.parsarNFe(xmlNFe)
 
-    Console.log("=== NF-e Recebida ===")
-    Console.log("Número:    " + nota.numero + "/" + nota.serie)
-    Console.log("Emitente:  " + nota.nomeEmitente + " (" + nota.cnpjEmitente + ")")
-    Console.log("Destinat.: " + nota.nomeDestinatario)
-    Console.log("Emissão:   " + nota.dataEmissao)
-    Console.log("Total:     R$ " + nota.valorTotal)
-    Console.log("")
-    Console.log("Itens:")
+    Console.escrever("=== NF-e Recebida ===")
+    Console.escrever("Número:    " + nota.numero + "/" + nota.serie)
+    Console.escrever("Emitente:  " + nota.nomeEmitente + " (" + nota.cnpjEmitente + ")")
+    Console.escrever("Destinat.: " + nota.nomeDestinatario)
+    Console.escrever("Emissão:   " + nota.dataEmissao)
+    Console.escrever("Total:     R$ " + nota.valorTotal)
+    Console.escrever("")
+    Console.escrever("Itens:")
 
     para item em nota.itens
-      Console.log(
+      Console.escrever(
         "  " + item.descricao +
         " | Qtd: " + item.quantidade +
         " | Unit: R$ " + item.valorUnitario +
@@ -169,7 +169,7 @@ itens = XML.buscarTodos(doc, "item")
 para item em itens
   produto = XML.texto(item, "produto")
   qtd = XML.texto(item, "qtd")
-  Console.log(produto + " x" + qtd)
+  Console.escrever(produto + " x" + qtd)
 fim
 ```
 

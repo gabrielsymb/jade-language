@@ -56,7 +56,7 @@ variavel contador: numero = 0
 
 contador = contador + 1
 contador = contador + 1
-Console.log(contador)  // 2
+Console.escrever(contador)  // 2
 ```
 
 ## O tipo `texto`
@@ -166,7 +166,7 @@ Muito usado em condicionais:
 variavel logado = verdadeiro
 
 se logado
-  Console.log("Bem-vindo!")
+  Console.escrever("Bem-vindo!")
 fim
 ```
 

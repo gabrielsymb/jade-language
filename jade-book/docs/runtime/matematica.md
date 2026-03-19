@@ -19,7 +19,7 @@ vendas.adicionar(2300.00)
 vendas.adicionar(800.00)
 
 total = Matematica.soma(vendas)
-Console.log("Total: R$ " + total)  // R$ 4600.00
+Console.escrever("Total: R$ " + total)  // R$ 4600.00
 ```
 
 ### `media`
@@ -107,7 +107,7 @@ servico EstoqueService
     abc = Matematica.curvaABC(dados)
 
     para linha em abc
-      Console.log(
+      Console.escrever(
         linha.id + " | Classe " + linha.classe +
         " | " + linha.percentual + "% | Acum: " + linha.acumulado + "%"
       )
@@ -161,7 +161,7 @@ vendasSorvete: lista<numero> = lista()
 // ...
 
 corr = Matematica.correlacao(temperaturas, vendasSorvete)
-Console.log("Correlação: " + corr)
+Console.escrever("Correlação: " + corr)
 ```
 
 ### `mediaMóvel`
@@ -187,7 +187,7 @@ Retorna o crescimento percentual entre dois valores.
 
 ```jd
 crescimento = Matematica.taxaCrescimento(10000, 13500)
-Console.log("Crescimento: " + crescimento + "%")  // 35%
+Console.escrever("Crescimento: " + crescimento + "%")  // 35%
 ```
 
 ## Exemplo completo — relatório de vendas
@@ -195,13 +195,13 @@ Console.log("Crescimento: " + crescimento + "%")  // 35%
 ```jd
 servico RelatorioVendas
   funcao resumo(vendas: lista<decimal>)
-    Console.log("=== Relatório de Vendas ===")
-    Console.log("Total:         R$ " + Matematica.soma(vendas))
-    Console.log("Média:         R$ " + Matematica.arredondar(Matematica.media(vendas), 2))
-    Console.log("Mediana:       R$ " + Matematica.mediana(vendas))
-    Console.log("Desvio Padrão: R$ " + Matematica.arredondar(Matematica.desvioPadrao(vendas), 2))
-    Console.log("Menor venda:   R$ " + Matematica.minimo(vendas))
-    Console.log("Maior venda:   R$ " + Matematica.maximo(vendas))
+    Console.escrever("=== Relatório de Vendas ===")
+    Console.escrever("Total:         R$ " + Matematica.soma(vendas))
+    Console.escrever("Média:         R$ " + Matematica.arredondar(Matematica.media(vendas), 2))
+    Console.escrever("Mediana:       R$ " + Matematica.mediana(vendas))
+    Console.escrever("Desvio Padrão: R$ " + Matematica.arredondar(Matematica.desvioPadrao(vendas), 2))
+    Console.escrever("Menor venda:   R$ " + Matematica.minimo(vendas))
+    Console.escrever("Maior venda:   R$ " + Matematica.maximo(vendas))
   fim
 fim
 ```

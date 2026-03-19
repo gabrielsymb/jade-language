@@ -45,8 +45,8 @@ fim
 calc = Calculadora()
 calc.precisao = 2
 
-Console.log(calc.somar(10, 5))       // 15.0
-Console.log(calc.dividir(100, 4))    // 25.0
+Console.escrever(calc.somar(10, 5))       // 15.0
+Console.escrever(calc.dividir(100, 4))    // 25.0
 ```
 
 ## Herança com `extends`
@@ -62,12 +62,12 @@ classe Veiculo
 
   funcao acelerar(incremento: numero)
     velocidadeAtual = velocidadeAtual + incremento
-    Console.log("Velocidade: " + velocidadeAtual + " km/h")
+    Console.escrever("Velocidade: " + velocidadeAtual + " km/h")
   fim
 
   funcao frear()
     velocidadeAtual = 0
-    Console.log("Veículo parado")
+    Console.escrever("Veículo parado")
   fim
 
   funcao descricao() -> texto
@@ -80,7 +80,7 @@ classe Carro extends Veiculo
   combustivel: texto
 
   funcao abastecer(litros: decimal)
-    Console.log("Abastecendo " + litros + "L de " + combustivel)
+    Console.escrever("Abastecendo " + litros + "L de " + combustivel)
   fim
 fim
 
@@ -88,7 +88,7 @@ classe Moto extends Veiculo
   cilindradas: numero
 
   funcao empinar()
-    Console.log("Grau!")
+    Console.escrever("Grau!")
   fim
 fim
 ```
@@ -103,7 +103,7 @@ carro.ano = 2023
 carro.portas = 4
 carro.combustivel = "gasolina"
 
-Console.log(carro.descricao())  // "Toyota Corolla (2023)"
+Console.escrever(carro.descricao())  // "Toyota Corolla (2023)"
 carro.acelerar(60)               // "Velocidade: 60 km/h"
 carro.abastecer(40)             // "Abastecendo 40L de gasolina"
 ```
@@ -116,11 +116,11 @@ classe Animal
   peso: decimal
 
   funcao respirar()
-    Console.log(nome + " está respirando")
+    Console.escrever(nome + " está respirando")
   fim
 
   funcao emitirSom()
-    Console.log("...")
+    Console.escrever("...")
   fim
 fim
 
@@ -128,7 +128,7 @@ classe Mamifero extends Animal
   pelagem: texto
 
   funcao amamentar()
-    Console.log(nome + " está amamentando")
+    Console.escrever(nome + " está amamentando")
   fim
 fim
 
@@ -136,11 +136,11 @@ classe Cachorro extends Mamifero
   raca: texto
 
   funcao emitirSom()
-    Console.log(nome + " faz: Au au!")
+    Console.escrever(nome + " faz: Au au!")
   fim
 
   funcao buscar(objeto: texto)
-    Console.log(nome + " foi buscar o " + objeto)
+    Console.escrever(nome + " foi buscar o " + objeto)
   fim
 fim
 ```

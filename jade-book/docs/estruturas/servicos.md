@@ -18,7 +18,7 @@ servico ProdutoService
   fim
 
   funcao desativar(id: id)
-    p = EntityManager.find(Produto, id)
+    p = EntityManager.buscarPorId(Produto, id)
     p.ativo = falso
     salvar p
   fim
@@ -61,7 +61,7 @@ servico ClienteService
   fim
 
   funcao buscar(id: id) -> Cliente
-    cliente = EntityManager.find(Cliente, id)
+    cliente = EntityManager.buscarPorId(Cliente, id)
     se nao cliente
       erro "Cliente não encontrado"
     fim
@@ -69,11 +69,11 @@ servico ClienteService
   fim
 
   funcao listar() -> lista<Cliente>
-    retornar EntityManager.findAll(Cliente)
+    retornar EntityManager.buscar(Cliente)
   fim
 
   funcao listarAtivos() -> lista<Cliente>
-    retornar EntityManager.findAll(Cliente, {
+    retornar EntityManager.buscar(Cliente, {
       onde: { ativo: verdadeiro },
       ordenarPor: { nome: "asc" }
     })
@@ -103,7 +103,7 @@ Serviços podem **emitir** eventos para avisar outros serviços sobre o que acon
 ```jd
 servico EstoqueService
   funcao entrada(produtoId: id, quantidade: numero, observacao: texto)
-    produto = EntityManager.find(Produto, produtoId)
+    produto = EntityManager.buscarPorId(Produto, produtoId)
 
     produto.estoque = produto.estoque + quantidade
     salvar produto
@@ -120,10 +120,10 @@ servico EstoqueService
   fim
 
   funcao saida(produtoId: id, quantidade: numero) -> booleano
-    produto = EntityManager.find(Produto, produtoId)
+    produto = EntityManager.buscarPorId(Produto, produtoId)
 
     se produto.estoque < quantidade
-      Console.log("Estoque insuficiente")
+      Console.escrever("Estoque insuficiente")
       retornar falso
     fim
 
@@ -146,7 +146,7 @@ Use `escutar` para reagir a eventos emitidos por outros serviços:
 ```jd
 servico NotificacaoService
   escutar EstoqueBaixo
-    Console.warn("⚠️ Estoque baixo: produto " + produtoId)
+    Console.avisar("⚠️ Estoque baixo: produto " + produtoId)
     enviarAlertaEmail(produtoId, quantidade)
   fim
 
@@ -169,9 +169,9 @@ fim
 ```jd
 servico PedidoService
   funcao fechar(pedidoId: id)
-    pedido = EntityManager.find(Pedido, pedidoId)
+    pedido = EntityManager.buscarPorId(Pedido, pedidoId)
 
-    itens = EntityManager.findAll(ItemPedido, {
+    itens = EntityManager.buscar(ItemPedido, {
       onde: { pedidoId: pedidoId }
     })
 
@@ -201,7 +201,7 @@ servico FinanceiroService
     total: decimal = 0
 
     para item em itens
-      produto = EntityManager.find(Produto, item.produtoId)
+      produto = EntityManager.buscarPorId(Produto, item.produtoId)
 
       se nao produto ou nao produto.ativo
         erro "Produto inválido: " + item.produtoId
@@ -231,7 +231,7 @@ servico FinanceiroService
   fim
 
   funcao gerarFatura(pedido: Pedido) -> texto
-    cliente = EntityManager.find(Cliente, pedido.clienteId)
+    cliente = EntityManager.buscarPorId(Cliente, pedido.clienteId)
 
     fatura = "=== FATURA ===\n"
     fatura = fatura + "Pedido: " + pedido.id + "\n"

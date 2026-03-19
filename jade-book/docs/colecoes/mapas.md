@@ -19,15 +19,15 @@ config.definir("ambiente", "producao")
 config.definir("versao", "1.0.0")
 config.definir("idioma", "pt-BR")
 
-Console.log(config.obter("ambiente"))  // "producao"
-Console.log(config.obter("versao"))    // "1.0.0"
+Console.escrever(config.obter("ambiente"))  // "producao"
+Console.escrever(config.obter("versao"))    // "1.0.0"
 ```
 
 ## Verificando existência
 
 ```jd
 se config.contem("ambiente")
-  Console.log("Ambiente configurado: " + config.obter("ambiente"))
+  Console.escrever("Ambiente configurado: " + config.obter("ambiente"))
 fim
 ```
 
@@ -85,7 +85,7 @@ variavel cache: mapa<texto, texto> = mapa()
 
 funcao buscarComCache(chave: texto) -> texto
   se cache.contem(chave)
-    Console.log("Cache hit: " + chave)
+    Console.escrever("Cache hit: " + chave)
     retornar cache.obter(chave)
   fim
 

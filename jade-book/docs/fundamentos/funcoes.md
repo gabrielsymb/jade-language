@@ -22,10 +22,10 @@ Anatomia:
 
 ```jd
 resultado = somar(10, 5)
-Console.log(resultado)  // 15
+Console.escrever(resultado)  // 15
 
 // Ou diretamente
-Console.log(somar(3, 7))  // 10
+Console.escrever(somar(3, 7))  // 10
 ```
 
 ## Funções sem retorno
@@ -34,7 +34,7 @@ Se a função não retorna nada, omita o `->`:
 
 ```jd
 funcao registrarLog(mensagem: texto)
-  Console.log("[LOG] " + mensagem)
+  Console.escrever("[LOG] " + mensagem)
 fim
 
 registrarLog("Sistema iniciado")
@@ -45,7 +45,7 @@ registrarLog("Sistema iniciado")
 
 ```jd
 funcao saudacao()
-  Console.log("Bem-vindo ao sistema!")
+  Console.escrever("Bem-vindo ao sistema!")
 fim
 
 saudacao()
@@ -69,10 +69,10 @@ Em funções sem retorno, `retornar` sozinho encerra a execução:
 ```jd
 funcao processar(valor: numero)
   se valor < 0
-    Console.log("Valor negativo — ignorado")
+    Console.escrever("Valor negativo — ignorado")
     retornar
   fim
-  Console.log("Processando: " + valor)
+  Console.escrever("Processando: " + valor)
 fim
 ```
 
@@ -85,7 +85,7 @@ funcao criarMensagem(nome: texto, saudacao: texto, pontuacao: texto) -> texto
   retornar saudacao + ", " + nome + pontuacao
 fim
 
-Console.log(criarMensagem("Maria", "Olá", "!"))  // "Olá, Maria!"
+Console.escrever(criarMensagem("Maria", "Olá", "!"))  // "Olá, Maria!"
 ```
 
 ### Parâmetros do tipo entidade
@@ -94,9 +94,9 @@ Você pode passar entidades como parâmetros:
 
 ```jd
 funcao exibirProduto(produto: Produto)
-  Console.log("Nome: " + produto.nome)
-  Console.log("Preço: R$ " + produto.preco)
-  Console.log("Estoque: " + produto.estoque)
+  Console.escrever("Nome: " + produto.nome)
+  Console.escrever("Preço: R$ " + produto.preco)
+  Console.escrever("Estoque: " + produto.estoque)
 fim
 ```
 
@@ -128,7 +128,7 @@ funcao criarProduto(nome: texto, preco: decimal) -> Produto
 fim
 
 notebook = criarProduto("Notebook", 3500.00)
-Console.log(notebook.nome)  // "Notebook"
+Console.escrever(notebook.nome)  // "Notebook"
 ```
 
 ## Retornando listas
@@ -151,7 +151,7 @@ Use `erro` para interromper a execução quando algo deu errado:
 
 ```jd
 funcao buscarCliente(id: id) -> Cliente
-  cliente = EntityManager.find(Cliente, id)
+  cliente = EntityManager.buscarPorId(Cliente, id)
 
   se nao cliente
     erro "Cliente não encontrado: " + id
@@ -189,7 +189,7 @@ servico ProdutoService
   fim
 
   funcao desativar(id: id)
-    p = EntityManager.find(Produto, id)
+    p = EntityManager.buscarPorId(Produto, id)
     p.ativo = falso
     salvar p
     emitir ProdutoDesativado(p.id)

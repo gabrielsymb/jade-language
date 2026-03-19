@@ -13,10 +13,10 @@
 variavel a = 10
 variavel b = 3
 
-Console.log(a + b)  // 13
-Console.log(a - b)  // 7
-Console.log(a * b)  // 30
-Console.log(a / b)  // 3
+Console.escrever(a + b)  // 13
+Console.escrever(a - b)  // 7
+Console.escrever(a * b)  // 30
+Console.escrever(a / b)  // 3
 ```
 
 ::: tip Divisão com decimais
@@ -24,7 +24,7 @@ Para divisão com casas decimais, use variáveis do tipo `decimal`:
 ```jd
 variavel a: decimal = 10.0
 variavel b: decimal = 3.0
-Console.log(a / b)  // 3.3333...
+Console.escrever(a / b)  // 3.3333...
 ```
 :::
 
@@ -35,7 +35,7 @@ O operador `+` com texto faz concatenação:
 ```jd
 variavel produto = "Notebook"
 variavel modelo = "Pro"
-Console.log(produto + " " + modelo)  // "Notebook Pro"
+Console.escrever(produto + " " + modelo)  // "Notebook Pro"
 ```
 
 ## Operadores de comparação
@@ -55,11 +55,11 @@ Sempre retornam `booleano`:
 variavel estoque = 5
 
 se estoque < 10
-  Console.log("Estoque baixo!")
+  Console.escrever("Estoque baixo!")
 fim
 
 se estoque == 0
-  Console.log("Sem estoque!")
+  Console.escrever("Sem estoque!")
 fim
 ```
 
@@ -78,17 +78,17 @@ variavel bloqueado = falso
 
 // e — ambos devem ser verdadeiros
 se ativo e aprovado
-  Console.log("Acesso liberado")
+  Console.escrever("Acesso liberado")
 fim
 
 // ou — pelo menos um verdadeiro
 se ativo ou aprovado
-  Console.log("Alguma condição atendida")
+  Console.escrever("Alguma condição atendida")
 fim
 
 // nao — inverte
 se nao bloqueado
-  Console.log("Não está bloqueado")
+  Console.escrever("Não está bloqueado")
 fim
 ```
 
@@ -100,7 +100,7 @@ variavel temCadastro = verdadeiro
 variavel bloqueado = falso
 
 se (idade >= 18 e temCadastro) e nao bloqueado
-  Console.log("Pode prosseguir")
+  Console.escrever("Pode prosseguir")
 fim
 ```
 
@@ -119,16 +119,16 @@ produto = Produto()
 produto.nome = "Caneta"
 produto.preco = 2.50
 
-Console.log(produto.nome)   // "Caneta"
-Console.log(produto.preco)  // 2.5
+Console.escrever(produto.nome)   // "Caneta"
+Console.escrever(produto.preco)  // 2.5
 ```
 
 Também usado para chamadas de métodos:
 
 ```jd
 variavel frase = "  olá mundo  "
-Console.log(frase.aparar())     // "olá mundo"
-Console.log(frase.maiusculo())  // "  OLÁ MUNDO  "
+Console.escrever(frase.aparar())     // "olá mundo"
+Console.escrever(frase.maiusculo())  // "  OLÁ MUNDO  "
 ```
 
 ## Operador de tipo de retorno (`->`)

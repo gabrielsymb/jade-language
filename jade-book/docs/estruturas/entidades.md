@@ -59,10 +59,10 @@ produto.ativo = verdadeiro
 ## Lendo campos
 
 ```jd
-Console.log(produto.nome)      // "Notebook Dell"
-Console.log(produto.preco)     // 3499.9
-Console.log(produto.estoque)   // 15
-Console.log(produto.ativo)     // verdadeiro
+Console.escrever(produto.nome)      // "Notebook Dell"
+Console.escrever(produto.preco)     // 3499.9
+Console.escrever(produto.estoque)   // 15
+Console.escrever(produto.ativo)     // verdadeiro
 ```
 
 ## Modificando campos
@@ -95,10 +95,10 @@ funcao criarCliente(nome: texto, email: texto) -> Cliente
 fim
 
 funcao exibirCliente(cliente: Cliente)
-  Console.log("=== Cliente ===")
-  Console.log("Nome:  " + cliente.nome)
-  Console.log("Email: " + cliente.email)
-  Console.log("Ativo: " + cliente.ativo)
+  Console.escrever("=== Cliente ===")
+  Console.escrever("Nome:  " + cliente.nome)
+  Console.escrever("Email: " + cliente.email)
+  Console.escrever("Ativo: " + cliente.ativo)
 fim
 ```
 
@@ -125,7 +125,7 @@ fim
 ```
 
 ::: tip Relacionamentos em JADE
-JADE usa a convenção `entidadeId` para campos de referência. Isso é intencional — você armazena o ID, não o objeto inteiro. Para buscar o objeto relacionado, use `EntityManager.find`.
+JADE usa a convenção `entidadeId` para campos de referência. Isso é intencional — você armazena o ID, não o objeto inteiro. Para buscar o objeto relacionado, use `EntityManager.buscarPorId`.
 :::
 
 ## Passando entidades para funções
@@ -141,7 +141,7 @@ notebook.nome = "Notebook"
 notebook.preco = 3000.00
 
 notebook = aplicarDesconto(notebook, 0.10)
-Console.log(notebook.preco)  // 2700.0
+Console.escrever(notebook.preco)  // 2700.0
 ```
 
 ## Lista de entidades
@@ -150,7 +150,7 @@ Console.log(notebook.preco)  // 2700.0
 funcao listarProdutosAtivos(produtos: lista<Produto>)
   para produto em produtos
     se produto.ativo
-      Console.log(produto.nome + " — R$ " + produto.preco)
+      Console.escrever(produto.nome + " — R$ " + produto.preco)
     fim
   fim
 fim

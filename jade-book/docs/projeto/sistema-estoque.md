@@ -146,7 +146,7 @@ servico UsuarioService
   fim
 
   funcao autenticar(email: texto, senha: texto) -> booleano
-    usuarios = EntityManager.findAll(Usuario, {
+    usuarios = EntityManager.buscar(Usuario, {
       onde: { email: email, ativo: verdadeiro }
     })
 
@@ -203,7 +203,7 @@ servico ProdutoService
   fim
 
   funcao buscar(id: id) -> Produto
-    p = EntityManager.find(Produto, id)
+    p = EntityManager.buscarPorId(Produto, id)
     se nao p
       erro "Produto não encontrado"
     fim
@@ -211,7 +211,7 @@ servico ProdutoService
   fim
 
   funcao listar() -> lista<Produto>
-    retornar EntityManager.findAll(Produto, {
+    retornar EntityManager.buscar(Produto, {
       onde: { ativo: verdadeiro },
       ordenarPor: { nome: "asc" }
     })
@@ -272,7 +272,7 @@ servico EstoqueService
     produto = ProdutoService.buscar(produtoId)
 
     se produto.estoque < quantidade
-      Console.warn("Estoque insuficiente para saída de " + quantidade + " unidades")
+      Console.avisar("Estoque insuficiente para saída de " + quantidade + " unidades")
       retornar falso
     fim
 
@@ -299,7 +299,7 @@ servico EstoqueService
   fim
 
   funcao historico(produtoId: id) -> lista<MovimentoEstoque>
-    retornar EntityManager.findAll(MovimentoEstoque, {
+    retornar EntityManager.buscar(MovimentoEstoque, {
       onde: { produtoId: produtoId },
       ordenarPor: { realizadoEm: "desc" }
     })
@@ -329,7 +329,7 @@ fim
 servico RelatorioService
   funcao resumoEstoque() -> texto
     produtos = ProdutoService.listar()
-    total = EntityManager.count(Produto, { onde: { ativo: verdadeiro } })
+    total = EntityManager.contar(Produto, { onde: { ativo: verdadeiro } })
     criticos = ProdutoService.buscarAbaixoMinimo()
 
     resumo = "=== RESUMO DO ESTOQUE ===\n"
@@ -349,7 +349,7 @@ servico RelatorioService
   fim
 
   funcao movimentacoesHoje() -> lista<MovimentoEstoque>
-    retornar EntityManager.findAll(MovimentoEstoque, {
+    retornar EntityManager.buscar(MovimentoEstoque, {
       onde: { realizadoEm: DateTime.today() },
       ordenarPor: { realizadoEm: "desc" }
     })
@@ -364,16 +364,16 @@ servico AlertaService
   escutar EstoqueBaixo
     msg = "⚠️ Estoque baixo: " + nomeProduto
       + " (" + estoqueAtual + "/" + estoqueMinimo + ")"
-    Console.warn(msg)
+    Console.avisar(msg)
     // Aqui você pode chamar HttpClient para enviar para Slack, email, etc.
   fim
 
   escutar EstoqueZerado
-    Console.error("🚨 ESTOQUE ZERADO: " + nomeProduto)
+    Console.erro("🚨 ESTOQUE ZERADO: " + nomeProduto)
   fim
 
   escutar ProdutoCadastrado
-    Console.log("✓ Produto cadastrado: " + nome + " (SKU: " + sku + ")")
+    Console.escrever("✓ Produto cadastrado: " + nome + " (SKU: " + sku + ")")
   fim
 fim
 
@@ -442,7 +442,7 @@ fim
 
 ```jd
 funcao demonstracao()
-  Console.log("=== Sistema de Estoque JADE ===\n")
+  Console.escrever("=== Sistema de Estoque JADE ===\n")
 
   // 1. Criar categorias
   eletronicos = Categoria()
@@ -488,10 +488,10 @@ funcao demonstracao()
   EstoqueService.saida(mouse.id, 43, "Venda lote")
 
   // 6. Ver relatório
-  Console.log(RelatorioService.resumoEstoque())
+  Console.escrever(RelatorioService.resumoEstoque())
 
   movs = RelatorioService.movimentacoesHoje()
-  Console.log("Movimentações hoje: " + movs.tamanho())
+  Console.escrever("Movimentações hoje: " + movs.tamanho())
 fim
 ```
 

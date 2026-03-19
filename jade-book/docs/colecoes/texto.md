@@ -7,10 +7,10 @@ O tipo `texto` tem uma biblioteca completa de métodos — incluindo utilitário
 ```jd
 variavel frase = "  Olá, Mundo!  "
 
-Console.log(frase.tamanho())      // 15
-Console.log(frase.aparar())       // "Olá, Mundo!"
-Console.log(frase.maiusculo())    // "  OLÁ, MUNDO!  "
-Console.log(frase.minusculo())    // "  olá, mundo!  "
+Console.escrever(frase.tamanho())      // 15
+Console.escrever(frase.aparar())       // "Olá, Mundo!"
+Console.escrever(frase.maiusculo())    // "  OLÁ, MUNDO!  "
+Console.escrever(frase.minusculo())    // "  olá, mundo!  "
 ```
 
 ## Busca e verificação
@@ -18,10 +18,10 @@ Console.log(frase.minusculo())    // "  olá, mundo!  "
 ```jd
 variavel email = "usuario@empresa.com.br"
 
-Console.log(email.contem("@"))              // verdadeiro
-Console.log(email.comecaCom("usuario"))     // verdadeiro
-Console.log(email.terminaCom(".br"))        // verdadeiro
-Console.log(email.tamanho())               // 22
+Console.escrever(email.contem("@"))              // verdadeiro
+Console.escrever(email.comecaCom("usuario"))     // verdadeiro
+Console.escrever(email.terminaCom(".br"))        // verdadeiro
+Console.escrever(email.tamanho())               // 22
 ```
 
 ## Transformação
@@ -31,14 +31,14 @@ variavel url = "meu produto bonito"
 
 // Substituir espaços por hífen (slug de URL)
 slug = url.substituir(" ", "-").minusculo()
-Console.log(slug)  // "meu-produto-bonito"
+Console.escrever(slug)  // "meu-produto-bonito"
 
 // Dividir em partes
 variavel csv = "Ana,Bruno,Carlos,Diana"
 nomes = csv.dividir(",")
 
 para nome em nomes
-  Console.log(nome)
+  Console.escrever(nome)
 fim
 // Ana
 // Bruno
@@ -63,10 +63,10 @@ variavel cnpj = "12.345.678/0001-95"
 variavel cep = "01310100"
 variavel telefone = "11987654321"
 
-Console.log(cpf.validarCPF())          // booleano
-Console.log(cnpj.validarCNPJ())        // booleano
-Console.log(cep.formatarCEP())         // "01310-100"
-Console.log(telefone.formatarTelefone()) // "(11) 98765-4321"
+Console.escrever(cpf.validarCPF())          // booleano
+Console.escrever(cnpj.validarCNPJ())        // booleano
+Console.escrever(cep.formatarCEP())         // "01310-100"
+Console.escrever(telefone.formatarTelefone()) // "(11) 98765-4321"
 ```
 
 ### Usando em validação de formulário

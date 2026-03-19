@@ -43,23 +43,23 @@ salvar produto
 ### Buscar por ID
 
 ```jd
-produto = EntityManager.find(Produto, produtoId)
+produto = EntityManager.buscarPorId(Produto, produtoId)
 
 se nao produto
-  Console.log("Produto não encontrado")
+  Console.escrever("Produto não encontrado")
 fim
 ```
 
 ### Buscar todos
 
 ```jd
-todos = EntityManager.findAll(Produto)
+todos = EntityManager.buscar(Produto)
 ```
 
 ### Buscar com filtros
 
 ```jd
-ativos = EntityManager.findAll(Produto, {
+ativos = EntityManager.buscar(Produto, {
   onde: { ativo: verdadeiro },
   ordenarPor: { nome: "asc" },
   limite: 20
@@ -69,14 +69,14 @@ ativos = EntityManager.findAll(Produto, {
 ### Contar
 
 ```jd
-total = EntityManager.count(Produto)
-Console.log("Total de produtos: " + total)
+total = EntityManager.contar(Produto)
+Console.escrever("Total de produtos: " + total)
 ```
 
 ## Atualizando dados
 
 ```jd
-produto = EntityManager.find(Produto, id)
+produto = EntityManager.buscarPorId(Produto, id)
 produto.preco = 4000.00
 salvar produto
 ```
@@ -86,7 +86,7 @@ salvar produto
 Em JADE, a exclusão é sempre **lógica** — o registro é desativado, não apagado:
 
 ```jd
-produto = EntityManager.find(Produto, id)
+produto = EntityManager.buscarPorId(Produto, id)
 produto.ativo = falso
 salvar produto
 ```
@@ -94,7 +94,7 @@ salvar produto
 Para exclusão física (use com cuidado):
 
 ```jd
-EntityManager.delete(produto)
+EntityManager.remover(produto)
 ```
 
 ## Controle de versão automático

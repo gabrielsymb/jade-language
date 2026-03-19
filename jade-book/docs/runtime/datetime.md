@@ -77,7 +77,7 @@ fim
 
 ```jd
 funcao pedidosDoPeriodo(inicio: data, fim: data) -> lista<Pedido>
-  retornar EntityManager.findAll(Pedido, {
+  retornar EntityManager.buscar(Pedido, {
     onde: {
       dataPedido_gte: inicio,
       dataPedido_lte: fim

@@ -28,6 +28,14 @@ export class ConsoleAPI {
     return [...this.history];
   }
 
+  // ── Métodos em português (API pública JADE) ──────────────────
+  escrever(...args: any[]): void  { this.log('info', ...args); }
+  avisar(...args: any[]): void    { this.log('warn', ...args); }
+  erro(...args: any[]): void      { this.log('error', ...args); }
+  informar(...args: any[]): void  { this.log('info', ...args); }
+  depurar(...args: any[]): void   { this.log('debug', ...args); }
+
+  // ── Aliases em inglês (uso interno / interop) ─────────────────
   debug(...args: any[]): void { this.log('debug', ...args); }
   info(...args: any[]): void  { this.log('info', ...args); }
   warn(...args: any[]): void  { this.log('warn', ...args); }
@@ -65,6 +73,18 @@ export class ConsoleAPI {
     consoleFn(`[JADE ${level.toUpperCase()}] ${indent}${prefix}${message}`);
   }
 
+  // ── Métodos de visualização (português) ──────────────────────
+  tabela(dados: any[]): void { this.table(dados); }
+  grupo(rotulo?: string): void { this.group(rotulo); }
+  fimGrupo(): void { this.groupEnd(); }
+  tempo(rotulo: string = 'padrão'): void { this.time(rotulo); }
+  fimTempo(rotulo: string = 'padrão'): number { return this.timeEnd(rotulo); }
+  contar(rotulo: string = 'padrão'): number { return this.count(rotulo); }
+  resetarContador(rotulo: string = 'padrão'): void { this.countReset(rotulo); }
+  afirmar(condicao: boolean, mensagem?: string): void { this.assert(condicao, mensagem); }
+  limpar(): void { this.clear(); }
+
+  // ── Aliases em inglês (interop) ──────────────────────────────
   table(data: any[]): void {
     console.table(data);
   }

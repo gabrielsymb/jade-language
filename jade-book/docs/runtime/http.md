@@ -8,9 +8,9 @@ O JADE oferece `HttpClient` para fazer requisições HTTP e `WebSocketClient` pa
 
 ```jd
 dados = HttpClient.get("https://viacep.com.br/ws/01310100/json/")
-Console.log(dados.logradouro)
-Console.log(dados.bairro)
-Console.log(dados.cidade)
+Console.escrever(dados.logradouro)
+Console.escrever(dados.bairro)
+Console.escrever(dados.cidade)
 ```
 
 ### POST — enviar dados
@@ -22,7 +22,7 @@ resposta = HttpClient.post("https://api.meuservico.com/pedidos", {
   total: valorTotal
 })
 
-Console.log("Pedido criado: " + resposta.id)
+Console.escrever("Pedido criado: " + resposta.id)
 ```
 
 ### Com autenticação
@@ -70,25 +70,25 @@ ws = WebSocketClient()
 ws.connect("wss://api.meuservico.com/realtime")
 
 ws.on("open", () ->
-  Console.log("Conexão estabelecida")
+  Console.escrever("Conexão estabelecida")
   ws.send({ tipo: "subscribe", canal: "pedidos" })
 )
 
 ws.on("message", (msg) ->
   se msg.tipo == "novo_pedido"
-    Console.log("Novo pedido recebido: " + msg.pedidoId)
+    Console.escrever("Novo pedido recebido: " + msg.pedidoId)
     atualizarLista()
   fim
 
   se msg.tipo == "estoque_atualizado"
-    produto = EntityManager.find(Produto, msg.produtoId)
+    produto = EntityManager.buscarPorId(Produto, msg.produtoId)
     produto.estoque = msg.novoEstoque
     salvar produto
   fim
 )
 
 ws.on("close", () ->
-  Console.log("Conexão encerrada. Tentando reconectar...")
+  Console.escrever("Conexão encerrada. Tentando reconectar...")
   EventLoop.schedule(() -> reconectar(), 5000)
 )
 ```

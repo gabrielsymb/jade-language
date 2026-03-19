@@ -122,7 +122,7 @@ fim
 servico ProdutoService
   funcao excluir(produtoId: id)
     usuario = AuthService.getCurrentUser()
-    produto = EntityManager.find(Produto, produtoId)
+    produto = EntityManager.buscarPorId(Produto, produtoId)
     produto.ativo = falso
     salvar produto
 
@@ -154,7 +154,7 @@ fim
 
 servico PedidoService
   funcao avancarStatus(pedidoId: id)
-    pedido = EntityManager.find(Pedido, pedidoId)
+    pedido = EntityManager.buscarPorId(Pedido, pedidoId)
 
     se pedido.status == StatusPedido.RASCUNHO
       pedido.status = StatusPedido.PENDENTE
@@ -178,7 +178,7 @@ servico PedidoService
   fim
 
   funcao cancelar(pedidoId: id)
-    pedido = EntityManager.find(Pedido, pedidoId)
+    pedido = EntityManager.buscarPorId(Pedido, pedidoId)
 
     se pedido.status == StatusPedido.ENTREGUE
       erro "Pedido entregue não pode ser cancelado"
@@ -218,8 +218,8 @@ fim
 // Qualquer serviço pode solicitar notificação sem saber como funciona
 servico PedidoService
   funcao confirmar(pedidoId: id)
-    pedido = EntityManager.find(Pedido, pedidoId)
-    cliente = EntityManager.find(Cliente, pedido.clienteId)
+    pedido = EntityManager.buscarPorId(Pedido, pedidoId)
+    cliente = EntityManager.buscarPorId(Cliente, pedido.clienteId)
 
     pedido.status = StatusPedido.CONFIRMADO
     salvar pedido
