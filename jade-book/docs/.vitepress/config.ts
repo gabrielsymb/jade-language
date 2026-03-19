@@ -87,6 +87,8 @@ export default defineConfig({
         text: '💡 Padrões e Boas Práticas',
         items: [
           { text: 'Padrões de Design', link: '/padroes/design' },
+          { text: 'Formatter', link: '/padroes/formatter' },
+          { text: 'Linter', link: '/padroes/linter' },
           { text: 'Erros Comuns', link: '/padroes/erros-comuns' },
         ],
       },

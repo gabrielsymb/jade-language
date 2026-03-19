@@ -236,4 +236,4 @@ fim
 
 ## Próximo passo
 
-→ [Erros Comuns](/padroes/erros-comuns)
+→ [Formatter — Formatação Automática](/padroes/formatter)

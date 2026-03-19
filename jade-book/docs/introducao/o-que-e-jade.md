@@ -13,12 +13,9 @@ Pense em como você descreveria um sistema de estoque para um colega:
 Em JADE, isso se escreve assim:
 
 ```jd
-regra reposicaoAutomatica
-  quando produto.estoque < 10
-  entao
-    emitir EstoqueBaixo(produto.id, produto.estoque)
-    gerarPedidoCompra(produto, 50)
-  fim
+regra reposicaoAutomatica quando produto.estoque < 10 entao
+  emitir EstoqueBaixo(produto.id, produto.estoque)
+  gerarPedidoCompra(produto, 50)
 fim
 ```
 
@@ -61,7 +58,7 @@ JADE foi feita para:
 
 - Não é uma linguagem de uso geral como Python ou Java
 - Não substitui JavaScript no frontend para tudo — é para lógica de negócio
-- Não tem LSP completo ainda (autocomplete avançado e refatoração vêm na v0.2.0)
+- Não substitui uma IDE com refatoração avançada — autocomplete semântico e rename vêm na v0.2.0
 
 ## Um exemplo rápido
 

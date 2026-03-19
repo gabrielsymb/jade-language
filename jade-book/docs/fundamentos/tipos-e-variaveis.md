@@ -8,7 +8,8 @@ JADE é uma linguagem de **tipagem estática** — todo valor tem um tipo conhec
 |------|-----------|---------|
 | `texto` | Sequência de caracteres (string) | `"João da Silva"` |
 | `numero` | Número inteiro | `42`, `-10`, `0` |
-| `decimal` | Número com casas decimais | `3.14`, `99.90` |
+| `decimal` | Número com casas decimais (ponto flutuante) | `3.14`, `99.90` |
+| `moeda` | Valor monetário sem erro de arredondamento | `49.90`, `1000.00` |
 | `booleano` | Verdadeiro ou falso | `verdadeiro`, `falso` |
 | `data` | Data no formato AAAA-MM-DD | `2024-03-15` |
 | `hora` | Hora no formato HH:MM | `14:30` |
@@ -97,9 +98,10 @@ variavel temperatura = -5
 variavel zero = 0
 ```
 
-::: tip Quando usar `numero` vs `decimal`
+::: tip Quando usar `numero` vs `decimal` vs `moeda`
 - `numero` para contagens, quantidades inteiras, idades, anos
-- `decimal` para preços, percentuais, medidas com casas decimais
+- `decimal` para percentuais, medidas, coordenadas com casas decimais
+- `moeda` para preços, totais, saldos — evita erros de arredondamento
 :::
 
 ## O tipo `decimal`
@@ -113,11 +115,41 @@ variavel temperatura = 36.8
 ```
 
 ::: warning Cuidado com arredondamento
-`decimal` usa ponto flutuante de 64 bits. Para cálculos financeiros críticos, sempre arredonde o resultado final:
+`decimal` usa ponto flutuante de 64 bits. Para cálculos financeiros, use `moeda` em vez de `decimal`:
 ```jd
-variavel valor = 0.1 + 0.2   // pode ser 0.30000000000000004
+variavel valor = 0.1 + 0.2   // pode ser 0.30000000000000004 com decimal
+variavel preco: moeda = 0.10  // seguro, sem erro de arredondamento
 ```
 :::
+
+## O tipo `moeda`
+
+Para valores monetários (preços, totais, descontos). Internamente opera em centavos inteiros, então **não tem o problema de `0.1 + 0.2`**:
+
+```jd
+entidade Produto
+  id: id
+  nome: texto
+  preco: moeda
+fim
+
+funcao calcularTotal(preco: moeda, qtd: numero) -> moeda
+  retornar preco * qtd
+fim
+
+funcao aplicarDesconto(preco: moeda, desconto: moeda) -> moeda
+  retornar preco - desconto
+fim
+```
+
+::: tip Quando usar `moeda` vs `decimal`
+- `moeda` para preços, totais, saldos, valores financeiros
+- `decimal` para percentuais, coordenadas geográficas, medidas científicas
+:::
+
+Operações suportadas com `moeda`:
+- Aritméticas: `moeda + moeda`, `moeda - moeda`, `moeda * numero`, `moeda / numero`
+- Comparações: `moeda < moeda`, `moeda == moeda`, etc.
 
 ## O tipo `booleano`
 
@@ -209,7 +241,7 @@ variavel idade = 25
 variavel preco: decimal = 99.90
 
 // Tipos disponíveis
-// texto, numero, decimal, booleano, data, hora, id
+// texto, numero, decimal, moeda, booleano, data, hora, id
 // lista<T>, mapa<K,V>, objeto
 ```
 

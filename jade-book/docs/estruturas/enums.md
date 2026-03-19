@@ -151,12 +151,9 @@ entidade Ticket
   status: StatusTicket
 fim
 
-regra escalarUrgentes
-  quando ticket.prioridade == Prioridade.CRITICA e ticket.diasAberto > 1
-  entao
-    emitir TicketCriticoSemAtendimento(ticket.id)
-    notificarDiretoria(ticket.id)
-  fim
+regra escalarUrgentes quando ticket.prioridade == Prioridade.CRITICA e ticket.diasAberto > 1 entao
+  emitir TicketCriticoSemAtendimento(ticket.id)
+  notificarDiretoria(ticket.id)
 fim
 ```
 

@@ -5,12 +5,9 @@ As **regras** são uma forma declarativa de expressar condições do negócio. E
 ## Declarando uma regra
 
 ```jd
-regra reposicaoAutomatica
-  quando produto.estoque < 10
-  entao
-    gerarPedidoCompra(produto, 50)
-    emitir EstoqueBaixo(produto.id, produto.estoque)
-  fim
+regra reposicaoAutomatica quando produto.estoque < 10 entao
+  gerarPedidoCompra(produto, 50)
+  emitir EstoqueBaixo(produto.id, produto.estoque)
 fim
 ```
 
@@ -18,7 +15,7 @@ Anatomia:
 - `regra` — palavra-chave
 - `reposicaoAutomatica` — nome da regra
 - `quando <condição>` — condição que dispara a regra
-- `entao` — o que fazer quando a condição for verdadeira
+- `entao` — separa a condição do bloco de ação
 - `fim` — encerra a regra
 
 ## Regra com alternativa
@@ -26,15 +23,12 @@ Anatomia:
 Use `senao` para o que fazer quando a condição **não** for atendida:
 
 ```jd
-regra classificacaoCliente
-  quando cliente.totalCompras > 10000
-  entao
-    cliente.categoria = "Premium"
-    aplicarDescontoPermanente(cliente, 0.10)
-    emitir ClienteUpgradeado(cliente.id, "Premium")
-  senao
-    cliente.categoria = "Standard"
-  fim
+regra classificacaoCliente quando cliente.totalCompras > 10000 entao
+  cliente.categoria = "Premium"
+  aplicarDescontoPermanente(cliente, 0.10)
+  emitir ClienteUpgradeado(cliente.id, "Premium")
+senao
+  cliente.categoria = "Standard"
 fim
 ```
 
@@ -61,12 +55,9 @@ funcao processar(pedido: Pedido)
 fim
 
 // Como 'regra' — melhor para políticas gerais
-regra aprovacaoObrigatoria
-  quando pedido.valorTotal > 10000
-  entao
-    pedido.requerAprovacao = verdadeiro
-    emitir AprovacaoNecessaria(pedido.id, pedido.valorTotal)
-  fim
+regra aprovacaoObrigatoria quando pedido.valorTotal > 10000 entao
+  pedido.requerAprovacao = verdadeiro
+  emitir AprovacaoNecessaria(pedido.id, pedido.valorTotal)
 fim
 ```
 
@@ -75,38 +66,29 @@ fim
 ### Política de desconto
 
 ```jd
-regra descontoProgressivo
-  quando pedido.valorTotal >= 500 e pedido.valorTotal < 1000
-  entao
-    pedido.desconto = pedido.valorTotal * 0.05
-    pedido.valorFinal = pedido.valorTotal - pedido.desconto
-  fim
+regra descontoProgressivo quando pedido.valorTotal >= 500 e pedido.valorTotal < 1000 entao
+  pedido.desconto = pedido.valorTotal * 0.05
+  pedido.valorFinal = pedido.valorTotal - pedido.desconto
 fim
 
-regra descontoVIP
-  quando pedido.valorTotal >= 1000 e cliente.categoria == "Premium"
-  entao
-    pedido.desconto = pedido.valorTotal * 0.15
-    pedido.valorFinal = pedido.valorTotal - pedido.desconto
-    emitir DescontoVIPAplicado(pedido.id, pedido.desconto)
-  fim
+regra descontoVIP quando pedido.valorTotal >= 1000 e cliente.categoria == "Premium" entao
+  pedido.desconto = pedido.valorTotal * 0.15
+  pedido.valorFinal = pedido.valorTotal - pedido.desconto
+  emitir DescontoVIPAplicado(pedido.id, pedido.desconto)
 fim
 ```
 
 ### Controle de crédito
 
 ```jd
-regra limiteCredito
-  quando cliente.debitoAberto > cliente.limiteCredito
-  entao
-    cliente.bloqueado = verdadeiro
-    emitir ClienteBloqueado(cliente.id, cliente.debitoAberto)
-    Console.warn("Cliente bloqueado por limite de crédito: " + cliente.nome)
-  senao
-    se cliente.bloqueado e cliente.debitoAberto == 0
-      cliente.bloqueado = falso
-      emitir ClienteDesbloqueado(cliente.id)
-    fim
+regra limiteCredito quando cliente.debitoAberto > cliente.limiteCredito entao
+  cliente.bloqueado = verdadeiro
+  emitir ClienteBloqueado(cliente.id, cliente.debitoAberto)
+  Console.warn("Cliente bloqueado por limite de crédito: " + cliente.nome)
+senao
+  se cliente.bloqueado e cliente.debitoAberto == 0
+    cliente.bloqueado = falso
+    emitir ClienteDesbloqueado(cliente.id)
   fim
 fim
 ```
@@ -114,42 +96,35 @@ fim
 ### SLA e prazos
 
 ```jd
-regra slaAtendimento
-  quando ticket.status == "aberto" e ticket.diasAberto > 2
-  entao
-    ticket.prioridade = "urgente"
-    emitir TicketSLAViolado(ticket.id, ticket.diasAberto)
-    escalarParaGerencia(ticket.id)
-  fim
+regra slaAtendimento quando ticket.status == "aberto" e ticket.diasAberto > 2 entao
+  ticket.prioridade = "urgente"
+  emitir TicketSLAViolado(ticket.id, ticket.diasAberto)
+  escalarParaGerencia(ticket.id)
 fim
 ```
 
 ### Validade de promoção
 
 ```jd
-regra promocaoExpirada
-  quando promocao.dataFim < DateTime.today() e promocao.ativa == verdadeiro
-  entao
-    promocao.ativa = falso
-    salvar promocao
-    emitir PromocaoEncerrada(promocao.id)
-    Console.log("Promoção encerrada: " + promocao.nome)
-  fim
+regra promocaoExpirada quando promocao.dataFim < DateTime.today() e promocao.ativa == verdadeiro entao
+  promocao.ativa = falso
+  salvar promocao
+  emitir PromocaoEncerrada(promocao.id)
+  Console.log("Promoção encerrada: " + promocao.nome)
 fim
 ```
 
 ## Regras com condições compostas
 
+Condições longas podem ser quebradas em várias linhas — o parser as trata como uma expressão contínua:
+
 ```jd
-regra alertaRiscoFraude
-  quando transacao.valor > 5000
+regra alertaRiscoFraude quando transacao.valor > 5000
     e transacao.hora > 23
-    e cliente.historicoPagamentos == "irregular"
-  entao
-    transacao.status = "suspeita"
-    emitir TransacaoSuspeita(transacao.id, cliente.id, transacao.valor)
-    notificarEquipeSeguranca(transacao.id)
-  fim
+    e cliente.historicoPagamentos == "irregular" entao
+  transacao.status = "suspeita"
+  emitir TransacaoSuspeita(transacao.id, cliente.id, transacao.valor)
+  notificarEquipeSeguranca(transacao.id)
 fim
 ```
 
@@ -160,33 +135,24 @@ Para sistemas maiores, agrupe regras relacionadas:
 ```jd
 // arquivo: regras-estoque.jd
 
-regra reposicaoAutomatica
-  quando produto.estoque < produto.estoqueMinimo
-  entao
-    gerarOrdemCompra(produto.id, produto.estoqueMinimo * 2)
-    emitir EstoqueCritico(produto.id)
-  fim
+regra reposicaoAutomatica quando produto.estoque < produto.estoqueMinimo entao
+  gerarOrdemCompra(produto.id, produto.estoqueMinimo * 2)
+  emitir EstoqueCritico(produto.id)
 fim
 
-regra excedenteDesnecessario
-  quando produto.estoque > produto.estoqueMáximo
-  entao
-    produto.emPromocao = verdadeiro
-    produto.desconto = 0.20
-    emitir PromocaoSugerida(produto.id)
-  fim
+regra excedenteDesnecessario quando produto.estoque > produto.estoqueMaximo entao
+  produto.emPromocao = verdadeiro
+  produto.desconto = 0.20
+  emitir PromocaoSugerida(produto.id)
 fim
 
 // arquivo: regras-financeiro.jd
 
-regra faturaVencida
-  quando fatura.vencimento < DateTime.today() e fatura.status == "pendente"
-  entao
-    fatura.status = "vencida"
-    fatura.multa = fatura.valor * 0.02
-    salvar fatura
-    emitir FaturaVencida(fatura.id, fatura.clienteId, fatura.valor)
-  fim
+regra faturaVencida quando fatura.vencimento < DateTime.today() e fatura.status == "pendente" entao
+  fatura.status = "vencida"
+  fatura.multa = fatura.valor * 0.02
+  salvar fatura
+  emitir FaturaVencida(fatura.id, fatura.clienteId, fatura.valor)
 fim
 ```
 

@@ -422,25 +422,19 @@ fim
 ## Passo 4 — Regras de negócio
 
 ```jd
-regra reposicaoAutomatica
-  quando produto.estoque < produto.estoqueMinimo e produto.ativo == verdadeiro
-  entao
-    emitir EstoqueBaixo(
-      produto.id,
-      produto.nome,
-      produto.estoque,
-      produto.estoqueMinimo
-    )
-  fim
+regra reposicaoAutomatica quando produto.estoque < produto.estoqueMinimo e produto.ativo == verdadeiro entao
+  emitir EstoqueBaixo(
+    produto.id,
+    produto.nome,
+    produto.estoque,
+    produto.estoqueMinimo
+  )
 fim
 
-regra bloqueioVendaEstoqueZero
-  quando produto.estoque == 0
-  entao
-    produto.disponivelParaVenda = falso
-    salvar produto
-    emitir EstoqueZerado(produto.id, produto.nome)
-  fim
+regra bloqueioVendaEstoqueZero quando produto.estoque == 0 entao
+  produto.disponivelParaVenda = falso
+  salvar produto
+  emitir EstoqueZerado(produto.id, produto.nome)
 fim
 ```
 

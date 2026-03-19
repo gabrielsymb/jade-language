@@ -42,11 +42,13 @@ produto.nome = "Caneta"
 
 ### Importar tudo do módulo
 
+::: warning Wildcard bloqueado
+`importar estoque.*` é rejeitado pelo compilador. Importações wildcard dificultam rastrear de onde cada símbolo vem. Prefira importações explícitas:
 ```jd
-importar estoque.*
+importar estoque.Produto
+importar estoque.EstoqueService
 ```
-
-Importa todos os elementos públicos de `estoque`.
+:::
 
 ### Importar com alias
 

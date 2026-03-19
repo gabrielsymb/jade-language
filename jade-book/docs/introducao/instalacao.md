@@ -21,7 +21,7 @@ Verifique a instalação:
 
 ```bash
 jadec --version
-# jadec 0.1.1
+# jadec 0.1.3
 ```
 
 ## 2. Instale a extensão VS Code
@@ -89,8 +89,15 @@ A partir da v0.1.2, o compilador resolve importações entre arquivos `.jd` auto
 | `jadec programa.jd -o saida` | Define prefixo dos arquivos de saída |
 | `jadec programa.jd --check` | Só verifica erros, não gera arquivos |
 | `jadec programa.jd --wat-only` | Gera apenas o texto WAT, sem o binário |
+| `jadec programa.jd --format` | Formata o código e imprime no terminal |
+| `jadec programa.jd --format-write` | Formata e sobrescreve o arquivo |
+| `jadec programa.jd --lint` | Analisa o código e exibe avisos de estilo |
 | `jadec --help` | Mostra ajuda |
 | `jadec --version` | Mostra a versão |
+
+::: tip VS Code integrado
+O formatter e o linter também funcionam automaticamente no VS Code com a extensão JADE instalada. O formatter é executado ao salvar; os avisos do linter aparecem como sublinhados amarelos no editor.
+:::
 
 ## Próximo passo
 
