@@ -46,6 +46,22 @@ lista, mapa, objeto, verdadeiro, falso, e, ou, nao
 3. `se` não usa `entao` — sintaxe: `se <expr> <bloco> fim`
 4. `parseTipo` para genéricos usa `TokenType.MENOR` e `TokenType.MAIOR`
 
+## Elementos de tela (DSL 100% português)
+
+```
+tabela, formulario, botao, cartao, modal, grafico
+```
+
+Termos em inglês são bloqueados em tempo de compilação com erro educativo:
+`card→cartao`, `click→clique`, `submit→enviar`, `button→botao`, `table→tabela`, `form→formulario`, `chart→grafico`
+
+Regras semânticas obrigatórias:
+- `botao` exige `acao:` ou `clique:` (referência a função declarada)
+- `tabela` e `grafico` exigem `entidade: NomeDaEntidade`
+- `formulario` exige `entidade: NomeDaEntidade`
+- `grafico.tipo` restrito a: `linha | barras | pizza`
+- `acao:`, `clique:`, `enviar:` devem referenciar funções declaradas no escopo
+
 ## Rodar testes
 
 ```bash

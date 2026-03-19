@@ -280,7 +280,7 @@ export interface TelaNode extends Node {
 
 export interface TelaElementoNode extends Node {
   kind: 'TelaElemento';
-  tipo: string; // 'tabela' | 'formulario' | 'botao' | 'card'
+  tipo: string; // 'tabela' | 'formulario' | 'botao' | 'cartao' | 'modal' | 'grafico'
   nome: string;
   propriedades: { chave: string; valor: string | string[] }[];
 }

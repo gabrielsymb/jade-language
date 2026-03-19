@@ -74,8 +74,8 @@ const DICAS_PARSER: Record<string, string> = {
     "Informe o título da tela entre aspas logo após o nome: `tela ListaProdutos \"Lista de Produtos\"`",
   "Esperado 'fim' para fechar tela":
     "Todo bloco 'tela' precisa terminar com 'fim'",
-  "Esperado tipo do elemento (tabela, formulario, botao, card)":
-    "Use um dos tipos de elemento: tabela, formulario, botao, card, modal ou grafico",
+  "Esperado tipo do elemento (tabela, formulario, botao, cartao)":
+    "Use um dos tipos de elemento: tabela, formulario, botao, cartao, modal ou grafico",
   "Esperado nome do elemento":
     "Dê um nome ao elemento da tela, ex: `tabela listagem`",
   "Esperado nome da propriedade":
@@ -517,7 +517,7 @@ export class Parser {
   }
 
   private parseTelaElemento(): N.TelaElementoNode {
-    const tipoToken = this.consume(TokenType.IDENTIFICADOR, "Esperado tipo do elemento (tabela, formulario, botao, card)");
+    const tipoToken = this.consume(TokenType.IDENTIFICADOR, "Esperado tipo do elemento (tabela, formulario, botao, cartao)");
     const tipo = tipoToken.value;
     const nomeToken = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do elemento");
     const nome = nomeToken.value;

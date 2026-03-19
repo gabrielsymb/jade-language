@@ -761,3 +761,284 @@ fim`);
     expect(r.sucesso).toBe(true);
   });
 });
+
+// ── UI — Padronização DSL (100% português) ────────────────────────────────────
+
+describe('UI — bloqueio de termos em inglês', () => {
+  it('rejeita elemento "card" com dica para usar "cartao"', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  card ResumoVendas
+    titulo: "Resumo"
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('cartao'))).toBe(true);
+  });
+
+  it('rejeita elemento "table" com dica para usar "tabela"', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  table ListaItens
+    titulo: "Itens"
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('tabela'))).toBe(true);
+  });
+
+  it('rejeita elemento "form" com dica para usar "formulario"', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  form CadastroForm
+    titulo: "Cadastro"
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('formulario'))).toBe(true);
+  });
+
+  it('rejeita elemento "button" com dica para usar "botao"', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  button Salvar
+    titulo: "Salvar"
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('botao'))).toBe(true);
+  });
+
+  it('rejeita elemento "chart" com dica para usar "grafico"', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  chart GraficoVendas
+    titulo: "Vendas"
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('grafico'))).toBe(true);
+  });
+
+  it('rejeita propriedade "click" com dica para usar "clique"', () => {
+    const r = analisarCodigo(`
+funcao salvar()
+fim
+
+tela Dashboard "Painel"
+  botao Salvar
+    click: salvar
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('clique'))).toBe(true);
+  });
+
+  it('rejeita propriedade "submit" com dica para usar "enviar"', () => {
+    const r = analisarCodigo(`
+funcao salvar()
+fim
+
+entidade Produto
+  id: id
+  nome: texto
+fim
+
+tela Dashboard "Painel"
+  formulario FormProduto
+    entidade: Produto
+    submit: salvar
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('enviar'))).toBe(true);
+  });
+});
+
+describe('UI — botao exige acao ou clique', () => {
+  it('rejeita botao sem acao: nem clique:', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  botao Salvar
+    titulo: "Salvar"
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) =>
+      e.mensagem.toLowerCase().includes('botao') || e.mensagem.toLowerCase().includes('acao')
+    )).toBe(true);
+  });
+
+  it('aceita botao com acao: apontando para função declarada', () => {
+    const r = analisarCodigo(`
+funcao salvarDados()
+fim
+
+tela Dashboard "Painel"
+  botao Salvar
+    titulo: "Salvar"
+    acao: salvarDados
+  fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('aceita botao com clique: apontando para função declarada', () => {
+    const r = analisarCodigo(`
+funcao confirmar()
+fim
+
+tela Dashboard "Painel"
+  botao Confirmar
+    titulo: "Confirmar"
+    clique: confirmar
+  fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('rejeita botao com acao: apontando para função inexistente', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  botao Salvar
+    titulo: "Salvar"
+    acao: funcaoInexistente
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('funcaoInexistente'))).toBe(true);
+  });
+});
+
+describe('UI — grafico.tipo restrito a linha|barras|pizza', () => {
+  it('aceita grafico com tipo linha', () => {
+    const r = analisarCodigo(`
+entidade Venda
+  id: id
+  valor: decimal
+fim
+
+tela Dashboard "Painel"
+  grafico GraficoVendas
+    entidade: Venda
+    tipo: linha
+  fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('aceita grafico com tipo barras', () => {
+    const r = analisarCodigo(`
+entidade Venda
+  id: id
+  valor: decimal
+fim
+
+tela Dashboard "Painel"
+  grafico GraficoVendas
+    entidade: Venda
+    tipo: barras
+  fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('aceita grafico com tipo pizza', () => {
+    const r = analisarCodigo(`
+entidade Venda
+  id: id
+  valor: decimal
+fim
+
+tela Dashboard "Painel"
+  grafico GraficoVendas
+    entidade: Venda
+    tipo: pizza
+  fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('rejeita grafico com tipo inválido "bar"', () => {
+    const r = analisarCodigo(`
+entidade Venda
+  id: id
+  valor: decimal
+fim
+
+tela Dashboard "Painel"
+  grafico GraficoVendas
+    entidade: Venda
+    tipo: bar
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('bar'))).toBe(true);
+  });
+
+  it('rejeita grafico com tipo inválido "pie"', () => {
+    const r = analisarCodigo(`
+entidade Venda
+  id: id
+  valor: decimal
+fim
+
+tela Dashboard "Painel"
+  grafico GraficoVendas
+    entidade: Venda
+    tipo: pie
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('pie'))).toBe(true);
+  });
+});
+
+describe('UI — formulario exige entidade', () => {
+  it('rejeita formulario sem entidade:', () => {
+    const r = analisarCodigo(`
+tela Dashboard "Painel"
+  formulario CadastroForm
+    titulo: "Cadastro"
+  fim
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) =>
+      e.mensagem.toLowerCase().includes('formulario') || e.mensagem.toLowerCase().includes('entidade')
+    )).toBe(true);
+  });
+
+  it('aceita formulario com entidade declarada', () => {
+    const r = analisarCodigo(`
+entidade Produto
+  id: id
+  nome: texto
+fim
+
+tela Dashboard "Painel"
+  formulario FormProduto
+    entidade: Produto
+  fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('aceita formulario com enviar: apontando para função declarada', () => {
+    const r = analisarCodigo(`
+entidade Produto
+  id: id
+  nome: texto
+fim
+
+funcao salvarProduto()
+fim
+
+tela Dashboard "Painel"
+  formulario FormProduto
+    entidade: Produto
+    enviar: salvarProduto
+  fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+});

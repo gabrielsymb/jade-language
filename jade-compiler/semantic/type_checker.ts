@@ -1186,64 +1186,148 @@ export class TypeChecker {
   }
 
   private verificarTela(node: N.TelaNode): void {
-    const tiposElementosValidos = ['tabela', 'formulario', 'botao', 'card', 'modal', 'grafico'];
+    // Tipos válidos em português — sem termos em inglês expostos na DSL
+    const tiposElementosValidos = ['tabela', 'formulario', 'botao', 'cartao', 'modal', 'grafico'];
+    // Tipos válidos para grafico.tipo
+    const tiposGrafico = ['linha', 'barras', 'pizza'];
+    // Propriedades que referenciam ações (devem ser funções declaradas)
+    const propriedadesAcao = ['acao', 'clique', 'enviar'];
+    // Termos em inglês bloqueados com dica educativa
+    const termosIngleses: Record<string, string> = {
+      'card': 'cartao',
+      'click': 'clique',
+      'submit': 'enviar',
+      'button': 'botao',
+      'table': 'tabela',
+      'form': 'formulario',
+      'chart': 'grafico',
+    };
 
     for (const elem of node.elementos) {
-      if (!tiposElementosValidos.includes(elem.tipo)) {
+      // Bloqueia termos em inglês com erro educativo
+      if (termosIngleses[elem.tipo]) {
         this.erro(
-          `Tipo de elemento '${elem.tipo}' inválido. Use: tabela, formulario, botao ou card`,
-          elem.line,
-          elem.column,
-          "Tipos válidos de elementos de tela: tabela, formulario, botao, card, modal ou grafico"
+          `Termo '${elem.tipo}' não é válido na DSL JADE — use '${termosIngleses[elem.tipo]}' (português)`,
+          elem.line, elem.column,
+          `Substitua '${elem.tipo}' por '${termosIngleses[elem.tipo]}' — JADE usa português em toda a API pública`
         );
         continue;
       }
 
-      // grafico requer propriedade 'entidade'
-      if (elem.tipo === 'grafico') {
-        const temEntidade = elem.propriedades.some(p => p.chave === 'entidade');
-        if (!temEntidade) {
+      if (!tiposElementosValidos.includes(elem.tipo)) {
+        this.erro(
+          `Tipo de elemento '${elem.tipo}' inválido. Use: tabela, formulario, botao, cartao, modal ou grafico`,
+          elem.line, elem.column,
+          "Tipos válidos de elementos de tela: tabela, formulario, botao, cartao, modal, grafico"
+        );
+        continue;
+      }
+
+      // ── Validar propriedades com termos em inglês ────────────
+      for (const prop of elem.propriedades) {
+        if (termosIngleses[prop.chave]) {
           this.erro(
-            `Elemento grafico '${elem.nome}' deve declarar a propriedade 'entidade' com a fonte de dados`,
-            elem.line,
-            elem.column,
-            "Informe a entidade de dados: entidade: NomeDaEntidade"
+            `Propriedade '${prop.chave}' não é válida — use '${termosIngleses[prop.chave]}' (português)`,
+            elem.line, elem.column,
+            `Substitua '${prop.chave}:' por '${termosIngleses[prop.chave]}:' — JADE usa português em toda a DSL`
           );
         }
       }
 
-      // Valida referência de entidade declarada na propriedade 'entidade:'
+      // ── Validar entidade ──────────────────────────────────────
       const propEntidade = elem.propriedades.find(p => p.chave === 'entidade');
+      let nomeEntidade: string | null = null;
+
       if (propEntidade && typeof propEntidade.valor === 'string') {
-        const nomeEntidade = propEntidade.valor;
+        nomeEntidade = propEntidade.valor;
         const simbolo = this.tabela.buscar(nomeEntidade);
         if (!simbolo || simbolo.kind !== 'entidade') {
           this.erro(
             `Entidade '${nomeEntidade}' não declarada ou não encontrada`,
-            elem.line,
-            elem.column,
+            elem.line, elem.column,
             `Declare a entidade antes de usá-la: entidade ${nomeEntidade} ... fim`
           );
-        } else {
-          // Valida campos referenciados na propriedade 'campos:'
-          const propCampos = elem.propriedades.find(p => p.chave === 'campos');
-          if (propCampos) {
-            const listaCampos = Array.isArray(propCampos.valor)
-              ? propCampos.valor
-              : [propCampos.valor];
+          nomeEntidade = null; // evita cascata de erros de campo
+        }
+      }
 
-            for (const nomeCampo of listaCampos) {
-              const tipoCampo = this.tabela.buscarCampo(nomeEntidade, nomeCampo);
-              if (tipoCampo === null) {
-                this.erro(
-                  `Campo '${nomeCampo}' não existe na entidade '${nomeEntidade}'`,
-                  elem.line,
-                  elem.column,
-                  `Verifique os campos disponíveis na entidade '${nomeEntidade}' e corrija o nome`
-                );
-              }
+      // tabela e grafico exigem entidade (compile-time)
+      if ((elem.tipo === 'tabela' || elem.tipo === 'grafico') && !propEntidade) {
+        this.erro(
+          `Elemento '${elem.tipo}' '${elem.nome}' deve declarar 'entidade: NomeDaEntidade'`,
+          elem.line, elem.column,
+          `Informe a fonte de dados: entidade: NomeDaEntidade`
+        );
+      }
+
+      // formulario exige entidade
+      if (elem.tipo === 'formulario' && !propEntidade) {
+        this.erro(
+          `Formulário '${elem.nome}' deve declarar 'entidade: NomeDaEntidade' com o tipo de dado a editar`,
+          elem.line, elem.column,
+          `Informe a entidade: entidade: NomeDaEntidade`
+        );
+      }
+
+      // ── Validar campos (somente se entidade conhecida) ────────
+      if (nomeEntidade) {
+        const propCampos = elem.propriedades.find(p => p.chave === 'campos');
+        if (propCampos) {
+          const listaCampos = Array.isArray(propCampos.valor) ? propCampos.valor : [propCampos.valor];
+          for (const nomeCampo of listaCampos) {
+            const tipoCampo = this.tabela.buscarCampo(nomeEntidade, nomeCampo);
+            if (tipoCampo === null) {
+              this.erro(
+                `Campo '${nomeCampo}' não existe na entidade '${nomeEntidade}'`,
+                elem.line, elem.column,
+                `Verifique os campos disponíveis na entidade '${nomeEntidade}' e corrija o nome`
+              );
             }
           }
+        }
+      }
+
+      // ── Validar tipo de gráfico ───────────────────────────────
+      if (elem.tipo === 'grafico') {
+        const propTipo = elem.propriedades.find(p => p.chave === 'tipo');
+        if (propTipo && typeof propTipo.valor === 'string') {
+          if (!tiposGrafico.includes(propTipo.valor)) {
+            this.erro(
+              `Tipo de gráfico '${propTipo.valor}' inválido. Use: linha, barras ou pizza`,
+              elem.line, elem.column,
+              `Tipos válidos: linha (gráfico de linha), barras (gráfico de barras), pizza (gráfico de pizza)`
+            );
+          }
+        }
+      }
+
+      // ── Validar ações tipadas (acao:, clique:, enviar:) ───────
+      for (const prop of elem.propriedades) {
+        if (propriedadesAcao.includes(prop.chave) && typeof prop.valor === 'string') {
+          // Suporte a 'salvar' e 'salvar()' — strip dos parênteses
+          const nomeFuncao = prop.valor.replace(/\(\)$/, '');
+          if (nomeFuncao) {
+            const simboloFuncao = this.tabela.buscar(nomeFuncao);
+            if (!simboloFuncao || simboloFuncao.kind !== 'funcao') {
+              this.erro(
+                `Ação '${nomeFuncao}' não encontrada ou não é uma função`,
+                elem.line, elem.column,
+                `Declare a função antes de referenciar: funcao ${nomeFuncao}(...) ... fim`
+              );
+            }
+          }
+        }
+      }
+
+      // ── botao exige acao: ou clique: ─────────────────────────
+      if (elem.tipo === 'botao') {
+        const temAcao = elem.propriedades.some(p => p.chave === 'acao' || p.chave === 'clique');
+        if (!temAcao) {
+          this.erro(
+            `Botão '${elem.nome}' deve declarar uma ação com 'acao: nomeFuncao' ou 'clique: nomeFuncao'`,
+            elem.line, elem.column,
+            `Adicione a ação do botão: acao: nomeFuncao`
+          );
         }
       }
     }

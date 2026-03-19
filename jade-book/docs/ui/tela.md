@@ -17,9 +17,20 @@ fim
 | `tabela`     | Exibe registros em grade com filtros            |
 | `formulario` | Formulário para criar ou editar registros       |
 | `botao`      | Ação clicável                                   |
-| `card`       | Exibe informações resumidas de um registro      |
+| `cartao`     | Exibe informações resumidas de um registro      |
 | `modal`      | Diálogo de confirmação ou exibição de conteúdo  |
 | `grafico`    | Gráfico de dados (linhas, barras, pizza)        |
+
+::: tip DSL 100% em português
+JADE bloqueia termos em inglês em tempo de compilação. Use sempre os nomes em português:
+- `card` → **`cartao`**
+- `click` → **`clique`**
+- `submit` → **`enviar`**
+- `button` → **`botao`**
+- `table` → **`tabela`**
+- `form` → **`formulario`**
+- `chart` → **`grafico`**
+:::
 
 ---
 
@@ -47,11 +58,24 @@ fim
 
 **Propriedades da tabela:**
 
-| Propriedade  | Tipo              | Descrição                               |
-|--------------|-------------------|-----------------------------------------|
-| `entidade`   | nome da entidade  | Qual entidade popular na tabela         |
-| `colunas`    | lista de campos   | Quais campos exibir como colunas        |
-| `filtravel`  | `verdadeiro/falso`| Mostrar campo de busca acima da tabela  |
+| Propriedade  | Tipo              | Obrigatório | Descrição                               |
+|--------------|-------------------|-------------|-----------------------------------------|
+| `entidade`   | nome da entidade  | ✅ sim       | Qual entidade popular na tabela         |
+| `colunas`    | lista de campos   | não         | Quais campos exibir como colunas        |
+| `filtravel`  | `verdadeiro/falso`| não         | Mostrar campo de busca acima da tabela  |
+
+::: warning Entidade obrigatória
+O compilador exige `entidade:` em tabelas. Sem ela, o código não compila:
+```jd
+// ❌ ERRO — tabela sem entidade
+tela Dashboard "Painel"
+  tabela MinhaTabela
+    filtravel: verdadeiro
+  fim
+fim
+// Erro: Elemento 'tabela' 'MinhaTabela' deve declarar 'entidade: NomeDaEntidade'
+```
+:::
 
 ---
 
@@ -60,20 +84,26 @@ fim
 Gera um formulário completo ligado a uma entidade:
 
 ```jd
+funcao salvarProduto()
+  // lógica de salvamento
+fim
+
 tela CadastroProduto "Novo Produto"
   formulario FormProduto
     entidade: Produto
     campos: nome, preco, estoque
+    enviar: salvarProduto
   fim
 fim
 ```
 
 **Propriedades do formulário:**
 
-| Propriedade | Tipo             | Descrição                        |
-|-------------|------------------|----------------------------------|
-| `entidade`  | nome da entidade | Qual entidade o formulário edita |
-| `campos`    | lista de campos  | Campos que aparecem no form      |
+| Propriedade | Tipo             | Obrigatório | Descrição                        |
+|-------------|------------------|-------------|----------------------------------|
+| `entidade`  | nome da entidade | ✅ sim       | Qual entidade o formulário edita |
+| `campos`    | lista de campos  | não         | Campos que aparecem no form      |
+| `enviar`    | nome de função   | não         | Função chamada ao submeter       |
 
 ---
 
@@ -82,47 +112,77 @@ fim
 Dispara uma ação ao ser clicado:
 
 ```jd
+funcao salvarProduto()
+  // lógica de salvamento
+fim
+
+funcao voltar()
+  // lógica de navegação
+fim
+
 tela CadastroProduto "Novo Produto"
   formulario FormProduto
     entidade: Produto
     campos: nome, preco, estoque
   fim
   botao Salvar
-    acao: salvarProduto()
+    acao: salvarProduto
   fim
   botao Cancelar
-    acao: voltar()
+    clique: voltar
   fim
 fim
 ```
 
 **Propriedades do botão:**
 
-| Propriedade | Tipo             | Descrição                  |
-|-------------|------------------|----------------------------|
-| `acao`      | nome de função   | Função chamada no clique   |
+| Propriedade | Tipo             | Descrição                        |
+|-------------|------------------|----------------------------------|
+| `acao`      | nome de função   | Função chamada ao clicar         |
+| `clique`    | nome de função   | Alias para `acao`                |
+
+::: warning Ação obrigatória
+Todo `botao` deve ter `acao:` ou `clique:` — e a função referenciada deve estar declarada:
+```jd
+// ❌ ERRO — botao sem acao
+tela Dashboard "Painel"
+  botao Salvar
+    titulo: "Salvar"
+  fim
+fim
+// Erro: Botão 'Salvar' deve declarar 'acao: nomeDaFuncao' ou 'clique: nomeDaFuncao'
+
+// ❌ ERRO — função não declarada
+tela Dashboard "Painel"
+  botao Salvar
+    acao: funcaoInexistente
+  fim
+fim
+// Erro: Função 'funcaoInexistente' não declarada
+```
+:::
 
 ---
 
-## Card
+## Cartão
 
 Exibe informações resumidas de um único registro:
 
 ```jd
 tela DetalheProduto "Detalhes do Produto"
-  card InfoProduto
+  cartao InfoProduto
     titulo: "Informações"
     conteudo: nome
   fim
 fim
 ```
 
-**Propriedades do card:**
+**Propriedades do cartão:**
 
-| Propriedade  | Tipo   | Descrição                    |
-|--------------|--------|------------------------------|
-| `titulo`     | texto  | Cabeçalho do card            |
-| `conteudo`   | campo  | Campo principal a exibir     |
+| Propriedade  | Tipo   | Descrição                     |
+|--------------|--------|-------------------------------|
+| `titulo`     | texto  | Cabeçalho do cartão           |
+| `conteudo`   | campo  | Campo principal a exibir      |
 
 ---
 
@@ -171,12 +231,24 @@ fim
 
 **Propriedades do gráfico:**
 
-| Propriedade | Tipo             | Valores possíveis          |
-|-------------|------------------|----------------------------|
-| `tipo`      | identificador    | `linha`, `barras`, `pizza` |
-| `entidade`  | nome da entidade | Fonte dos dados            |
-| `eixoX`     | campo            | Campo para o eixo X        |
-| `eixoY`     | campo            | Campo para o eixo Y        |
+| Propriedade | Tipo             | Obrigatório | Valores possíveis          |
+|-------------|------------------|-------------|----------------------------|
+| `tipo`      | identificador    | não         | `linha`, `barras`, `pizza` |
+| `entidade`  | nome da entidade | ✅ sim       | Fonte dos dados            |
+| `eixoX`     | campo            | não         | Campo para o eixo X        |
+| `eixoY`     | campo            | não         | Campo para o eixo Y        |
+
+::: warning Tipo de gráfico restrito
+O compilador aceita apenas `linha`, `barras` ou `pizza`. Termos em inglês (`bar`, `pie`, `line`) são rejeitados:
+```jd
+// ❌ ERRO — tipo inválido
+grafico GraficoVendas
+  entidade: Venda
+  tipo: bar   // em inglês
+fim
+// Erro: Tipo de gráfico 'bar' inválido. Use: linha, barras ou pizza
+```
+:::
 
 ---
 
@@ -194,6 +266,15 @@ entidade Produto
   ativo: booleano
 fim
 
+funcao abrirFormulario()
+fim
+
+funcao salvar()
+fim
+
+funcao cancelar()
+fim
+
 tela GerenciamentoProdutos "Gerenciamento de Produtos"
   tabela ListaProdutos
     entidade: Produto
@@ -201,7 +282,7 @@ tela GerenciamentoProdutos "Gerenciamento de Produtos"
     filtravel: verdadeiro
   fim
   botao NovoProduto
-    acao: abrirFormulario()
+    acao: abrirFormulario
   fim
 fim
 
@@ -209,14 +290,66 @@ tela FormularioProduto "Cadastrar Produto"
   formulario FormProduto
     entidade: Produto
     campos: nome, preco, estoque, categoriaId
-  fim
-  botao Salvar
-    acao: salvar()
+    enviar: salvar
   fim
   botao Cancelar
-    acao: cancelar()
+    clique: cancelar
   fim
 fim
+```
+
+---
+
+## Validações em tempo de compilação
+
+O compilador JADE verifica telas rigorosamente antes de gerar código:
+
+```jd
+// ❌ ERRO — termo em inglês
+tela Dashboard "Painel"
+  card InfoVendas
+    titulo: "Resumo"
+  fim
+fim
+// Erro: Termo 'card' não é válido na DSL JADE — use 'cartao' (português)
+
+// ❌ ERRO — botao sem acao
+tela Dashboard "Painel"
+  botao Salvar
+    titulo: "Salvar"
+  fim
+fim
+// Erro: Botão 'Salvar' deve declarar 'acao: nomeDaFuncao' ou 'clique: nomeDaFuncao'
+
+// ❌ ERRO — tabela sem entidade
+tela Dashboard "Painel"
+  tabela ListaItens
+    filtravel: verdadeiro
+  fim
+fim
+// Erro: Elemento 'tabela' 'ListaItens' deve declarar 'entidade: NomeDaEntidade'
+
+// ❌ ERRO — entidade inexistente
+tela Dashboard "Painel"
+  tabela ListaVendas
+    entidade: VendaNaoDeclarada
+  fim
+fim
+// Erro: Entidade 'VendaNaoDeclarada' não declarada ou não encontrada
+
+// ❌ ERRO — campo inexistente na entidade
+entidade Produto
+  id: id
+  nome: texto
+fim
+
+tela Dashboard "Painel"
+  tabela ListaProdutos
+    entidade: Produto
+    campos: nome, preco    // 'preco' não existe em Produto
+  fim
+fim
+// Erro: Campo 'preco' não existe na entidade 'Produto'
 ```
 
 ---
@@ -228,53 +361,9 @@ O JADE não gera HTML diretamente. Em vez disso, a declaração `tela` é interp
 1. Lê a estrutura da tela declarada no código
 2. Gera os componentes HTML correspondentes
 3. Liga automaticamente os dados da entidade aos campos
-4. Gerencia eventos de clique, submit e filtro
+4. Gerencia eventos de clique e envio de formulários
 
 Isso significa que você nunca escreve `<input>`, `<table>` ou event listeners manualmente.
-
----
-
-## Validações automáticas
-
-O compilador JADE verifica os tipos de elementos em tempo de compilação:
-
-```jd
-// ❌ ERRO — tipo de elemento inválido (typo)
-tela Relatorio "Relatório"
-  grafico_ MinhasVendas
-    tipo: pizza
-  fim
-fim
-// Erro: Tipo de elemento 'grafico_' inválido. Use: tabela, formulario, botao, card, modal ou grafico
-```
-
-Referências a entidades declaradas em outros módulos são resolvidas em runtime — o compilador não exige que a entidade esteja no mesmo arquivo.
-
-```jd
-// ✅ OK — entidade definida no mesmo arquivo
-entidade Venda
-  id: id
-  valor: decimal
-  data: data
-fim
-
-tela Dashboard "Painel"
-  tabela ListaVendas
-    entidade: Venda
-    colunas: valor, data
-  fim
-fim
-
-// ✅ TAMBÉM OK — entidade importada de outro módulo
-importar financeiro.Venda
-
-tela Dashboard "Painel"
-  tabela ListaVendas
-    entidade: Venda
-    colunas: valor, data
-  fim
-fim
-```
 
 ---
 
