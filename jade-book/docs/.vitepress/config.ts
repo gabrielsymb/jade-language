@@ -1,9 +1,11 @@
 import { defineConfig } from 'vitepress'
 
+
 export default defineConfig({
   title: 'A Linguagem JADE',
   description: 'O guia completo da linguagem JADE — DSL empresarial em português compilada para WebAssembly',
   lang: 'pt-BR',
+  base: '/jade-language/',
 
   themeConfig: {
     logo: '/icon-file.svg',
@@ -119,6 +121,26 @@ export default defineConfig({
     theme: {
       light: 'github-light',
       dark: 'github-dark',
+    },
+    languageAlias: {
+      jd: 'js',
+    },
+    config: (md) => {
+      // Escape bare HTML tags in inline text (e.g. lista<Produto>, mapa<texto>)
+      // to prevent Vue template compiler from treating them as unclosed HTML elements.
+      md.core.ruler.push('escape-html-inline', (state) => {
+        for (const blockToken of state.tokens) {
+          if (!blockToken.children) continue
+          for (const token of blockToken.children) {
+            if (token.type === 'html_inline') {
+              token.type = 'text'
+              token.content = token.content
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+            }
+          }
+        }
+      })
     },
   },
 })
