@@ -61,7 +61,7 @@ JADE foi feita para:
 
 - Não é uma linguagem de uso geral como Python ou Java
 - Não substitui JavaScript no frontend para tudo — é para lógica de negócio
-- Não tem framework de UI ainda (vem na v0.2.0 com a keyword `tela`)
+- Não tem LSP completo ainda (autocomplete avançado e refatoração vêm na v0.2.0)
 
 ## Um exemplo rápido
 

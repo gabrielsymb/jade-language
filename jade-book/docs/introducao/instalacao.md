@@ -10,39 +10,34 @@
 O compilador JADE (`jadec`) é instalado via npm:
 
 ```bash
-npm install -g jade-compiler
+# Instalação completa (compilador + runtime)
+npm install -g @yakuzaa/jade
+
+# Ou só o compilador
+npm install -g @yakuzaa/jade-compiler
 ```
 
 Verifique a instalação:
 
 ```bash
 jadec --version
-# jadec 0.1.0
+# jadec 0.1.1
 ```
 
 ## 2. Instale a extensão VS Code
 
 A extensão JADE para VS Code oferece:
 
-- Destaque de sintaxe
-- Autocomplete inteligente
-- Diagnósticos em tempo real (erros sublinhados enquanto você digita)
-- Go to Definition (`F12`)
-- Rename Symbol (`F2`)
-- Formatação automática ao salvar
+- Destaque de sintaxe para arquivos `.jd`
+- Snippets para estruturas comuns (`entidade`, `servico`, `funcao`, etc.)
+- Diagnósticos básicos em tempo real
 
 ### Via marketplace
 
 Procure por **"JADE Language"** no marketplace do VS Code ou instale via terminal:
 
 ```bash
-code --install-extension jade-lang.jade-lang-vscode
-```
-
-### Via arquivo VSIX (instalação local)
-
-```bash
-code --install-extension jade-lang-vscode-0.1.0.vsix
+code --install-extension yakuzaa.jade-lang-vscode
 ```
 
 ## 3. Crie seu primeiro projeto
@@ -83,7 +78,7 @@ meu-projeto/
 ```
 
 ::: warning Nota — versão atual
-Na versão 0.1.0, cada arquivo `.jd` é compilado individualmente. O sistema de múltiplos arquivos (importações entre arquivos) está previsto para a v0.2.0.
+Na versão 0.1.1, cada arquivo `.jd` é compilado individualmente. O sistema de múltiplos arquivos (importações entre arquivos) vem na v0.2.0.
 :::
 
 ## Comandos do compilador

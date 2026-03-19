@@ -170,7 +170,7 @@ fim
 ```
 
 ::: warning Versão atual
-Na v0.1.0 o sistema de importações entre múltiplos arquivos está em desenvolvimento. Atualmente, todo o código vai em um único arquivo `.jd`. A resolução de módulos multi-arquivo vem na v0.2.0.
+Na v0.1.1, todo o código deve estar em um único arquivo `.jd`. A resolução de módulos multi-arquivo (importações entre arquivos) vem na v0.2.0.
 :::
 
 ## Próximo passo
