@@ -40,6 +40,7 @@ export enum TokenType {
   TIPO_TEXTO = 'TIPO_TEXTO',
   TIPO_NUMERO = 'TIPO_NUMERO',
   TIPO_DECIMAL = 'TIPO_DECIMAL',
+  TIPO_MOEDA = 'TIPO_MOEDA',
   TIPO_BOOLEANO = 'TIPO_BOOLEANO',
   TIPO_DATA = 'TIPO_DATA',
   TIPO_HORA = 'TIPO_HORA',
@@ -109,4 +110,5 @@ export enum TokenType {
   EOF = 'EOF',
   COMENTARIO_LINHA = 'COMENTARIO_LINHA',   // // ...
   COMENTARIO_BLOCO = 'COMENTARIO_BLOCO',   // /* ... */
+  DESCONHECIDO = 'DESCONHECIDO',           // caractere não reconhecido pelo lexer
 }

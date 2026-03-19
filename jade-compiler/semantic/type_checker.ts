@@ -5,6 +5,8 @@ export interface ErroSemantico {
   mensagem: string;
   linha: number;
   coluna: number;
+  /** Dica educativa sobre como corrigir o erro */
+  dica?: string;
 }
 
 export class TypeChecker {
@@ -37,12 +39,12 @@ export class TypeChecker {
     'contem': 'booleano',
     'adicionar': 'vazio',
     'remover': 'vazio',
-    'obter': 'T',        // tipo do elemento
-    'filtrar': 'lista',  // lista.filtrar(condicao) -> lista<T>
-    'ordenar': 'lista',  // lista.ordenar(campo) -> lista<T>
-    'primeiro': 'T',     // lista.primeiro() -> T
-    'ultimo': 'T',       // lista.ultimo() -> T
-    'vazia': 'booleano'  // lista.vazia() -> booleano
+    'obter': 'qualquer',    // tipo do elemento — sem suporte a genéricos ainda
+    'filtrar': 'lista',     // lista.filtrar(condicao) -> lista<T>
+    'ordenar': 'lista',     // lista.ordenar(campo) -> lista<T>
+    'primeiro': 'qualquer', // tipo do elemento — sem suporte a genéricos ainda
+    'ultimo': 'qualquer',   // tipo do elemento — sem suporte a genéricos ainda
+    'vazia': 'booleano'
   };
 
   // ── Verificações principais ──────────────────────────────
@@ -93,7 +95,8 @@ export class TypeChecker {
           this.erro(
             `Ciclo de eventos detectado: ${ciclo}. ` +
             `Isso causaria loop infinito em runtime.`,
-            0, 0
+            0, 0,
+            'Redesenhe o fluxo de eventos para evitar que um evento dispare outro que eventualmente o re-dispare'
           );
           return true;
         }
@@ -145,9 +148,9 @@ export class TypeChecker {
   }
 
   private registrarImportacao(node: N.ImportacaoNode): void {
-    try {
-      if (node.alias) {
-        // importar financeiro como fin → registra 'fin' como namespace do módulo
+    if (node.alias) {
+      // importar financeiro como fin → registra 'fin' como namespace do módulo
+      if (!this.tabela.buscar(node.alias)) {
         this.tabela.declarar({
           nome: node.alias,
           kind: 'entidade' as SimboloKind,
@@ -156,8 +159,11 @@ export class TypeChecker {
           coluna: node.column,
           escopo: this.tabela.escopoAtual()
         });
-      } else if (node.item && !node.wildcard) {
-        // importar estoque.Produto → registra 'Produto' como tipo externo conhecido
+      }
+    } else if (node.item && !node.wildcard) {
+      // importar estoque.Produto → registra 'Produto' como tipo externo conhecido
+      // Se já declarado localmente, o símbolo local tem precedência (não substituir)
+      if (!this.tabela.buscar(node.item)) {
         this.tabela.declarar({
           nome: node.item,
           kind: 'classe' as SimboloKind,
@@ -167,11 +173,14 @@ export class TypeChecker {
           escopo: this.tabela.escopoAtual()
         });
       }
-      // Wildcard (importar vendas.*) — não é possível registrar símbolos
-      // específicos sem resolver o módulo; aceito silenciosamente por enquanto.
-    } catch {
-      // Silenciar conflito de nome se o tipo já foi declarado localmente.
-      // A precedência é do símbolo local.
+    } else if (node.wildcard) {
+      // Wildcard bloqueado — ambíguo e inseguro
+      this.erro(
+        `Import wildcard 'importar ${node.modulo}.*' não é permitido`,
+        node.line,
+        node.column,
+        `Importe apenas o que precisa: 'importar ${node.modulo}.NomeDoTipo'`
+      );
     }
   }
 
@@ -279,7 +288,8 @@ export class TypeChecker {
     // Verificar superclasse
     if (node.superClasse) {
       if (!this.tipoExiste(node.superClasse)) {
-        this.erro(`Superclasse '${node.superClasse}' não encontrada`, node.line, node.column);
+        this.erro(`Superclasse '${node.superClasse}' não encontrada`, node.line, node.column,
+          `Declare a classe '${node.superClasse}' antes de usá-la como superclasse, ou verifique se o nome está correto`);
       } else {
         // Registrar superclasse para verificação de herança
         this.tabela.registrarSuperClasse(node.nome, node.superClasse);
@@ -289,7 +299,8 @@ export class TypeChecker {
     // Verificar interfaces
     for (const interfaceNome of node.interfaces) {
       if (!this.tipoExiste(interfaceNome)) {
-        this.erro(`Interface '${interfaceNome}' não encontrada`, node.line, node.column);
+        this.erro(`Interface '${interfaceNome}' não encontrada`, node.line, node.column,
+          `Declare a interface '${interfaceNome}' antes de usá-la com 'implements'`);
       }
     }
 
@@ -327,7 +338,7 @@ export class TypeChecker {
       }
 
       if (!this.tipoExiste(tipoCampo)) {
-        this.erro(`Tipo '${tipoCampo}' não existe`, campo.line, campo.column);
+        this.erro(`Tipo '${tipoCampo}' não existe`, campo.line, campo.column, this.dicaTipoNaoExiste(tipoCampo));
       }
 
       const simbolo: Simbolo = {
@@ -344,7 +355,8 @@ export class TypeChecker {
     }
 
     if (!temId) {
-      this.erro(`Entidade '${node.nome}' deve ter exatamente um campo do tipo 'id'`, node.line, node.column);
+      this.erro(`Entidade '${node.nome}' deve ter exatamente um campo do tipo 'id'`, node.line, node.column,
+        `Adicione 'id: id' à entidade '${node.nome}' para que ela possa ser salva e buscada`);
     }
 
     this.tabela.sairEscopo();
@@ -375,7 +387,7 @@ export class TypeChecker {
     for (const parametro of node.parametros) {
       const tipoParam = this.tipoParaString(parametro.tipo);
       if (!this.tipoExiste(tipoParam)) {
-        this.erro(`Tipo '${tipoParam}' não existe`, parametro.line, parametro.column);
+        this.erro(`Tipo '${tipoParam}' não existe`, parametro.line, parametro.column, this.dicaTipoNaoExiste(tipoParam));
       }
       tiposParams.push(tipoParam);
 
@@ -404,7 +416,8 @@ export class TypeChecker {
         if (!this.verificarRetornoEmTodosCaminhos(node.corpo)) {
           this.erro(
             `Função '${node.nome}' deve retornar valor em todos os caminhos`,
-            node.line, node.column
+            node.line, node.column,
+            `Certifique-se que todos os ramos do 'se/senao' terminam com 'retornar valor'`
           );
         }
       }
@@ -418,7 +431,8 @@ export class TypeChecker {
     // Verificar se evento existe
     const evento = this.tabela.buscar(node.evento);
     if (!evento || evento.kind !== 'evento') {
-      this.erro(`Evento '${node.evento}' não encontrado`, node.line, node.column);
+      this.erro(`Evento '${node.evento}' não encontrado`, node.line, node.column,
+        `Declare o evento antes de escutá-lo: 'evento ${node.evento}'`);
       return; // Retorna para não continuar com um evento inválido
     }
 
@@ -465,7 +479,8 @@ export class TypeChecker {
     for (const campo of node.campos) {
       const tipoCampo = this.tipoParaString(campo.tipo);
       if (!this.tipoExiste(tipoCampo)) {
-        this.erro(`Tipo '${tipoCampo}' não existe`, campo.line, campo.column);
+        this.erro(`Tipo '${tipoCampo}' não existe`, campo.line, campo.column,
+          'Use um tipo válido para o campo do evento: texto, numero, decimal, booleano, data, hora ou id');
       }
 
       const simbolo: Simbolo = {
@@ -511,15 +526,18 @@ export class TypeChecker {
     // Verificar se a condição é booleana
     const tipoCondicao = this.resolverTipo(node.condicao);
     if (tipoCondicao !== 'booleano') {
-      this.erro(`Condição da regra '${node.nome}' deve ser booleana, recebido '${tipoCondicao}'`, node.condicao.line, node.condicao.column);
+      this.erro(`Condição da regra '${node.nome}' deve ser booleana, recebido '${tipoCondicao}'`, node.condicao.line, node.condicao.column,
+        "A condição deve resultar em verdadeiro/falso, ex: `quando produto.estoque < 10` ou `quando cliente.ativo`");
     }
 
-    // Verificar o bloco então
+    this.tabela.entrarEscopo('regra_entao');
     this.verificarBloco(node.entao);
+    this.tabela.sairEscopo();
 
-    // Verificar o bloco senão (se existir)
     if (node.senao) {
+      this.tabela.entrarEscopo('regra_senao');
       this.verificarBloco(node.senao);
+      this.tabela.sairEscopo();
     }
   }
 
@@ -580,7 +598,7 @@ export class TypeChecker {
     if (node.tipo) {
       tipoDeclarado = this.tipoParaString(node.tipo);
       if (!this.tipoExiste(tipoDeclarado)) {
-        this.erro(`Tipo '${tipoDeclarado}' não existe`, node.line, node.column);
+        this.erro(`Tipo '${tipoDeclarado}' não existe`, node.line, node.column, this.dicaTipoNaoExiste(tipoDeclarado));
       }
     }
 
@@ -588,14 +606,16 @@ export class TypeChecker {
       const tipoInicializador = this.resolverTipo(node.inicializador);
 
       if (tipoDeclarado && !this.tiposCompatíveis(tipoDeclarado, tipoInicializador)) {
-        this.erro(`Tipo incompatível: esperado '${tipoDeclarado}', recebido '${tipoInicializador}'`, node.line, node.column);
+        this.erro(`Tipo incompatível: esperado '${tipoDeclarado}', recebido '${tipoInicializador}'`, node.line, node.column,
+          `Converta o valor para '${tipoDeclarado}' ou mude o tipo declarado da variável`);
       }
 
       if (!tipoDeclarado) {
         tipoDeclarado = tipoInicializador;
       }
     } else if (!tipoDeclarado) {
-      this.erro(`Variável '${node.nome}' precisa de tipo ou inicializador`, node.line, node.column);
+      this.erro(`Variável '${node.nome}' precisa de tipo ou inicializador`, node.line, node.column,
+        `Declare com tipo: 'variavel ${node.nome}: numero', ou com valor: 'variavel ${node.nome} = 0'`);
     }
 
     const simbolo: Simbolo = {
@@ -610,7 +630,8 @@ export class TypeChecker {
     try {
       this.tabela.declarar(simbolo);
     } catch (e: any) {
-      this.erro(e.message, node.line, node.column);
+      this.erro(e.message, node.line, node.column,
+        `Renomeie a variável '${node.nome}' ou remova a declaração duplicada`);
     }
   }
 
@@ -620,12 +641,14 @@ export class TypeChecker {
     if (typeof node.alvo === 'string') {
       const simbolo = this.tabela.buscar(node.alvo);
       if (!simbolo) {
-        this.erro(`Variável '${node.alvo}' não declarada`, node.line, node.column);
+        this.erro(`Variável '${node.alvo}' não declarada`, node.line, node.column,
+          `Declare a variável antes de usá-la: 'variavel ${node.alvo}: tipo'`);
         return;
       }
 
       if (!this.tiposCompatíveis(simbolo.tipo, tipoValor)) {
-        this.erro(`Tipo incompatível: esperado '${simbolo.tipo}', recebido '${tipoValor}'`, node.line, node.column);
+        this.erro(`Tipo incompatível: esperado '${simbolo.tipo}', recebido '${tipoValor}'`, node.line, node.column,
+          `O valor atribuído não é do mesmo tipo da variável '${node.alvo}' (${simbolo.tipo})`);
       }
     } else {
       // Acesso a membro: produto.estoque = x
@@ -633,7 +656,8 @@ export class TypeChecker {
       const objetoSimbolo = this.tabela.buscar(tipoObjeto);
 
       if (!objetoSimbolo || (objetoSimbolo.kind !== 'classe' && objetoSimbolo.kind !== 'entidade')) {
-        this.erro(`'${tipoObjeto}' não é uma classe ou entidade`, node.alvo.line, node.alvo.column);
+        this.erro(`'${tipoObjeto}' não é uma classe ou entidade`, node.alvo.line, node.alvo.column,
+          "Só é possível acessar campos com '.' em entidades ou classes");
         return;
       }
 
@@ -641,14 +665,16 @@ export class TypeChecker {
       const tipoCampo = this.tabela.buscarCampo(tipoObjeto, node.alvo.membro);
 
       if (tipoCampo === null) {
-        this.erro(`'${tipoObjeto}' não possui campo '${node.alvo.membro}'`, node.alvo.line, node.alvo.column);
+        this.erro(`'${tipoObjeto}' não possui campo '${node.alvo.membro}'`, node.alvo.line, node.alvo.column,
+          `Verifique o nome do campo — pode estar digitado errado. Os campos disponíveis estão na declaração da entidade '${tipoObjeto}'`);
         return;
       }
 
       if (!this.tiposCompatíveis(tipoCampo, tipoValor)) {
         this.erro(
           `Tipo incompatível: campo '${node.alvo.membro}' espera '${tipoCampo}', recebido '${tipoValor}'`,
-          node.line, node.column
+          node.line, node.column,
+          `Converta o valor para '${tipoCampo}' antes de atribuir ao campo '${node.alvo.membro}'`
         );
       }
     }
@@ -657,36 +683,50 @@ export class TypeChecker {
   verificarCondicional(node: N.CondicionalNode): void {
     const tipoCondicao = this.resolverTipo(node.condicao);
     if (tipoCondicao !== 'booleano') {
-      this.erro(`Condição do 'se' deve ser booleano, recebeu '${tipoCondicao}'`, node.condicao.line, node.condicao.column);
+      this.erro(`Condição do 'se' deve ser booleano, recebeu '${tipoCondicao}'`, node.condicao.line, node.condicao.column,
+        "Use uma comparação: `se x > 0`, `se produto.ativo`, `se nome == \"João\"`");
     }
 
+    // Cada branch tem seu próprio escopo — evita vazamento de variáveis entre branches
+    this.tabela.entrarEscopo('se');
     this.verificarBloco(node.entao);
+    this.tabela.sairEscopo();
+
     if (node.senao) {
+      this.tabela.entrarEscopo('senao');
       this.verificarBloco(node.senao);
+      this.tabela.sairEscopo();
     }
   }
 
   verificarEnquanto(node: N.EnquantoNode): void {
     const tipoCondicao = this.resolverTipo(node.condicao);
     if (tipoCondicao !== 'booleano') {
-      this.erro(`Condição do 'enquanto' deve ser booleano, recebeu '${tipoCondicao}'`, node.condicao.line, node.condicao.column);
+      this.erro(`Condição do 'enquanto' deve ser booleano, recebeu '${tipoCondicao}'`, node.condicao.line, node.condicao.column,
+        "Use uma condição booleana, ex: `enquanto i < 10` ou `enquanto cliente.ativo`");
     }
 
+    // Corpo do enquanto tem escopo próprio
+    this.tabela.entrarEscopo('enquanto');
     this.verificarBloco(node.corpo);
+    this.tabela.sairEscopo();
   }
 
   verificarPara(node: N.ParaNode): void {
     const tipoIteravel = this.resolverTipo(node.iteravel);
 
     if (!tipoIteravel.startsWith('lista<')) {
-      this.erro(`Iterável do 'para' deve ser do tipo 'lista<T>', recebeu '${tipoIteravel}'`, node.iteravel.line, node.iteravel.column);
+      this.erro(`Iterável do 'para' deve ser do tipo 'lista<T>', recebeu '${tipoIteravel}'`, node.iteravel.line, node.iteravel.column,
+        "O 'para' itera sobre listas, ex: `para produto em listaProdutos` onde listaProdutos é do tipo lista<Produto>");
       return;
     }
 
     // Extrair tipo do elemento: lista<Tipo> -> Tipo
     const tipoElemento = tipoIteravel.substring(6, tipoIteravel.length - 1);
 
-    // Declarar variável de iteração
+    // Variável de iteração e corpo do loop têm escopo próprio — não vaza para fora
+    this.tabela.entrarEscopo('para');
+
     const simbolo: Simbolo = {
       nome: node.variavel,
       kind: 'variavel' as SimboloKind,
@@ -699,21 +739,25 @@ export class TypeChecker {
     try {
       this.tabela.declarar(simbolo);
     } catch (e: any) {
-      this.erro(e.message, node.line, node.column);
+      this.erro(e.message, node.line, node.column,
+        `Renomeie a variável de iteração '${node.variavel}' para evitar conflito com nome existente`);
     }
 
     this.verificarBloco(node.corpo);
+    this.tabela.sairEscopo();
   }
 
   verificarRetorno(node: N.RetornoNode): void {
     if (!this.funcaoAtual) {
-      this.erro(`'retornar' só pode ser usado dentro de uma função`, node.line, node.column);
+      this.erro(`'retornar' só pode ser usado dentro de uma função`, node.line, node.column,
+        "Mova o 'retornar' para dentro de um bloco 'funcao'");
       return;
     }
 
     if (node.valor) {
       if (!this.funcaoAtual.tipoRetorno) {
-        this.erro(`Função '${this.funcaoAtual.nome}' não deve retornar valor`, node.line, node.column);
+        this.erro(`Função '${this.funcaoAtual.nome}' não deve retornar valor`, node.line, node.column,
+          `Remova o valor do 'retornar', ou adicione '-> tipo' na declaração da função '${this.funcaoAtual.nome}'`);
         return;
       }
 
@@ -721,17 +765,20 @@ export class TypeChecker {
       const tipoValor = this.resolverTipo(node.valor);
 
       if (!this.tiposCompatíveis(tipoRetorno, tipoValor)) {
-        this.erro(`Tipo incompatível: esperado '${tipoRetorno}', recebido '${tipoValor}'`, node.line, node.column);
+        this.erro(`Tipo incompatível: esperado '${tipoRetorno}', recebido '${tipoValor}'`, node.line, node.column,
+          `O valor retornado não combina com o tipo de retorno '${tipoRetorno}' declarado na função`);
       }
     } else if (this.funcaoAtual.tipoRetorno) {
-      this.erro(`Função '${this.funcaoAtual.nome}' deve retornar valor`, node.line, node.column);
+      this.erro(`Função '${this.funcaoAtual.nome}' deve retornar valor`, node.line, node.column,
+        `Adicione 'retornar valor' ao final da função, ou remova '-> ${this.tipoParaString(this.funcaoAtual.tipoRetorno)}' da declaração`);
     }
   }
 
   verificarEmissaoEvento(node: N.EmissaoEventoNode): void {
     const evento = this.tabela.buscar(node.evento);
     if (!evento || evento.kind !== 'evento') {
-      this.erro(`Evento '${node.evento}' não encontrado`, node.line, node.column);
+      this.erro(`Evento '${node.evento}' não encontrado`, node.line, node.column,
+        `Declare o evento antes de emiti-lo: 'evento ${node.evento}'`);
       return;
     }
 
@@ -742,7 +789,8 @@ export class TypeChecker {
       if (node.argumentos.length !== camposEvento.size) {
         this.erro(
           `Evento '${node.evento}' espera ${camposEvento.size} argumentos, recebeu ${node.argumentos.length}`,
-          node.line, node.column
+          node.line, node.column,
+          `Forneça exatamente um valor para cada campo do evento na ordem declarada: emitir ${node.evento}(${Array.from(camposEvento.keys()).join(', ')})`
         );
         return;
       }
@@ -759,7 +807,8 @@ export class TypeChecker {
           this.erro(
             `Argumento '${nomeCampo}' do evento '${node.evento}' deve ser '${tipoCampo}', recebido '${tipoArgumento}'`,
             node.argumentos[i].line || node.line,
-            node.argumentos[i].column || node.column
+            node.argumentos[i].column || node.column,
+            `Verifique o tipo do valor fornecido para o campo '${nomeCampo}' — esperado '${tipoCampo}'`
           );
         }
       }
@@ -769,7 +818,8 @@ export class TypeChecker {
   verificarErro(node: N.ErroNode): void {
     const tipoMensagem = this.resolverTipo(node.mensagem);
     if (tipoMensagem !== 'texto') {
-      this.erro(`Mensagem de erro deve ser do tipo 'texto', recebeu '${tipoMensagem}'`, node.line, node.column);
+      this.erro(`Mensagem de erro deve ser do tipo 'texto', recebeu '${tipoMensagem}'`, node.line, node.column,
+        'Use uma string entre aspas: `erro "Mensagem de erro aqui"`');
     }
   }
 
@@ -835,7 +885,11 @@ export class TypeChecker {
   resolverTipoIdentificador(node: N.IdentificadorNode): string {
     const simbolo = this.tabela.buscar(node.nome);
     if (!simbolo) {
-      this.erro(`Variável '${node.nome}' não declarada`, node.line, node.column);
+      const sug = this.sugestao(node.nome, this.tabela.buscarTodosNomesVisiveis());
+      const dica = sug
+        ? `Você quis dizer '${sug}'? Declare a variável antes de usá-la: 'variavel ${node.nome}: tipo'`
+        : `Declare a variável antes de usá-la: 'variavel ${node.nome}: tipo'`;
+      this.erro(`Variável '${node.nome}' não declarada`, node.line, node.column, dica);
       return 'desconhecido';
     }
     return simbolo.tipo;
@@ -854,6 +908,10 @@ export class TypeChecker {
         if (tipoEsquerda === 'decimal' && tipoDireita === 'decimal') return 'decimal';
         if (tipoEsquerda === 'decimal' && tipoDireita === 'numero') return 'decimal';
         if (tipoEsquerda === 'numero' && tipoDireita === 'decimal') return 'decimal';
+        // moeda opera com moeda ou numero (escala monetária); sempre retorna moeda
+        if (tipoEsquerda === 'moeda' && tipoDireita === 'moeda') return 'moeda';
+        if (tipoEsquerda === 'moeda' && tipoDireita === 'numero') return 'moeda';
+        if (tipoEsquerda === 'numero' && tipoDireita === 'moeda') return 'moeda';
         if (node.operador === '+' && tipoEsquerda === 'texto' && tipoDireita === 'texto') return 'texto';
         break;
 
@@ -866,8 +924,8 @@ export class TypeChecker {
       case '<=':
       case '>':
       case '>=':
-        if ((tipoEsquerda === 'numero' || tipoEsquerda === 'decimal') &&
-          (tipoDireita === 'numero' || tipoDireita === 'decimal')) return 'booleano';
+        if ((tipoEsquerda === 'numero' || tipoEsquerda === 'decimal' || tipoEsquerda === 'moeda') &&
+          (tipoDireita === 'numero' || tipoDireita === 'decimal' || tipoDireita === 'moeda')) return 'booleano';
         if (tipoEsquerda === 'data' && tipoDireita === 'data') return 'booleano';
         if (tipoEsquerda === 'hora' && tipoDireita === 'hora') return 'booleano';
         break;
@@ -878,7 +936,8 @@ export class TypeChecker {
         break;
     }
 
-    this.erro(`Operador '${node.operador}' não pode ser aplicado entre '${tipoEsquerda}' e '${tipoDireita}'`, node.line, node.column);
+    this.erro(`Operador '${node.operador}' não pode ser aplicado entre '${tipoEsquerda}' e '${tipoDireita}'`, node.line, node.column,
+      `Operadores aritméticos (+, -, *, /) funcionam entre número/decimal. '+' também concatena dois textos. Compare apenas valores do mesmo tipo`);
     return 'desconhecido';
   }
 
@@ -887,21 +946,27 @@ export class TypeChecker {
 
     switch (node.operador) {
       case '-':
-        if (tipoOperando === 'numero' || tipoOperando === 'decimal') return tipoOperando;
+        if (tipoOperando === 'numero' || tipoOperando === 'decimal' || tipoOperando === 'moeda') return tipoOperando;
         break;
       case 'nao':
         if (tipoOperando === 'booleano') return 'booleano';
         break;
     }
 
-    this.erro(`Operador unário '${node.operador}' não pode ser aplicado ao tipo '${tipoOperando}'`, node.line, node.column);
+    this.erro(`Operador unário '${node.operador}' não pode ser aplicado ao tipo '${tipoOperando}'`, node.line, node.column,
+      "O operador 'nao' só funciona com booleanos; o operador '-' (negação) só funciona com numero e decimal");
     return 'desconhecido';
   }
 
   resolverTipoChamada(node: N.ChamadaFuncaoNode): string {
     const funcao = this.tabela.buscar(node.nome);
     if (!funcao || funcao.kind !== 'funcao') {
-      this.erro(`Função '${node.nome}' não encontrada`, node.line, node.column);
+      const funcoes = this.tabela.buscarTodosNomesVisiveis();
+      const sug = this.sugestao(node.nome, funcoes);
+      const dica = sug
+        ? `Você quis dizer '${sug}'? Verifique o nome ou declare-a: 'funcao ${node.nome}()'`
+        : `A função não foi declarada. Verifique o nome ou declare-a: 'funcao ${node.nome}()'`;
+      this.erro(`Função '${node.nome}' não encontrada`, node.line, node.column, dica);
       return 'desconhecido';
     }
 
@@ -910,7 +975,8 @@ export class TypeChecker {
     if (params !== null && node.argumentos.length !== params.length) {
       this.erro(
         `Função '${node.nome}' espera ${params.length} argumentos, recebeu ${node.argumentos.length}`,
-        node.line, node.column
+        node.line, node.column,
+        `Passe exatamente ${params.length} argumento(s) na chamada de '${node.nome}'`
       );
     }
 
@@ -945,7 +1011,8 @@ export class TypeChecker {
     const tipoCampo = this.tabela.buscarCampo(tipoObjeto, node.membro);
 
     if (tipoCampo === null) {
-      this.erro(`'${tipoObjeto}' não possui campo '${node.membro}'`, node.line, node.column);
+      this.erro(`'${tipoObjeto}' não possui campo '${node.membro}'`, node.line, node.column,
+        `Verifique o nome do campo — pode estar digitado errado ou não existe na entidade/classe '${tipoObjeto}'`);
       return 'desconhecido';
     }
 
@@ -959,14 +1026,28 @@ export class TypeChecker {
   private tiposCompatíveis(esperado: string, recebido: string): boolean {
     if (esperado === recebido) return true;
 
+    // 'desconhecido' suprime cascata de erros — erro já foi reportado na origem
+    if (esperado === 'desconhecido' || recebido === 'desconhecido') return true;
+
+    // Strip modificadores opcionais/obrigatórios para comparação de base
+    const baseEsperado = esperado.replace(/[?!]$/, '');
+    const baseRecebido = recebido.replace(/[?!]$/, '');
+    if (baseEsperado === baseRecebido) return true;
+
+    // 'qualquer' é compatível com qualquer tipo (escape hatch)
+    if (baseEsperado === 'qualquer' || baseRecebido === 'qualquer') return true;
+
     // decimal aceita numero
-    if (esperado === 'decimal' && recebido === 'numero') return true;
+    if (baseEsperado === 'decimal' && baseRecebido === 'numero') return true;
+
+    // moeda aceita decimal (interop com valores monetários vindos de APIs)
+    if (baseEsperado === 'moeda' && baseRecebido === 'decimal') return true;
 
     // id aceita numero (IDs podem ser representados como números)
-    if (esperado === 'id' && recebido === 'numero') return true;
+    if (baseEsperado === 'id' && baseRecebido === 'numero') return true;
 
     // Verificar herança de classes
-    if (this.verificarHeranca(esperado, recebido)) return true;
+    if (this.verificarHeranca(baseEsperado, baseRecebido)) return true;
 
     return false;
   }
@@ -1045,22 +1126,26 @@ export class TypeChecker {
 
   // Verifica se um tipo existe (primitivo, classe, entidade, enum declarado)
   private tipoExiste(nome: string): boolean {
-    const tiposPrimitivos = ['texto', 'numero', 'decimal', 'booleano', 'data', 'hora', 'id'];
-    if (tiposPrimitivos.includes(nome)) return true;
+    // Strip modificadores opcionais (?) e obrigatórios (!) antes de validar
+    const nomeBase = nome.replace(/[?!]$/, '');
+
+    const tiposPrimitivos = ['texto', 'numero', 'decimal', 'moeda', 'booleano', 'data', 'hora', 'id', 'qualquer', 'vazio', 'objeto'];
+    if (tiposPrimitivos.includes(nomeBase)) return true;
 
     // Verificar tipos genéricos
-    if (nome.startsWith('lista<') && nome.endsWith('>')) {
-      const elementoTipo = nome.substring(6, nome.length - 1);
+    if (nomeBase.startsWith('lista<') && nomeBase.endsWith('>')) {
+      const elementoTipo = nomeBase.substring(6, nomeBase.length - 1);
       return this.tipoExiste(elementoTipo);
     }
 
-    if (nome.startsWith('mapa<') && nome.endsWith('>')) {
-      const partes = nome.substring(4, nome.length - 1).split(',');
+    if (nomeBase.startsWith('mapa<') && nomeBase.endsWith('>')) {
+      // 'mapa<' tem 5 chars — substring(5) descarta corretamente o prefixo com '<'
+      const partes = nomeBase.substring(5, nomeBase.length - 1).split(',');
       if (partes.length !== 2) return false;
       return this.tipoExiste(partes[0].trim()) && this.tipoExiste(partes[1].trim());
     }
 
-    const simbolo = this.tabela.buscar(nome);
+    const simbolo = this.tabela.buscar(nomeBase);
     return simbolo !== null && ['classe', 'entidade', 'enum', 'interface'].includes(simbolo.kind);
   }
 
@@ -1108,17 +1193,108 @@ export class TypeChecker {
         this.erro(
           `Tipo de elemento '${elem.tipo}' inválido. Use: tabela, formulario, botao ou card`,
           elem.line,
-          elem.column
+          elem.column,
+          "Tipos válidos de elementos de tela: tabela, formulario, botao, card, modal ou grafico"
         );
+        continue;
       }
 
-      // Referências a entidades em tela podem vir de outros módulos —
-      // resolução completa está prevista para v0.2.0 (sistema de módulos).
+      // grafico requer propriedade 'entidade'
+      if (elem.tipo === 'grafico') {
+        const temEntidade = elem.propriedades.some(p => p.chave === 'entidade');
+        if (!temEntidade) {
+          this.erro(
+            `Elemento grafico '${elem.nome}' deve declarar a propriedade 'entidade' com a fonte de dados`,
+            elem.line,
+            elem.column,
+            "Informe a entidade de dados: entidade: NomeDaEntidade"
+          );
+        }
+      }
+
+      // Valida referência de entidade declarada na propriedade 'entidade:'
+      const propEntidade = elem.propriedades.find(p => p.chave === 'entidade');
+      if (propEntidade && typeof propEntidade.valor === 'string') {
+        const nomeEntidade = propEntidade.valor;
+        const simbolo = this.tabela.buscar(nomeEntidade);
+        if (!simbolo || simbolo.kind !== 'entidade') {
+          this.erro(
+            `Entidade '${nomeEntidade}' não declarada ou não encontrada`,
+            elem.line,
+            elem.column,
+            `Declare a entidade antes de usá-la: entidade ${nomeEntidade} ... fim`
+          );
+        } else {
+          // Valida campos referenciados na propriedade 'campos:'
+          const propCampos = elem.propriedades.find(p => p.chave === 'campos');
+          if (propCampos) {
+            const listaCampos = Array.isArray(propCampos.valor)
+              ? propCampos.valor
+              : [propCampos.valor];
+
+            for (const nomeCampo of listaCampos) {
+              const tipoCampo = this.tabela.buscarCampo(nomeEntidade, nomeCampo);
+              if (tipoCampo === null) {
+                this.erro(
+                  `Campo '${nomeCampo}' não existe na entidade '${nomeEntidade}'`,
+                  elem.line,
+                  elem.column,
+                  `Verifique os campos disponíveis na entidade '${nomeEntidade}' e corrija o nome`
+                );
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   // Adiciona erro sem lançar exceção (continua verificando o resto)
-  private erro(mensagem: string, linha: number, coluna: number): void {
-    this.erros.push({ mensagem, linha, coluna });
+  private erro(mensagem: string, linha: number, coluna: number, dica?: string): void {
+    this.erros.push({ mensagem, linha, coluna, dica });
+  }
+
+  // ── "Você quis dizer X?" ─────────────────────────────────────────────────
+
+  private levenshtein(a: string, b: string): number {
+    const m = a.length, n = b.length;
+    const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+      Array.from({ length: n + 1 }, (_, j) => i === 0 ? j : j === 0 ? i : 0)
+    );
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+    return dp[m][n];
+  }
+
+  // Retorna o nome mais próximo de `nome` na lista `candidatos` se distância ≤ 2
+  private sugestao(nome: string, candidatos: string[]): string | undefined {
+    let melhor: string | undefined;
+    let menorDist = 3;
+    for (const c of candidatos) {
+      const dist = this.levenshtein(nome.toLowerCase(), c.toLowerCase());
+      if (dist < menorDist) { menorDist = dist; melhor = c; }
+    }
+    return melhor;
+  }
+
+  private readonly TIPOS_BUILTIN = ['texto', 'numero', 'decimal', 'moeda', 'booleano', 'data', 'hora', 'id'];
+
+  private sugestaoTipo(nome: string): string | undefined {
+    const tiposConhecidos = [
+      ...this.TIPOS_BUILTIN,
+      ...this.tabela.buscarTodosNomesVisiveis()
+    ];
+    return this.sugestao(nome, tiposConhecidos);
+  }
+
+  private dicaTipoNaoExiste(tipo: string): string {
+    const sug = this.sugestaoTipo(tipo);
+    const base = 'Use um tipo válido: texto, numero, decimal, moeda, booleano, data, hora, id, ou o nome de uma entidade declarada';
+    return sug ? `Você quis dizer '${sug}'? ${base}` : base;
   }
 }

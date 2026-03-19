@@ -7,43 +7,78 @@ export class IRGenerator {
   private currentBlock: IR.IRBlock | null = null;
   private tempCounter: number = 0;
   private blockCounter: number = 0;
+  /** Mapeia nome de variável local → nome do tipo JADE (entidade/classe) para resolução de campos */
+  private localEntityTypeMap: Map<string, string> = new Map();
 
   constructor(moduleName: string) {
     this.module = {
       name: moduleName,
       typeDefinitions: [],
       globals: [],
-      functions: []
+      functions: [],
+      eventHandlers: [],
+      telas: []
     };
   }
 
   generate(program: N.ProgramaNode): IR.IRModule {
-    // Passo 1: registrar todos os tipos (entidades/classes)
-    for (const declaracao of program.declaracoes) {
+    const allDecls = this.flattenDeclarations(program.declaracoes);
+
+    // Passo 1: registrar todos os tipos (entidades/classes/eventos)
+    for (const declaracao of allDecls) {
       if (declaracao.kind === 'Entidade') {
         this.generateEntidade(declaracao as N.EntidadeNode);
       } else if (declaracao.kind === 'Classe') {
         this.generateClasse(declaracao as N.ClasseNode);
+      } else if (declaracao.kind === 'Evento') {
+        this.generateEvento(declaracao as N.EventoNode);
       }
     }
 
     // Passo 2: gerar funções
-    for (const declaracao of program.declaracoes) {
+    for (const declaracao of allDecls) {
       if (declaracao.kind === 'Funcao') {
         this.generateFuncao(declaracao as N.FuncaoNode);
       } else if (declaracao.kind === 'Servico') {
         this.generateServico(declaracao as N.ServicoNode);
+      } else if (declaracao.kind === 'Regra') {
+        this.generateRegra(declaracao as N.RegraNode);
       } else if (declaracao.kind === 'Tela') {
-        // Telas são tratadas pelo UIEngine em runtime — sem geração de IR
+        this.generateTela(declaracao as N.TelaNode);
       }
     }
 
     return this.module;
   }
 
+  private flattenDeclarations(decls: N.DeclaracaoNode[]): N.DeclaracaoNode[] {
+    const result: N.DeclaracaoNode[] = [];
+    for (const decl of decls) {
+      if (decl.kind === 'Modulo') {
+        result.push(...this.flattenDeclarations((decl as N.ModuloNode).declaracoes));
+      } else {
+        result.push(decl);
+      }
+    }
+    return result;
+  }
+
   // ── Geradores de declaração ──────────────────────────────
 
   private generateEntidade(node: N.EntidadeNode): void {
+    const fields = node.campos.map(campo => ({
+      name: campo.nome,
+      type: this.jadeTypeToIR(campo.tipo)
+    }));
+
+    this.module.typeDefinitions.push({
+      name: node.nome,
+      fields
+    });
+  }
+
+  private generateEvento(node: N.EventoNode): void {
+    // Eventos são tipos compostos (assim como entidades)
     const fields = node.campos.map(campo => ({
       name: campo.nome,
       type: this.jadeTypeToIR(campo.tipo)
@@ -84,6 +119,16 @@ export class IRGenerator {
     };
 
     this.currentFunction = func;
+    this.localEntityTypeMap = new Map();
+    // Registrar parâmetros de tipo entidade para resolução de campos
+    for (const param of node.parametros) {
+      if (param.tipo.kind === 'TipoSimples') {
+        const nomeTipo = (param.tipo as N.TipoSimples).nome;
+        if (!['numero', 'decimal', 'moeda', 'booleano', 'texto', 'id', 'data', 'hora'].includes(nomeTipo)) {
+          this.localEntityTypeMap.set(param.nome, nomeTipo);
+        }
+      }
+    }
     this.module.functions.push(func);
 
     // Criar bloco entry
@@ -102,7 +147,109 @@ export class IRGenerator {
     this.currentBlock = null;
   }
 
+  private generateOuvinte(servicoNome: string, node: N.OuvinteNode): void {
+    // Nome da função handler: '@NomeServico_on_NomeEvento'
+    const funcName = `@${servicoNome}_on_${node.evento}`;
+
+    const func: IR.IRFunction = {
+      name: funcName,
+      parameters: [{ name: '%evento', type: 'ptr' }],
+      returnType: 'void',
+      blocks: [],
+      locals: []
+    };
+
+    this.currentFunction = func;
+    this.module.functions.push(func);
+
+    const entryBlock = this.createBlock('entry');
+    this.switchToBlock(entryBlock);
+
+    this.generateBloco(node.corpo);
+
+    if (this.currentBlock && !this.currentBlock.terminator) {
+      this.setTerminator({ kind: 'Return' });
+    }
+
+    this.currentFunction = null;
+    this.currentBlock = null;
+
+    // Registrar no metadata de event handlers
+    this.module.eventHandlers.push({
+      eventName: node.evento,
+      functionName: funcName
+    });
+  }
+
+  private generateRegra(node: N.RegraNode): void {
+    // Regra vira função WASM chamável: @regra_NomeRegra()
+    const func: IR.IRFunction = {
+      name: '@regra_' + node.nome,
+      parameters: [],
+      returnType: 'void',
+      blocks: [],
+      locals: []
+    };
+
+    this.currentFunction = func;
+    this.module.functions.push(func);
+
+    const entryBlock = this.createBlock('entry');
+    this.switchToBlock(entryBlock);
+
+    // Gera condicional: se condicao → entao, senao → senao (se existir)
+    const thenBlock = this.createBlock(this.newBlockLabel('regra_entao'));
+    const elseBlock = node.senao ? this.createBlock(this.newBlockLabel('regra_senao')) : null;
+    const mergeBlock = this.createBlock(this.newBlockLabel('regra_fim'));
+
+    const condition = this.generateExpressao(node.condicao);
+    this.setTerminator({
+      kind: 'CondBranch',
+      condition,
+      trueBlock: thenBlock.label,
+      falseBlock: elseBlock ? elseBlock.label : mergeBlock.label
+    });
+
+    this.switchToBlock(thenBlock);
+    this.generateBloco(node.entao);
+    if (this.currentBlock && !this.currentBlock.terminator) {
+      this.setTerminator({ kind: 'Branch', target: mergeBlock.label });
+    }
+
+    if (elseBlock && node.senao) {
+      this.switchToBlock(elseBlock);
+      this.generateBloco(node.senao);
+      if (this.currentBlock && !this.currentBlock.terminator) {
+        this.setTerminator({ kind: 'Branch', target: mergeBlock.label });
+      }
+    }
+
+    this.switchToBlock(mergeBlock);
+    this.setTerminator({ kind: 'Return' });
+
+    this.currentFunction = null;
+    this.currentBlock = null;
+  }
+
+  private generateTela(node: N.TelaNode): void {
+    const descriptor: IR.IRTelaDescriptor = {
+      nome: node.nome,
+      titulo: node.titulo,
+      elementos: node.elementos.map(el => ({
+        tipo: el.tipo,
+        nome: el.nome,
+        propriedades: el.propriedades
+      }))
+    };
+    this.module.telas.push(descriptor);
+  }
+
   private generateServico(node: N.ServicoNode): void {
+    // Gera cada ouvinte como função handler + registra no eventHandlers
+    for (const ouvinte of node.ouvintes) {
+      this.generateOuvinte(node.nome, ouvinte);
+    }
+
     // Gera cada método como função independente
     // Nome: '@NomeServico_nomeFuncao'
     for (const metodo of node.metodos) {
@@ -183,6 +330,14 @@ export class IRGenerator {
 
   private generateVariavel(node: N.VariavelNode): void {
     const type = node.tipo ? this.jadeTypeToIR(node.tipo) : 'void';
+
+    // Rastrear tipo de entidade para resolução de campos em AcessoMembro
+    if (node.tipo?.kind === 'TipoSimples') {
+      const nomeTipo = (node.tipo as N.TipoSimples).nome;
+      if (!['numero', 'decimal', 'moeda', 'booleano', 'texto', 'id', 'data', 'hora'].includes(nomeTipo)) {
+        this.localEntityTypeMap.set(node.nome, nomeTipo);
+      }
+    }
 
     if (node.inicializador) {
       const value = this.generateExpressao(node.inicializador);
@@ -620,7 +775,7 @@ export class IRGenerator {
     const object = this.generateExpressao(node.objeto);
     // Emite GetField
     const result = this.newTemp();
-    const type = 'void'; // TODO: Obter tipo do campo
+    const type = this.resolveFieldType(node.objeto, node.membro);
 
     this.emit({
       kind: 'GetField',
@@ -635,6 +790,35 @@ export class IRGenerator {
       name: result,
       type
     };
+  }
+
+  /**
+   * Resolve o IR type de um campo de acesso a membro.
+   * Usa localEntityTypeMap para encontrar o tipo da entidade e busca o campo
+   * nas typeDefinitions registradas.
+   */
+  private resolveFieldType(objeto: N.ExpressaoNode, campo: string): IR.IRType {
+    let entityName: string | undefined;
+
+    if (objeto.kind === 'Identificador') {
+      entityName = this.localEntityTypeMap.get((objeto as N.IdentificadorNode).nome);
+    }
+
+    if (entityName) {
+      const typeDef = this.module.typeDefinitions.find(t => t.name === entityName);
+      if (typeDef) {
+        const field = typeDef.fields.find(f => f.name === campo);
+        if (field) return field.type as IR.IRType;
+      }
+    }
+
+    // Fallback: tentar buscar o campo em todos os tipos conhecidos
+    for (const typeDef of this.module.typeDefinitions) {
+      const field = typeDef.fields.find(f => f.name === campo);
+      if (field) return field.type as IR.IRType;
+    }
+
+    return 'i32'; // fallback seguro — ponteiros e inteiros são i32
   }
 
   // ── Utilitários ──────────────────────────────────────────
@@ -717,6 +901,7 @@ export class IRGenerator {
         switch (nome) {
           case 'numero': return 'i32';
           case 'decimal': return 'f64';
+          case 'moeda': return 'f64'; // moeda usa centavos internamente como f64
           case 'booleano': return 'i1';
           case 'texto': return 'ptr';
           case 'id': return 'ptr';

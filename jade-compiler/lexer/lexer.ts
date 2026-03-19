@@ -43,6 +43,7 @@ const KEYWORDS: Record<string, TokenType> = {
   'texto': TokenType.TIPO_TEXTO,
   'numero': TokenType.TIPO_NUMERO,
   'decimal': TokenType.TIPO_DECIMAL,
+  'moeda': TokenType.TIPO_MOEDA,
   'booleano': TokenType.TIPO_BOOLEANO,
   'data': TokenType.TIPO_DATA,
   'hora': TokenType.TIPO_HORA,
@@ -175,7 +176,7 @@ export class Lexer {
         case ']': this.addToken(TokenType.FECHA_COLCHETE, undefined, startColumn); break;
 
         case '\n':
-          this.newLine();
+          // newLine() já foi chamado por advance() — não chamar de novo
           break;
 
         default:
@@ -183,9 +184,11 @@ export class Lexer {
             this.position--; // volta o caractere para readIdentifierOrKeyword consumir
             this.column--;  // volta a coluna também
             this.readIdentifierOrKeyword();
-          } else {
-            throw new Error(`Erro léxico na linha ${startLine}, coluna ${startColumn}: caractere inesperado '${char}'`);
+          } else if (char.charCodeAt(0) >= 32 || char === '\t') {
+            // Caractere visível desconhecido — emite token de erro e continua (não trava o pipeline)
+            this.addToken(TokenType.DESCONHECIDO, char, startColumn);
           }
+          // Caracteres de controle (< 32 exceto \t e \n) são silenciosamente ignorados
       }
     }
 
@@ -260,7 +263,14 @@ export class Lexer {
     }
 
     if (this.isAtEnd()) {
-      throw new Error(`Erro léxico na linha ${startLine}, coluna ${stringStartColumn}: string não terminada`);
+      // String não terminada — emite o que temos como token de erro e continua
+      this.tokens.push({
+        type: TokenType.DESCONHECIDO,
+        value: `"${value}`,
+        line: startLine,
+        column: stringStartColumn
+      });
+      return;
     }
 
     this.advance(); // pula a aspa final
@@ -438,9 +448,7 @@ export class Lexer {
       this.advance();
     }
 
-    if (this.isAtEnd()) {
-      throw new Error(`Erro léxico na linha ${this.line}, coluna ${this.column}: comentário de bloco não terminado`);
-    }
+    // Comentário de bloco não terminado — silenciosamente ignorado (EOF encerra o comentário)
   }
 
   private skipWhitespace(): void {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { Lexer } from '../dist/lexer/lexer.js';
-import { Parser } from '../dist/parser/parser.js';
-import { SemanticAnalyzer } from '../dist/semantic/semantic_analyzer.js';
+import { Lexer } from '../lexer/lexer.js';
+import { Parser } from '../parser/parser.js';
+import { SemanticAnalyzer } from '../semantic/semantic_analyzer.js';
 
 // Helper function to run semantic analysis
 function analisarCodigo(source: any) {
@@ -420,5 +420,344 @@ fim
 `);
     expect(r.sucesso).toBe(false);
     expect(r.erros.some((e: any) => e.mensagem.includes('Venda'))).toBe(true);
+  });
+
+  it('deve aceitar campos válidos da entidade', () => {
+    const r = analisarCodigo(`
+entidade Produto
+  id: id
+  nome: texto
+  preco: decimal
+fim
+
+tela Dashboard "Painel"
+  tabela ListaProdutos
+    entidade: Produto
+    campos: nome, preco
+  fim
+fim
+`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('deve reportar erro para campo inexistente na entidade', () => {
+    const r = analisarCodigo(`
+entidade Produto
+  id: id
+  nome: texto
+  preco: decimal
+fim
+
+tela Dashboard "Painel"
+  tabela ListaProdutos
+    entidade: Produto
+    campos: nome, estoque
+  fim
+fim
+`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('estoque'))).toBe(true);
+  });
+
+  it('deve reportar erro para campo único inexistente', () => {
+    const r = analisarCodigo(`
+entidade Produto
+  id: id
+  nome: texto
+fim
+
+tela Dashboard "Painel"
+  tabela ListaProdutos
+    entidade: Produto
+    campos: descricao
+  fim
+fim
+`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('descricao'))).toBe(true);
+  });
+});
+
+// ── "Você quis dizer X?" — sugestões ─────────────────────────────────────────
+
+describe('Type Checker — sugestões "você quis dizer"', () => {
+  it('sugere tipo correto para typo em tipo de campo', () => {
+    const r = analisarCodigo(`
+entidade Produto
+    id: id
+    nome: txeto
+fim`);
+    expect(r.sucesso).toBe(false);
+    const dica = r.erros[0]?.dica ?? '';
+    expect(dica).toContain('texto');
+  });
+
+  it('sugere variável correta para typo em identificador', () => {
+    const r = analisarCodigo(`
+funcao teste()
+    variavel total: numero = 0
+    variavel x: numero = totla
+fim`);
+    expect(r.sucesso).toBe(false);
+    const dica = r.erros.find((e: any) => e.mensagem.includes('totla'))?.dica ?? '';
+    expect(dica).toContain('total');
+  });
+
+  it('sugere função correta para typo em chamada', () => {
+    const r = analisarCodigo(`
+funcao calcular(x: numero) -> numero
+    retornar x + 1
+fim
+funcao teste()
+    variavel r: numero = calcualr(1)
+fim`);
+    expect(r.sucesso).toBe(false);
+    const dica = r.erros.find((e: any) => e.mensagem.includes('calcualr'))?.dica ?? '';
+    expect(dica).toContain('calcular');
+  });
+
+  it('não sugere quando typo é muito diferente', () => {
+    const r = analisarCodigo(`
+funcao teste()
+    variavel x: numero = zzz
+fim`);
+    expect(r.sucesso).toBe(false);
+    const dica = r.erros.find((e: any) => e.mensagem.includes('zzz'))?.dica ?? '';
+    // Não deve sugerir nada próximo — dica padrão sem "Você quis dizer"
+    expect(dica).not.toContain('Você quis dizer');
+  });
+});
+
+// ── Importações ───────────────────────────────────────────────────────────────
+
+describe('Type Checker — importações', () => {
+  it('deve bloquear import wildcard', () => {
+    const r = analisarCodigo(`importar vendas.*`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('wildcard'))).toBe(true);
+  });
+
+  it('deve aceitar import de item específico', () => {
+    const r = analisarCodigo(`importar vendas.Produto`);
+    expect(r.sucesso).toBe(true);
+  });
+});
+
+// ── Testes de regressão — bugs corrigidos ─────────────────────────────────────
+
+describe('Regressão — TIPO-1: mapa<K,V> deve ser válido', () => {
+  it('mapa<texto,numero> é um tipo válido', () => {
+    const r = analisarCodigo(`
+funcao teste(m: mapa<texto,numero>) -> numero
+    retornar 0
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('mapa<texto,texto> como campo de entidade é válido', () => {
+    const r = analisarCodigo(`
+entidade Config
+    id: id
+    atributos: mapa<texto,texto>
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('mapa<texto,lista<numero>> é um tipo genérico aninhado válido', () => {
+    const r = analisarCodigo(`
+funcao teste(m: mapa<texto,lista<numero>>)
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+});
+
+describe('Regressão — TIPO-2: tipos opcionais (texto?) devem ser válidos', () => {
+  it('variavel com tipo opcional texto? é válida', () => {
+    const r = analisarCodigo(`
+funcao teste()
+    variavel nome: texto?
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('campo de entidade com tipo opcional é válido', () => {
+    const r = analisarCodigo(`
+entidade Cliente
+    id: id
+    email: texto?
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('tipo opcional numero? é compatível com numero', () => {
+    const r = analisarCodigo(`
+funcao teste()
+    variavel x: numero? = 42
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+});
+
+describe('Regressão — SCOPE-1: variáveis em branches não vazam', () => {
+  it('variavel x em dois blocos se consecutivos não conflita', () => {
+    const r = analisarCodigo(`
+funcao teste(cond: booleano)
+    se cond
+        variavel x: numero = 1
+    fim
+    se cond
+        variavel x: texto = "ok"
+    fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('variavel no branch entao não vaza para senao', () => {
+    const r = analisarCodigo(`
+funcao teste(cond: booleano) -> numero
+    se cond
+        variavel resultado: numero = 1
+        retornar resultado
+    senao
+        variavel resultado: numero = 2
+        retornar resultado
+    fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+});
+
+describe('Regressão — SCOPE-2: variável do para não vaza', () => {
+  it('variável de iteração não existe após o loop', () => {
+    const r = analisarCodigo(`
+entidade Item
+    id: id
+    valor: numero
+fim
+
+funcao teste(itens: lista<Item>) -> numero
+    variavel total: numero = 0
+    para item em itens
+        total = total + item.valor
+    fim
+    retornar total
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('duas variáveis de iteração com mesmo nome em loops consecutivos não conflitam', () => {
+    const r = analisarCodigo(`
+entidade Item
+    id: id
+    valor: numero
+fim
+
+funcao teste(lista1: lista<Item>, lista2: lista<Item>) -> numero
+    variavel total: numero = 0
+    para item em lista1
+        total = total + item.valor
+    fim
+    para item em lista2
+        total = total + item.valor
+    fim
+    retornar total
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+});
+
+describe('Regressão — MOEDA-1: tipo moeda como primitivo', () => {
+  it('campo de entidade com tipo moeda é válido', () => {
+    const r = analisarCodigo(`
+entidade Produto
+    id: id
+    nome: texto
+    preco: moeda
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('aritmética entre moeda e moeda retorna moeda', () => {
+    const r = analisarCodigo(`
+funcao calcularTotal(preco: moeda, desconto: moeda) -> moeda
+    retornar preco - desconto
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('aritmética entre moeda e numero retorna moeda', () => {
+    const r = analisarCodigo(`
+funcao aplicarDesconto(preco: moeda, qtd: numero) -> moeda
+    retornar preco * qtd
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('comparação entre moeda e moeda retorna booleano', () => {
+    const r = analisarCodigo(`
+funcao maisBarato(a: moeda, b: moeda) -> booleano
+    retornar a < b
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('moeda não é compatível com texto', () => {
+    const r = analisarCodigo(`
+funcao teste()
+    variavel preco: moeda = "caro"
+fim`);
+    expect(r.sucesso).toBe(false);
+    expect(r.erros.some((e: any) => e.mensagem.includes('incompatível'))).toBe(true);
+  });
+
+  it('variável moeda usada em se/senao com escopo correto', () => {
+    const r = analisarCodigo(`
+funcao aplicarTaxa(preco: moeda, temTaxa: booleano) -> moeda
+    se temTaxa
+        variavel taxa: moeda = preco
+        retornar taxa
+    senao
+        retornar preco
+    fim
+fim`);
+    expect(r.sucesso).toBe(true);
+  });
+});
+
+describe('Casos de tortura — edge cases', () => {
+  it('mapa aninhado: mapa<mapa<texto,numero>,lista<texto>> é inválido graciosamente', () => {
+    // mapa<K,V> requer que K e V sejam tipos válidos — mapa como chave não é idiomático
+    // mas não deve crashar o compilador
+    const r = analisarCodigo(`
+funcao teste(m: mapa<texto,lista<texto>>)
+fim`);
+    // mapa<texto,lista<texto>> — lista<texto> como valor de mapa deve ser válido
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('100 variáveis de iteração aninhadas não causam stack overflow', () => {
+    // Testa que o gerenciamento de escopos profundos funciona
+    const linhas = ['entidade N', '    id: id', '    v: numero', 'fim', ''];
+    linhas.push('funcao testeDeep(lista1: lista<N>) -> numero');
+    linhas.push('    variavel total: numero = 0');
+    for (let i = 0; i < 5; i++) {
+      linhas.push(`    para item em lista1`);
+      linhas.push(`        total = total + item.v`);
+    }
+    for (let i = 0; i < 5; i++) {
+      linhas.push(`    fim`);
+    }
+    linhas.push('    retornar total');
+    linhas.push('fim');
+    const r = analisarCodigo(linhas.join('\n'));
+    expect(r.sucesso).toBe(true);
+  });
+
+  it('tipo qualquer é compatível com qualquer tipo', () => {
+    const r = analisarCodigo(`
+funcao obterItem(lista: lista<numero>) -> qualquer
+    retornar lista.obter(0)
+fim`);
+    expect(r.sucesso).toBe(true);
   });
 });

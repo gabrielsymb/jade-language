@@ -147,16 +147,21 @@ export class LocalDatastore {
     });
   }
 
+  // Gera hash de 7 bytes criptograficamente seguro (browser + Node 14.17+)
+  private randomHash(): string {
+    const buf = new Uint8Array(4);
+    crypto.getRandomValues(buf);
+    return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 7);
+  }
+
   // Gera _rev inicial: '1-xxxxxxx'
   private generateRev(seq: number): string {
-    const hash = Math.random().toString(36).slice(2, 9);
-    return `${seq + 1}-${hash}`;
+    return `${seq + 1}-${this.randomHash()}`;
   }
 
   // Incrementa a sequência do _rev: '2-xxxxxxx' → '3-xxxxxxx'
   private bumpRev(rev: string): string {
     const seq = parseInt(rev.split('-')[0] ?? '0', 10);
-    const hash = Math.random().toString(36).slice(2, 9);
-    return `${seq + 1}-${hash}`;
+    return `${seq + 1}-${this.randomHash()}`;
   }
 }

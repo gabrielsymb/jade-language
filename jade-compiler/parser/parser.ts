@@ -3,6 +3,113 @@ import { TokenType } from '../lexer/token_type.js';
 import { ParseResult, ParseError } from './parse_result.js';
 import * as N from '../ast/nodes.js';
 
+/**
+ * Tabela de dicas educativas para erros de sintaxe.
+ * Mapeamento: mensagem de erro → dica de como corrigir.
+ */
+const DICAS_PARSER: Record<string, string> = {
+  "Esperado nome do módulo":
+    "Dê um nome ao módulo logo após a palavra 'modulo', ex: `modulo estoque`",
+  "Esperado 'fim' para fechar módulo":
+    "Todo bloco 'modulo' precisa terminar com 'fim'",
+  "Esperado nome da classe":
+    "Dê um nome à classe, ex: `classe Funcionario`",
+  "Esperado nome da superclasse":
+    "Informe o nome da classe pai após 'extends', ex: `classe Gerente extends Funcionario`",
+  "Esperado nome da interface":
+    "Informe o nome da interface após 'implements', ex: `classe Produto implements Estocavel`",
+  "Esperado 'fim' para fechar classe":
+    "Todo bloco 'classe' precisa terminar com 'fim'",
+  "Esperado nome da entidade":
+    "Dê um nome à entidade, ex: `entidade Produto`",
+  "Esperado 'fim' para fechar entidade":
+    "Todo bloco 'entidade' precisa terminar com 'fim'",
+  "Esperado nome do serviço":
+    "Dê um nome ao serviço, ex: `servico EstoqueService`",
+  "Esperado 'funcao' ou 'escutar' no serviço":
+    "Dentro de um serviço só pode haver funções (`funcao nome()`) e ouvintes de evento (`escutar NomeEvento`)",
+  "Esperado 'fim' para fechar serviço":
+    "Todo bloco 'servico' precisa terminar com 'fim'",
+  "Esperado nome da função":
+    "Dê um nome à função, ex: `funcao calcularTotal()`",
+  "Esperado '('":
+    "A declaração de função precisa de parênteses, mesmo sem parâmetros: `funcao nome()`",
+  "Esperado ')'":
+    "Feche os parênteses — pode estar faltando ')' após os parâmetros ou argumentos",
+  "Esperado 'fim' para fechar função":
+    "Todo bloco 'funcao' precisa terminar com 'fim'",
+  "Esperado nome do evento":
+    "Dê um nome ao evento, ex: `evento PedidoCriado`",
+  "Esperado 'fim' para fechar evento":
+    "Todo bloco 'evento' precisa terminar com 'fim'",
+  "Esperado nome da regra":
+    "Dê um nome à regra, ex: `regra reposicaoAutomatica`",
+  "Esperado 'quando'":
+    "A regra precisa de uma condição após o nome: `regra nome quando produto.estoque < 10`",
+  "Esperado 'entao'":
+    "Após a condição do 'quando', use 'entao' para definir o que acontece: `quando x > 0 entao`",
+  "Esperado 'fim' para fechar regra":
+    "Todo bloco 'regra' precisa terminar com 'fim'",
+  "Esperado 'funcao' na interface":
+    "Interfaces só podem declarar assinaturas de função: `funcao nome(param: tipo) -> tipo`",
+  "Esperado nome da assinatura":
+    "Dê um nome à assinatura da função na interface, ex: `funcao calcular(x: numero) -> numero`",
+  "Esperado '->'":
+    "Informe o tipo de retorno após '->', ex: `funcao calcular() -> numero`",
+  "Esperado 'fim' para fechar interface":
+    "Todo bloco 'interface' precisa terminar com 'fim'",
+  "Esperado nome do enum":
+    "Dê um nome ao enum, ex: `enum StatusPedido`",
+  "Esperado valor do enum":
+    "Liste os valores do enum, um por linha, em letras maiúsculas, ex: PENDENTE, CONFIRMADO, CANCELADO",
+  "Esperado 'fim' para fechar enum":
+    "Todo bloco 'enum' precisa terminar com 'fim'",
+  "Esperado item importado":
+    "Informe o item do módulo: `importar estoque.Produto`, ou use alias: `importar estoque como est`",
+  "Esperado alias":
+    "Informe o nome alternativo após 'como', ex: `importar estoque como est`",
+  "Esperado nome da tela":
+    "Dê um nome à tela, ex: `tela ListaProdutos \"Produtos\"`",
+  "Esperado título da tela entre aspas":
+    "Informe o título da tela entre aspas logo após o nome: `tela ListaProdutos \"Lista de Produtos\"`",
+  "Esperado 'fim' para fechar tela":
+    "Todo bloco 'tela' precisa terminar com 'fim'",
+  "Esperado tipo do elemento (tabela, formulario, botao, card)":
+    "Use um dos tipos de elemento: tabela, formulario, botao, card, modal ou grafico",
+  "Esperado nome do elemento":
+    "Dê um nome ao elemento da tela, ex: `tabela listagem`",
+  "Esperado nome da propriedade":
+    "Informe o nome da propriedade seguido de ':', ex: `entidade: Produto`",
+  "Esperado ':' após nome da propriedade":
+    "Use ':' para separar nome e valor da propriedade, ex: `titulo: \"Meu Título\"`",
+  "Esperado identificador":
+    "Informe um nome válido (começa com letra, sem espaços)",
+  "Esperado valor para a propriedade":
+    "O valor pode ser texto entre aspas, um identificador ou verdadeiro/falso",
+  "Esperado nome do campo":
+    "O campo precisa de um nome seguido de ':', ex: `nome: texto`",
+  "Esperado ':'":
+    "Use ':' para declarar o tipo do campo, ex: `preco: decimal`",
+  "Esperado '<'":
+    "Especifique o tipo do elemento entre '<' e '>', ex: `lista<texto>` ou `lista<Produto>`",
+  "Esperado '>'":
+    "Feche o tipo genérico com '>', ex: `lista<texto>` ou `mapa<texto, numero>`",
+  "Esperado tipo":
+    "Informe um tipo válido: texto, numero, decimal, booleano, data, hora, id, lista<T> ou mapa<K,V>",
+  "Esperado nome da variável":
+    "Dê um nome à variável, ex: `variavel total: numero` ou `variavel nome = \"João\"`",
+  "Esperado nome do membro após '.'":
+    "Informe o nome do campo ou método após o ponto, ex: `produto.preco`",
+  "Esperado ')' após expressão":
+    "Feche os parênteses da expressão",
+  "Esperado ')' após argumentos":
+    "Feche os parênteses dos argumentos da função",
+  "Esperado nome do membro":
+    "Informe o nome do campo ou método após o ponto",
+  "Esperado ','":
+    "Separe os tipos com vírgula, ex: `mapa<texto, numero>`",
+};
+
 export class Parser {
   private tokens: Token[];
   private current: number = 0;
@@ -17,16 +124,30 @@ export class Parser {
 
     while (!this.isAtEnd()) {
       try {
+        const before = this.current;
         const declaracao = this.parseDeclaracao();
         if (declaracao) {
           declaracoes.push(declaracao);
+        } else if (this.current === before) {
+          // Token não reconhecido como declaração — registra erro e avança para não travar
+          this.errors.push({
+            message: `Token inesperado '${this.peek().value}' — esperado início de declaração (modulo, entidade, funcao, servico, etc.)`,
+            line: this.peek().line,
+            column: this.peek().column
+          });
+          this.advance();
         }
       } catch (error: any) {
-        this.errors.push({
-          message: error.message || 'Erro de sintaxe',
-          line: this.peek().line,
-          column: this.peek().column
-        });
+        // ParseError thrown by consume/error() already has line, column and dica
+        if (error && typeof error.line === 'number' && typeof error.column === 'number') {
+          this.errors.push(error as ParseError);
+        } else {
+          this.errors.push({
+            message: error.message || 'Erro de sintaxe',
+            line: this.peek().line,
+            column: this.peek().column
+          });
+        }
         this.synchronize();
       }
     }
@@ -72,8 +193,18 @@ export class Parser {
     const declaracoes: N.DeclaracaoNode[] = [];
 
     while (!this.check(TokenType.FIM) && !this.isAtEnd()) {
+      const before = this.current;
       const declaracao = this.parseDeclaracao();
-      if (declaracao) declaracoes.push(declaracao);
+      if (declaracao) {
+        declaracoes.push(declaracao);
+      } else if (this.current === before) {
+        // Token não reconhecido dentro do módulo — lança erro para sair do loop
+        throw this.error(
+          `Token inesperado '${this.peek().value}' dentro do módulo`,
+          undefined,
+          "Verifique se uma declaração está incompleta ou se há 'fim' faltando"
+        );
+      }
     }
 
     this.consume(TokenType.FIM, "Esperado 'fim' para fechar módulo");
@@ -134,7 +265,11 @@ export class Parser {
     const campos: N.CampoNode[] = [];
 
     while (!this.check(TokenType.FIM) && !this.isAtEnd()) {
+      const before = this.current;
       campos.push(this.parseCampo());
+      if (this.current === before) {
+        throw this.error(`Token inesperado '${this.peek().value}' na entidade — esperado nome de campo`);
+      }
     }
 
     this.consume(TokenType.FIM, "Esperado 'fim' para fechar entidade");
@@ -216,7 +351,11 @@ export class Parser {
     const campos: N.CampoNode[] = [];
 
     while (!this.check(TokenType.FIM) && !this.isAtEnd()) {
+      const before = this.current;
       campos.push(this.parseCampo());
+      if (this.current === before) {
+        throw this.error(`Token inesperado '${this.peek().value}' no evento — esperado nome de campo`);
+      }
     }
 
     this.consume(TokenType.FIM, "Esperado 'fim' para fechar evento");
@@ -353,12 +492,16 @@ export class Parser {
     const nomeToken = this.consume(TokenType.IDENTIFICADOR, "Esperado nome da tela");
     const nome = nomeToken.value;
     const tituloToken = this.consume(TokenType.LITERAL_TEXTO, "Esperado título da tela entre aspas");
-    const titulo = tituloToken.value;
+    const titulo = tituloToken.value.slice(1, -1);
 
     const elementos: N.TelaElementoNode[] = [];
 
     while (!this.check(TokenType.FIM) && !this.isAtEnd()) {
+      const before = this.current;
       elementos.push(this.parseTelaElemento());
+      if (this.current === before) {
+        throw this.error(`Token inesperado '${this.peek().value}' na tela — esperado elemento (tabela, formulario, botao, card)`);
+      }
     }
 
     this.consume(TokenType.FIM, "Esperado 'fim' para fechar tela");
@@ -402,7 +545,7 @@ export class Parser {
         valor = 'falso';
       } else if (this.checkAny([
         TokenType.IDENTIFICADOR,
-        TokenType.TIPO_TEXTO, TokenType.TIPO_NUMERO, TokenType.TIPO_DECIMAL,
+        TokenType.TIPO_TEXTO, TokenType.TIPO_NUMERO, TokenType.TIPO_DECIMAL, TokenType.TIPO_MOEDA,
         TokenType.TIPO_BOOLEANO, TokenType.TIPO_DATA, TokenType.TIPO_HORA,
         TokenType.TIPO_ID, TokenType.TIPO_LISTA, TokenType.TIPO_MAPA
       ])) {
@@ -420,7 +563,7 @@ export class Parser {
           while (this.match(TokenType.VIRGULA)) {
             lista.push(this.consumeAny([
               TokenType.IDENTIFICADOR,
-              TokenType.TIPO_TEXTO, TokenType.TIPO_NUMERO, TokenType.TIPO_DECIMAL,
+              TokenType.TIPO_TEXTO, TokenType.TIPO_NUMERO, TokenType.TIPO_DECIMAL, TokenType.TIPO_MOEDA,
               TokenType.TIPO_BOOLEANO, TokenType.TIPO_DATA, TokenType.TIPO_HORA,
               TokenType.TIPO_ID
             ], "Esperado identificador").value);
@@ -455,6 +598,7 @@ export class Parser {
       TokenType.TIPO_TEXTO,
       TokenType.TIPO_NUMERO,
       TokenType.TIPO_DECIMAL,
+      TokenType.TIPO_MOEDA,
       TokenType.TIPO_BOOLEANO,
       TokenType.TIPO_DATA,
       TokenType.TIPO_HORA,
@@ -482,6 +626,7 @@ export class Parser {
       TokenType.TIPO_TEXTO,
       TokenType.TIPO_NUMERO,
       TokenType.TIPO_DECIMAL,
+      TokenType.TIPO_MOEDA,
       TokenType.TIPO_BOOLEANO,
       TokenType.TIPO_DATA,
       TokenType.TIPO_HORA,
@@ -538,6 +683,7 @@ export class Parser {
       TokenType.TIPO_TEXTO,
       TokenType.TIPO_NUMERO,
       TokenType.TIPO_DECIMAL,
+      TokenType.TIPO_MOEDA,
       TokenType.TIPO_BOOLEANO,
       TokenType.TIPO_DATA,
       TokenType.TIPO_HORA,
@@ -595,7 +741,11 @@ export class Parser {
         if (this.isAtEnd()) {
           break;
         }
-        throw this.error(`Parser travado: token inesperado ${this.peek().type}='${this.peek().value}'`);
+        throw this.error(
+          `Token inesperado '${this.peek().value}' — verifique se um 'fim' está faltando acima desta linha`,
+          undefined,
+          "Erros desse tipo costumam acontecer quando um bloco (entidade, funcao, servico, se...) não foi fechado com 'fim'"
+        );
       }
     }
 
@@ -748,11 +898,12 @@ export class Parser {
 
     // Token consumido mas não reconhecido como instrução válida
     // Volta o token para não perder (usando current--)
-    this.current--;
+    if (this.current > 0) this.current--;
     return null;
   }
 
   private parseRetorno(): N.RetornoNode {
+    const retornarToken = this.previous(); // 'retornar' já consumido por match()
     let valor: N.ExpressaoNode | undefined;
 
     if (!this.check(TokenType.FIM) && !this.check(TokenType.EOF)) {
@@ -761,8 +912,8 @@ export class Parser {
 
     return {
       kind: 'Retorno',
-      line: 1,
-      column: 1,
+      line: retornarToken.line,
+      column: retornarToken.column,
       valor
     };
   }
@@ -1106,7 +1257,7 @@ export class Parser {
           const membroToken = this.consumeAny([
             TokenType.IDENTIFICADOR,
             TokenType.TIPO_ID, TokenType.TIPO_TEXTO, TokenType.TIPO_NUMERO,
-            TokenType.TIPO_DECIMAL, TokenType.TIPO_BOOLEANO, TokenType.TIPO_DATA,
+            TokenType.TIPO_DECIMAL, TokenType.TIPO_MOEDA, TokenType.TIPO_BOOLEANO, TokenType.TIPO_DATA,
             TokenType.TIPO_HORA, TokenType.TIPO_LISTA, TokenType.TIPO_MAPA, TokenType.TIPO_OBJETO
           ], "Esperado nome do membro");
 
@@ -1132,7 +1283,11 @@ export class Parser {
       };
     }
 
-    throw this.error(`Expressão inesperada: ${this.peek().value}`);
+    throw this.error(
+      `Expressão inesperada: '${this.peek().value}'`,
+      undefined,
+      "Use um valor (número, texto, verdadeiro/falso), uma variável, chamada de função ou expressão entre parênteses"
+    );
   }
 
   // ── Utilitários ───────────────────────────────────────────
@@ -1171,28 +1326,29 @@ export class Parser {
     return false;
   }
 
-  private consume(type: TokenType, message: string): Token {
+  private consume(type: TokenType, message: string, dica?: string): Token {
     if (this.check(type)) return this.advance();
-    throw this.error(message);
+    throw this.error(message, undefined, dica);
   }
 
-  private consumeAny(types: TokenType[], message: string): Token {
+  private consumeAny(types: TokenType[], message: string, dica?: string): Token {
     for (const type of types) {
       if (this.check(type)) return this.advance();
     }
-    throw this.error(message);
+    throw this.error(message, undefined, dica);
   }
 
   private isAtEnd(): boolean {
     return this.peek().type === TokenType.EOF;
   }
 
-  private error(message: string, token?: Token): ParseError {
+  private error(message: string, token?: Token, dica?: string): ParseError {
     const errorToken = token || this.peek();
     return {
       message,
       line: errorToken.line,
-      column: errorToken.column
+      column: errorToken.column,
+      dica: dica ?? DICAS_PARSER[message]
     };
   }
 
