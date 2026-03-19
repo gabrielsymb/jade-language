@@ -169,8 +169,8 @@ funcao principal()
 fim
 ```
 
-::: warning Versão atual
-Na v0.1.1, todo o código deve estar em um único arquivo `.jd`. A resolução de módulos multi-arquivo (importações entre arquivos) vem na v0.2.0.
+::: tip Multi-arquivo disponível a partir da v0.1.2
+A partir da v0.1.2, o compilador `jadec` resolve automaticamente as importações entre arquivos `.jd`. Basta ter os arquivos na mesma pasta e usar `importar modulo.Tipo` normalmente.
 :::
 
 ## Próximo passo

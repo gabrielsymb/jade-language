@@ -77,8 +77,8 @@ meu-projeto/
 └── principal.jd
 ```
 
-::: warning Nota — versão atual
-Na versão 0.1.1, cada arquivo `.jd` é compilado individualmente. O sistema de múltiplos arquivos (importações entre arquivos) vem na v0.2.0.
+::: tip Multi-arquivo disponível a partir da v0.1.2
+A partir da v0.1.2, o compilador resolve importações entre arquivos `.jd` automaticamente. Organize seu projeto em múltiplos arquivos e use `importar modulo.Tipo` normalmente.
 :::
 
 ## Comandos do compilador
