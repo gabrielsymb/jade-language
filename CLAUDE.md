@@ -107,6 +107,8 @@ O validar.sh cobre:
 | UI Engine | ✅ Completo (TS) |
 | Stdlib Texto | ✅ Completo |
 | `tela` keyword | ✅ Completo (parser, type checker, IR, docs) |
-| LSP / VSCode | ⏳ Pendente v0.2.0 |
+| Resolução de módulos multi-arquivo | ✅ Completo (jade-compiler/import_resolver.ts) |
+| VSCode: syntax highlighting + snippets | ✅ Completo (jade-vscode/) |
+| LSP completo (autocomplete, go-to-def) | ⏳ Pendente v0.2.0 |
 
 > Veja `ANALISE_DOCUMENTACAO.md` para análise detalhada de gaps.

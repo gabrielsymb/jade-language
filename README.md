@@ -68,7 +68,7 @@ npx jadec --check meu_sistema.jd
 |--------|-----------|-----|
 | [`jade-compiler`](./jade-compiler) | Compilador: lexer, parser, type checker, IR → WAT → WASM | [![npm](https://img.shields.io/npm/v/@yakuzaa/jade-compiler)](https://www.npmjs.com/package/@yakuzaa/jade-compiler) |
 | [`jade-runtime`](./jade-runtime) | Runtime: event loop, UI Engine, APIs, stdlib | [![npm](https://img.shields.io/npm/v/@yakuzaa/jade-runtime)](https://www.npmjs.com/package/@yakuzaa/jade-runtime) |
-| [`jade-vscode`](./jade-vscode) | Extensão VSCode: syntax highlighting, snippets, LSP | [Marketplace](https://marketplace.visualstudio.com/items?itemName=yakuzaa.jade-lang-vscode) |
+| [`jade-vscode`](./jade-vscode) | Extensão VSCode: syntax highlighting, snippets, diagnósticos básicos | [Marketplace](https://marketplace.visualstudio.com/items?itemName=yakuzaa.jade-lang-vscode) |
 | [`jade-book`](./jade-book) | Documentação completa (VitePress) | [gabrielsymb.github.io/jade-language](https://gabrielsymb.github.io/jade-language) |
 
 ## Documentação
@@ -123,7 +123,7 @@ cd jade-book && npm run dev
 | Compiler (lexer, parser, type checker, IR, WASM) | 72 | Vitest |
 | Runtime (core, APIs, UI/PWA, stdlib) | 163 | Vitest |
 
-## Status v0.1.0
+## Status
 
 | Componente | Status |
 |------------|--------|
@@ -137,8 +137,9 @@ cd jade-book && npm run dev
 | APIs Runtime | ✅ Completo |
 | UI Engine + `tela` | ✅ Completo |
 | Stdlib (Texto, Matemática, Moeda, XML) | ✅ Completo |
-| LSP / VSCode completo | ⏳ v0.2.0 |
-| Resolução de módulos | ⏳ v0.2.0 |
+| Resolução de módulos multi-arquivo | ✅ v0.1.2 |
+| VSCode: syntax highlighting + snippets | ✅ Completo |
+| LSP completo (autocomplete, go-to-def, refatoração) | ⏳ v0.2.0 |
 
 ## Contribuindo
 
