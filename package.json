@@ -7,8 +7,7 @@
   "workspaces": [
     "jade-compiler",
     "jade-runtime",
-    "jade-vscode",
-    "jade"
+    "jade-vscode"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
