@@ -13,8 +13,8 @@ hero:
       text: Instalação
       link: /introducao/instalacao
     - theme: alt
-      text: Ver Demo ao Vivo
-      link: /demo/
+      text: Ver Vitrine
+      link: /vitrine
 
 features:
   - icon: 🇧🇷

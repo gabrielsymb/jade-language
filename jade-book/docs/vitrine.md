@@ -1,9 +1,9 @@
 ---
 layout: page
-title: Demo ao Vivo — ERP/WMS Jade DSL
+title: Vitrine — ERP/WMS feito com Jade DSL
 ---
 
-# Demo ao Vivo
+# Vitrine — ERP/WMS em Jade DSL
 
 <div class="jade-demo-header">
   <p>Este ERP/WMS foi escrito inteiramente em <strong>Jade DSL</strong> — código-fonte disponível abaixo. Rode em produção com IndexedDB como banco de dados offline-first.</p>
@@ -11,7 +11,7 @@ title: Demo ao Vivo — ERP/WMS Jade DSL
 
 <div class="jade-demo-frame">
   <iframe
-    src="https://gabrielsymb.github.io/jade-erp-demo/"
+    src="https://gabrielsymb.github.io/jade-erp-demo-/"
     title="Jade DSL ERP Demo"
     allow="fullscreen"
     loading="lazy">

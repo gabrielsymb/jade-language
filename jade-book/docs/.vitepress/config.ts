@@ -15,7 +15,7 @@ export default defineConfig({
       { text: 'Início', link: '/' },
       { text: 'Guia', link: '/introducao/o-que-e-jade' },
       { text: 'Referência', link: '/estruturas/entidades' },
-      { text: 'Demo ao Vivo', link: '/demo/' },
+      { text: 'Vitrine', link: '/vitrine' },
     ],
 
     sidebar: [
@@ -100,9 +100,9 @@ export default defineConfig({
         ],
       },
       {
-        text: '🎯 Demo ao Vivo',
+        text: '🎯 Vitrine',
         items: [
-          { text: 'ERP/WMS Demonstração', link: '/demo/' },
+          { text: 'ERP/WMS em Jade DSL', link: '/vitrine' },
         ],
       },
     ],
