@@ -13,6 +13,7 @@ const KEYWORDS: Record<string, TokenType> = {
   'interface': TokenType.INTERFACE,
   'enum': TokenType.ENUM,
   'tela': TokenType.TELA,
+  'banco': TokenType.BANCO,
   'fim': TokenType.FIM,
 
   // Controle
@@ -36,8 +37,9 @@ const KEYWORDS: Record<string, TokenType> = {
   'escutar': TokenType.ESCUTAR,
   'quando': TokenType.QUANDO,
 
-  // Variável
-  'variavel': TokenType.VARIAVEL,
+  // Variável / Constante
+  'variavel':  TokenType.VARIAVEL,
+  'constante': TokenType.CONSTANTE,
 
   // Tipos
   'texto': TokenType.TIPO_TEXTO,

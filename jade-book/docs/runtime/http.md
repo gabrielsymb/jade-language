@@ -28,7 +28,7 @@ Console.escrever("Pedido criado: " + resposta.id)
 ### Com autenticação
 
 ```jd
-token = Session.get("access_token")
+token = sessao.obterToken()
 
 dados = HttpClient.get("https://api.meuservico.com/relatorios", {
   cabecalhos: {
@@ -44,6 +44,25 @@ dados = HttpClient.get("https://api.meuservico.com/relatorios", {
 resultado = HttpClient.get("https://api.externa.com/dados", {
   timeout: 10000,    // 10 segundos
   retries: 3         // tentar 3 vezes em caso de falha
+})
+```
+
+### Rastreabilidade e idempotência (automático)
+
+O `HttpClient` adiciona automaticamente dois cabeçalhos de confiabilidade em todas as requisições:
+
+| Cabeçalho         | Onde é adicionado              | Para que serve                                                       |
+|-------------------|-------------------------------|----------------------------------------------------------------------|
+| `X-Correlation-ID`| Toda requisição               | Correlaciona logs entre cliente e servidor — facilita depuração      |
+| `Idempotency-Key` | POST, PUT, PATCH, DELETE      | Garante que o servidor ignore duplicatas em caso de retry automático |
+
+Esses cabeçalhos são gerados automaticamente com UUID v4 — nenhuma configuração necessária.
+
+Para operações onde idempotência não faz sentido (ex: log de eventos), use `semIdempotencia`:
+
+```jd
+HttpClient.post("https://api.meuservico.com/eventos/log", payload, {
+  semIdempotencia: verdadeiro
 })
 ```
 

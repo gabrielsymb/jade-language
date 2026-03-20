@@ -438,7 +438,122 @@ regra bloqueioVendaEstoqueZero quando produto.estoque == 0 entao
 fim
 ```
 
-## Passo 5 — Usando o sistema
+## Passo 5 — Banco de dados e interface (novo)
+
+### Conexão com banco de dados
+
+Com o bloco `banco`, o compilador gera automaticamente um servidor de sincronização pronto para rodar:
+
+```jd
+banco
+  tipo: postgres
+  url:  env("DATABASE_URL")   // ex: postgres://user:pass@localhost:5432/estoque
+  jwt:  env("JWT_SECRET")     // segredo para assinar tokens JWT
+  porta: 3001
+
+  // RLS: cada usuário vê apenas seus próprios movimentos
+  politica MovimentoEstoque
+    dono: usuarioId
+  fim
+fim
+```
+
+Compile e execute:
+
+```bash
+jadec estoque.jd                          # gera estoque.jade-ui.json + jade-server.js
+JWT_SECRET=s3cr3t DATABASE_URL=postgres://... node jade-server.js
+```
+
+O servidor gerado expõe `POST /api/sync` com autenticação JWT e resolução de conflitos via `_rev`.
+
+### Tela de login
+
+```jd
+funcao fazerLogin(evento)
+  credenciais = evento.credenciais
+  chave       = evento.chave
+
+  resultado = AuthService.login({
+    username:   credenciais.usuario,
+    password:   credenciais.senha,
+    rememberMe: credenciais.lembrarMe
+  })
+
+  sessao.definir(resultado.accessToken, resultado.refreshToken, resultado.expiresIn)
+  ui.emitirResultadoAcao(chave)
+  router.navegar("/inicio")
+fim
+
+tela TelaLogin "Sistema de Estoque"
+  login FormLogin
+    enviar: fazerLogin
+    titulo: "Gestão de Estoque"
+  fim
+fim
+```
+
+### Interface completa — dashboard
+
+```jd
+funcao abrirFormProduto()
+fim
+
+funcao fazerLogout()
+  sessao.limpar()
+  router.navegar("/login")
+fim
+
+tela TelaDashboard "Dashboard"
+  gaveta MenuLateral
+    item: Dashboard|casa|TelaDashboard
+    item: Produtos|caixa|TelaProdutos
+    item: Movimentos|relatorio|TelaMovimentos
+    separador
+    item: Sair|sair|acao:fazerLogout
+  fim
+  cartao TotalProdutos
+    titulo: "Produtos Ativos"
+    variante: destaque
+  fim
+  cartao ProdutosCriticos
+    titulo: "Estoque Crítico"
+    variante: alerta
+  fim
+  grafico GraficoMovimentos
+    tipo: barras
+    entidade: MovimentoEstoque
+    eixoX: realizadoEm
+    eixoY: quantidade
+  fim
+fim
+
+tela TelaProdutos "Catálogo de Produtos"
+  tabela ListaProdutos
+    entidade: Produto
+    colunas: nome, sku, preco, estoque, ativo
+    filtravel: verdadeiro
+    ordenavel: verdadeiro
+    paginacao: 20
+  fim
+  botao NovoProduto
+    acao: abrirFormProduto
+    icone: mais
+    tipo: primario
+  fim
+fim
+```
+
+### Compilar e rodar
+
+```bash
+jadec estoque.jd
+jade servir dist/
+```
+
+O compilador gera tudo automaticamente — servidor, interface e inicialização do browser. Abra o endereço exibido no terminal.
+
+## Passo 6 — Usando o sistema
 
 ```jd
 funcao demonstracao()
@@ -526,5 +641,8 @@ Você acabou de construir um sistema de estoque completo em Jade DSL com:
 - ✅ Regras de negócio declarativas
 - ✅ Autenticação e permissões
 - ✅ Relatórios e histórico
+- ✅ Conexão com banco real via `banco` DSL
+- ✅ Interface declarativa com login, dashboard, tabela e gráfico
+- ✅ Sincronização offline-first via SyncManager + JWT
 
 A partir daqui, você tem o conhecimento para construir qualquer sistema empresarial em Jade DSL.

@@ -35,7 +35,7 @@ export class IRGenerator {
       }
     }
 
-    // Passo 2: gerar funções
+    // Passo 2: gerar funções + extrair config de banco
     for (const declaracao of allDecls) {
       if (declaracao.kind === 'Funcao') {
         this.generateFuncao(declaracao as N.FuncaoNode);
@@ -45,6 +45,8 @@ export class IRGenerator {
         this.generateRegra(declaracao as N.RegraNode);
       } else if (declaracao.kind === 'Tela') {
         this.generateTela(declaracao as N.TelaNode);
+      } else if (declaracao.kind === 'Banco') {
+        this.generateBanco(declaracao as N.BancoNode);
       }
     }
 
@@ -231,6 +233,16 @@ export class IRGenerator {
     this.currentBlock = null;
   }
 
+  private generateBanco(node: N.BancoNode): void {
+    this.module.banco = {
+      tipo: node.tipo,
+      url: node.url,
+      porta: node.porta ?? 3000,
+      jwt: node.jwt ?? { tipo: 'env', variavel: 'JWT_SECRET' },
+      politicas: node.politicas ?? []
+    };
+  }
+
   private generateTela(node: N.TelaNode): void {
     const descriptor: IR.IRTelaDescriptor = {
       nome: node.nome,
@@ -367,12 +379,15 @@ export class IRGenerator {
     const value = this.generateExpressao(node.valor);
 
     if (typeof node.alvo === 'string') {
-      // Se alvo é string: Store simples
+      const existingLocal = this.currentFunction?.locals.find(
+        l => l.name === '%' + node.alvo
+      );
+      const inferredType = existingLocal?.type ?? value.type ?? 'i32';
       this.emit({
         kind: 'Store',
         target: '%' + node.alvo,
         value,
-        type: 'void' // Tipo será inferido do valor
+        type: inferredType !== 'void' ? inferredType : 'i32'
       });
     } else {
       // Se alvo é AcessoMembro: SetField
@@ -534,7 +549,7 @@ export class IRGenerator {
 
     this.generateBloco(node.corpo);
 
-    if (this.currentBlock && this.currentBlock.terminator.kind === 'Unreachable') {
+    if (this.currentBlock && this.currentBlock.terminator.kind !== 'Return') {
       const iLoadInc = this.newTemp();
       this.emit({
         kind: 'Load',
@@ -771,25 +786,29 @@ export class IRGenerator {
   }
 
   private generateAcessoMembro(node: N.AcessoMembroNode): IR.IRValue {
-    // Gera objeto
     const object = this.generateExpressao(node.objeto);
-    // Emite GetField
     const result = this.newTemp();
     const type = this.resolveFieldType(node.objeto, node.membro);
+
+    let objectTypeName: string | undefined;
+    if (node.objeto.kind === 'Identificador') {
+      objectTypeName = this.localEntityTypeMap.get(
+        (node.objeto as N.IdentificadorNode).nome
+      );
+    }
+    const objectWithType: IR.IRValue = (objectTypeName && object.kind === 'LocalRef')
+      ? { ...object, typeName: objectTypeName }
+      : object;
 
     this.emit({
       kind: 'GetField',
       result,
-      object,
+      object: objectWithType,
       field: node.membro,
       type
     });
 
-    return {
-      kind: 'LocalRef',
-      name: result,
-      type
-    };
+    return { kind: 'LocalRef', name: result, type };
   }
 
   /**

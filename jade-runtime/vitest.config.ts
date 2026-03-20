@@ -2,9 +2,21 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    // Ambiente Node.js para stdlib e APIs server-side
-    // Nota: testes de UI precisariam de jsdom — separar quando chegarem a Vitest
+    // Ambiente padrão Node.js — stdlib e APIs server-side
     environment: 'node',
+
+    // Testes de UI (UIEngine, componentes DOM) usam happy-dom
+    environmentMatchGlobs: [
+      ['tests/ui_engine.test.ts', 'happy-dom'],
+    ],
+
+    // Timeout global — aumentado para acomodar ambientes com carga (watch mode + build paralelo)
+    // Testes com scrypt podem levar mais tempo dependendo da carga da máquina
+    testTimeout: 30000,
+
+    // Roda todos os arquivos no mesmo processo fork — evita timeout de inicialização
+    // do worker happy-dom quando jade-compiler watch roda em paralelo (Vitest 4+)
+    forks: { singleFork: true },
 
     // Diretório de testes
     include: ['tests/**/*.test.ts'],

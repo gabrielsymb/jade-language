@@ -1,6 +1,6 @@
 {
   "name": "@yakuzaa/jade-runtime",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Runtime da Jade DSL — event loop, UI engine mobile-first, persistência IndexedDB/localStorage e APIs empresariais",
   "type": "module",
   "main": "./dist/index.js",
@@ -45,7 +45,10 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "cheerio": "^1.2.0",
     "esbuild": "^0.25.12",
+    "happy-dom": "^20.8.4",
+    "jsdom": "^29.0.1",
     "typescript": "^5.0.0",
     "vitest": "^4.1.0"
   },

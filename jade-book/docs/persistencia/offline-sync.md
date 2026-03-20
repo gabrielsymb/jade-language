@@ -78,16 +78,30 @@ Produto {
 
 O formato é `{número da revisão}-{hash da mudança}`. O servidor usa isso para detectar conflitos.
 
-## Configurando a URL do servidor
+## Configurando o servidor e autenticação
+
+Chame `configurar` após o login — o token JWT será enviado em todas as requisições de sync via `Authorization: Bearer`:
 
 ```jd
+// Após login bem-sucedido
 SyncManager.configurar({
   url: "https://meu-servidor.com/api/sync",
-  intervalo: 30000,     // sincronizar a cada 30 segundos
-  token: Session.get("access_token")
+  token: sessao.obterToken(),   // Bearer token enviado automaticamente
+  intervalo: 30000              // polling a cada 30s (0 = desativado)
 })
 ```
 
+No logout, limpe o token para parar de enviar requests autenticados:
+
+```jd
+SyncManager.limparToken()
+sessao.limpar()
+```
+
+::: tip Compatibilidade com Supabase, PostgreSQL, etc.
+O endpoint `/api/sync` pode ser qualquer servidor REST. Como o token JWT é enviado no header `Authorization`, é compatível com qualquer backend que valide Bearer tokens — Express + PostgreSQL, Supabase Edge Functions, etc.
+:::
+
 ## Próximo passo
 
-→ [HTTP e Redes](/runtime/http)
+→ [Protocolo de Sincronização](/persistencia/protocolo-sync) — como implementar o servidor e adapters para PostgreSQL, Supabase, etc.

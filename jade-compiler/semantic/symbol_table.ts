@@ -9,7 +9,8 @@ export type SimboloKind =
   | 'interface'
   | 'enum'
   | 'enum_valor'
-  | 'tela';
+  | 'tela'
+  | 'banco';
 
 export interface Simbolo {
   nome: string;
@@ -18,6 +19,7 @@ export interface Simbolo {
   linha: number;
   coluna: number;
   escopo: string;        // caminho do escopo, ex: 'global', 'EstoqueService.baixar'
+  imutavel?: boolean;
 }
 
 export class TabelaSimbolos {

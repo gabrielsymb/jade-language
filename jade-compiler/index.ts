@@ -100,7 +100,8 @@ export async function compile(source: string, moduleName = 'jade_module') {
     wasm: wasmResult.wasm ?? null,
     wat: wasmResult.wat,
     eventHandlers: ir.eventHandlers,
-    telas: ir.telas
+    telas: ir.telas,
+    banco: ir.banco ?? null
   };
 }
 
@@ -218,6 +219,7 @@ export async function compileFile(
     wasm: wasmResult.wasm ?? null,
     wat: wasmResult.wat,
     eventHandlers: ir.eventHandlers,
-    telas: ir.telas
+    telas: ir.telas,
+    banco: ir.banco ?? null
   };
 }

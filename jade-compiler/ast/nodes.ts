@@ -60,7 +60,8 @@ export type DeclaracaoNode =
   | EnumNode
   | ImportacaoNode
   | VariavelNode
-  | TelaNode;
+  | TelaNode
+  | BancoNode;
 
 export interface ModuloNode extends Node {
   kind: 'Modulo';
@@ -179,6 +180,7 @@ export interface VariavelNode extends Node {
   nome: string;
   tipo?: TipoNode;          // opcional quando há inferência
   inicializador?: ExpressaoNode;
+  imutavel: boolean;        // true quando declarado com 'constante'
 }
 
 export interface AtribuicaoNode extends Node {
@@ -268,6 +270,30 @@ export interface AcessoMembroNode extends Node {
   objeto: ExpressaoNode;
   membro: string;
   chamada?: ExpressaoNode[]; // produto.calcular(x) → chamada = [x]
+}
+
+// ─── Banco (configuração de persistência server-side) ────────
+
+/** Valor de propriedade do bloco banco: literal string ou env("VAR") */
+export type BancoValor =
+  | { tipo: 'literal'; valor: string }
+  | { tipo: 'env'; variavel: string };
+
+export type BancoTipo = 'postgres' | 'mysql' | 'sqlite' | 'supabase';
+
+/** Política de acesso por linha — gerada no jade-server.js como filtro por dono */
+export interface BancoPolitica {
+  entidade: string;   // nome da entidade (ex: "Produto")
+  dono: string;       // campo na entidade que deve == usuario.sub (ex: "usuarioId")
+}
+
+export interface BancoNode extends Node {
+  kind: 'Banco';
+  tipo: BancoTipo;
+  url: BancoValor;
+  porta?: number;       // porta do servidor sync (padrão: 3000)
+  jwt?: BancoValor;     // env var ou valor do JWT secret (padrão: env("JWT_SECRET"))
+  politicas: BancoPolitica[]; // políticas de acesso por linha (RLS aplicado no app)
 }
 
 // ─── Tela (UI declarativa) ───────────────────────────────────

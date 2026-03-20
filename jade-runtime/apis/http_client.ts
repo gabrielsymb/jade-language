@@ -3,6 +3,16 @@ export interface RequestOptions {
   params?: Record<string, any>;
   timeout?: number;
   retries?: number;
+  /** Desativa a geração automática do Idempotency-Key para esta requisição */
+  semIdempotencia?: boolean;
+}
+
+function gerarUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
 }
 
 export interface HttpResponse<T = any> {
@@ -52,6 +62,7 @@ export class HttpClient {
     params?: Record<string, any>;
     timeout?: number;
     retries?: number;
+    semIdempotencia?: boolean;
   }): Promise<HttpResponse<T>> {
     this.validateUrl(config.url);
 
@@ -73,6 +84,16 @@ export class HttpClient {
     }
 
     const headers = { ...this.defaultHeaders, ...(finalConfig.headers || {}) };
+
+    // Rastreabilidade: ID único por requisição para correlacionar logs cliente/servidor
+    headers['X-Correlation-ID'] = gerarUUID();
+
+    // Idempotência: chave única por operação mutante — o servidor ignora duplicatas
+    const ehMutacao = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(finalConfig.method.toUpperCase());
+    if (ehMutacao && !finalConfig.semIdempotencia && !headers['Idempotency-Key']) {
+      headers['Idempotency-Key'] = gerarUUID();
+    }
+
     const retries = finalConfig.retries ?? 0;
 
     let lastError: Error | null = null;

@@ -19,6 +19,7 @@ export { UIEngine }           from './ui/ui_engine.js';
 export { Router }             from './ui/router.js';
 export { Signal, Store, createEffect } from './ui/reactive.js';
 export { aplicarTema }        from './ui/theme.js';
+export { Session, sessao }    from './ui/session.js';
 
 // PWA
 export { PWAGenerator }       from './pwa/pwa_generator.js';
@@ -35,9 +36,11 @@ export { HttpClient }         from './apis/http_client.js';
 export { ConsoleAPI }         from './apis/console_api.js';
 export { DateTimeAPI }        from './apis/datetime_api.js';
 
-// Persistência (IndexedDB + localStorage)
+// Persistência (IndexedDB + localStorage + sync)
 export { LocalDatastore }     from './persistence/local_datastore.js';
 export { Preferencias, preferencias } from './persistence/preferencias.js';
+export { SyncManager }        from './persistence/sync_manager.js';
+export type { SyncConfig, Change, ConflictStrategy, ConflictRecord } from './persistence/sync_manager.js';
 
 // Entidade e regras
 export { EntityManager }      from './core/entity_manager.js';

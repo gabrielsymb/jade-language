@@ -21,6 +21,7 @@ export interface LintWarning {
  *   VAZIO003 Serviço sem métodos nem ouvintes
  *   PARAM001 Função com mais de 5 parâmetros
  *   VAR001   Variável declarada sem tipo nem inicializador
+ *   CONST001 Variável nunca reatribuída — sugerir 'constante'
  *   MORT001  Código morto — instrução após retornar
  */
 export class Linter {
@@ -111,10 +112,13 @@ export class Linter {
   // ── Bloco e instruções ───────────────────────────────────────────────────
 
   private checkBloco(bloco: N.BlocoNode): void {
+    // Pré-computar todos os nomes reatribuídos neste bloco (incluindo sub-blocos)
+    const reatribuidas = this.coletarReatribuicoes(bloco);
+
     const instrucoes = bloco.instrucoes;
     for (let i = 0; i < instrucoes.length; i++) {
       const instr = instrucoes[i];
-      this.checkInstrucao(instr);
+      this.checkInstrucao(instr, reatribuidas);
 
       // MORT001 — código morto após retornar
       if (instr.kind === 'Retorno' && i < instrucoes.length - 1) {
@@ -130,7 +134,36 @@ export class Linter {
     }
   }
 
-  private checkInstrucao(node: N.InstrucaoNode): void {
+  /**
+   * Coleta recursivamente todos os nomes de variáveis que aparecem como
+   * alvo de atribuição em um bloco (e seus sub-blocos).
+   * Usado pelo CONST001 para detectar variáveis nunca reatribuídas.
+   */
+  private coletarReatribuicoes(bloco: N.BlocoNode): Set<string> {
+    const nomes = new Set<string>();
+    for (const instr of bloco.instrucoes) {
+      this.coletarReatribuicoesInstrucao(instr, nomes);
+    }
+    return nomes;
+  }
+
+  private coletarReatribuicoesInstrucao(node: N.InstrucaoNode, nomes: Set<string>): void {
+    switch (node.kind) {
+      case 'Atribuicao':
+        if (typeof node.alvo === 'string') nomes.add(node.alvo);
+        break;
+      case 'Condicional':
+        for (const i of node.entao.instrucoes) this.coletarReatribuicoesInstrucao(i, nomes);
+        if (node.senao) for (const i of node.senao.instrucoes) this.coletarReatribuicoesInstrucao(i, nomes);
+        break;
+      case 'Enquanto':
+      case 'Para':
+        for (const i of node.corpo.instrucoes) this.coletarReatribuicoesInstrucao(i, nomes);
+        break;
+    }
+  }
+
+  private checkInstrucao(node: N.InstrucaoNode, reatribuidas: Set<string>): void {
     switch (node.kind) {
       case 'Variavel':
         this.assertCamelCase(node.nome, 'NOME004', 'Variável', node.line, node.column);
@@ -138,6 +171,14 @@ export class Linter {
           this.warn(
             'VAR001',
             `Variável '${node.nome}' declarada sem tipo nem valor inicial`,
+            node.line, node.column
+          );
+        }
+        // CONST001 — sugerir 'constante' quando variável nunca é reatribuída
+        if (!node.imutavel && node.inicializador && !reatribuidas.has(node.nome)) {
+          this.warn(
+            'CONST001',
+            `Variável '${node.nome}' nunca é reatribuída — considere usar 'constante'`,
             node.line, node.column
           );
         }

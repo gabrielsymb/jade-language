@@ -34,6 +34,7 @@ export interface TokenPayload {
 export class AuthService {
   private users: Map<string, User> = new Map();
   private sessions: Map<string, { userId: string; expiresAt: number }> = new Map();
+  private resetTokens: Map<string, { userId: string; expiraEm: number }> = new Map();
   private jwtSecret: string;
   private tokenExpirySeconds: number;
   private scryptN: number;
@@ -150,6 +151,57 @@ export class AuthService {
     if (!user) throw new Error('Usuário não encontrado');
 
     return this.generateToken(user, this.tokenExpirySeconds);
+  }
+
+  // Retorna o usuário autenticado a partir de um token JWT válido
+  getCurrentUser(token: string): Omit<User, 'passwordHash'> {
+    const payload = this.verifyToken(token);
+    const user = this.users.get(payload.userId);
+    if (!user) throw new Error('Usuário não encontrado');
+    const { passwordHash, ...safeUser } = user;
+    return safeUser;
+  }
+
+  // Altera a senha do usuário verificando a senha atual
+  async changePassword(userId: string, senhaAtual: string, novaSenha: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error('Usuário não encontrado');
+    const valida = await this.verifyPassword(senhaAtual, user.passwordHash!);
+    if (!valida) throw new Error('Senha atual incorreta');
+    user.passwordHash = await this.hashPassword(novaSenha);
+  }
+
+  /**
+   * Gera um token de reset de senha válido por 1 hora.
+   * Retorna o token — em produção seria enviado por email;
+   * aqui é retornado diretamente para integração manual (ex: admin mostra ao usuário).
+   * Não vaza se o email não existe: retorna token inválido silenciosamente.
+   */
+  solicitarResetSenha(email: string): string {
+    let userId: string | undefined;
+    for (const user of this.users.values()) {
+      if (user.email === email) { userId = user.id; break; }
+    }
+
+    const token = this.generateId();
+    if (userId) {
+      this.resetTokens.set(token, { userId, expiraEm: Date.now() + 3_600_000 }); // 1h
+    }
+    // Se email não existe, retorna token aleatório que nunca estará no map — sem vazamento de info
+    return token;
+  }
+
+  // Confirma o reset de senha usando o token gerado por solicitarResetSenha
+  async confirmarResetSenha(resetToken: string, novaSenha: string): Promise<void> {
+    const entrada = this.resetTokens.get(resetToken);
+    if (!entrada || Date.now() > entrada.expiraEm) {
+      this.resetTokens.delete(resetToken);
+      throw new Error('Token de reset inválido ou expirado');
+    }
+    const user = this.users.get(entrada.userId);
+    if (!user) throw new Error('Usuário não encontrado');
+    user.passwordHash = await this.hashPassword(novaSenha);
+    this.resetTokens.delete(resetToken);
   }
 
   // Utilitários privados

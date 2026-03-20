@@ -1,4 +1,5 @@
 import { Store, Signal, disposeOwner, setEffectOwner } from './reactive.js';
+import { sessao } from './session.js';
 import { bind, bindInput } from './binding.js';
 import { RefManager } from './refs.js';
 import { VirtualList } from './virtual_list.js';
@@ -6,6 +7,14 @@ import { aplicarTema, Tema } from './theme.js';
 import { Router } from './router.js';
 import { MemoryManager } from '../core/memory_manager.js';
 import { Responsivo } from './responsive.js';
+import { criarGraficoSVG, GraficoConfig } from './grafico.js';
+import { ModalManager, ModalConfig } from './modal.js';
+import { criarAbas, AbasConfig } from './abas.js';
+import { criarLista, ListaConfig } from './lista.js';
+import { criarAcordeao, AcordeaoConfig } from './acordeao.js';
+import { criarNavegacao, NavConfig, NavAbaConfig } from './navegar.js';
+import { criarGaveta, GavetaConfig, GavetaItemConfig } from './gaveta.js';
+import { criarElementoIcone } from './icones.js';
 
 // Formato gerado pelo compilador (jade-ui.json)
 export interface TelaDescriptor {
@@ -48,7 +57,7 @@ export interface TabelaConfig {
 export interface CampoConfig {
   nome: string;
   titulo: string;
-  tipo: 'texto' | 'numero' | 'decimal' | 'booleano' | 'data' | 'hora' | 'select';
+  tipo: 'texto' | 'numero' | 'decimal' | 'booleano' | 'data' | 'hora' | 'select' | 'senha';
   obrigatorio?: boolean;
   ref?: string;
   opcoes?: Array<{ valor: string; label: string }>; // para tipo 'select'
@@ -58,6 +67,8 @@ export interface CampoConfig {
 export interface FormularioConfig {
   entidade: string;
   campos: CampoConfig[];
+  /** Nome da função chamada ao submeter o formulário (tecla Enter ou submit nativo) */
+  enviar?: string;
 }
 
 export type TipoNotificacao = 'sucesso' | 'erro' | 'aviso' | 'info';
@@ -70,8 +81,10 @@ export class UIEngine {
   private memory: MemoryManager;
   private router: Router;
   private responsivo: Responsivo;
+  private modais: ModalManager;
   private telaAtiva: string | null = null;
   private toastContainer: HTMLElement | null = null;
+  private acoesPendentes: Map<string, HTMLButtonElement> = new Map();
 
   constructor(memory: MemoryManager, tema?: Tema) {
     this.memory = memory;
@@ -79,10 +92,15 @@ export class UIEngine {
     this.refs = new RefManager();
     this.router = new Router(this.store, memory);
     this.responsivo = new Responsivo();
+    this.modais = new ModalManager();
     if (typeof document !== 'undefined') {
       aplicarTema(tema);
       this.responsivo.injetarEstilos();
     }
+    // Escuta evento de conclusão para reabilitar botões automaticamente
+    window.addEventListener('jade:acao:concluido', ((e: CustomEvent) => {
+      if (e.detail?.acao) this.concluirAcao(e.detail.acao);
+    }) as EventListener);
   }
 
   // ── Gestão de telas ───────────────────────────────────────────────────────
@@ -100,6 +118,8 @@ export class UIEngine {
       // CORREÇÃO: limpar apenas o namespace da tela que saiu, não o store inteiro
       this.store.clearNamespace(this.telaAtiva + '.');
       this.refs.limpar();
+      this.modais.limpar();
+      this.acoesPendentes.clear();
     }
 
     this.telaAtiva = config.nome;
@@ -134,6 +154,7 @@ export class UIEngine {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'jade-tabela-wrapper';
+    if (config.altura) wrapper.style.maxHeight = config.altura;
 
     // Barra de busca (acima da tabela/lista, visível em ambos os layouts)
     const termoBusca  = new Signal('');
@@ -170,7 +191,12 @@ export class UIEngine {
 
     const form = document.createElement('form');
     form.className = 'jade-formulario';
-    form.onsubmit = e => e.preventDefault();
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (config.enviar) {
+        window.dispatchEvent(new CustomEvent('jade:acao', { detail: { acao: config.enviar, tela: this.telaAtiva } }));
+      }
+    });
 
     const signals: Record<string, Signal<string>> = {};
 
@@ -198,6 +224,7 @@ export class UIEngine {
                  : campo.tipo === 'booleano' ? 'checkbox'
                  : campo.tipo === 'data' ? 'date'
                  : campo.tipo === 'hora' ? 'time'
+                 : campo.tipo === 'senha' ? 'password'
                  : 'text';
         if (campo.placeholder) inp.placeholder = campo.placeholder;
         inp.required = campo.obrigatorio ?? false;
@@ -243,9 +270,15 @@ export class UIEngine {
     btn.className = `jade-botao jade-botao-${opcoes?.tipo ?? 'primario'}`;
 
     if (opcoes?.icone) {
-      const icon = document.createElement('span');
-      icon.textContent = opcoes.icone;
-      btn.appendChild(icon);
+      const iconeEl = criarElementoIcone(opcoes.icone, 18);
+      if (iconeEl) {
+        btn.appendChild(iconeEl);
+      } else {
+        // Fallback: trata como texto (compatibilidade com valores livres)
+        const span = document.createElement('span');
+        span.textContent = opcoes.icone;
+        btn.appendChild(span);
+      }
     }
 
     const label = document.createTextNode(texto);
@@ -264,11 +297,14 @@ export class UIEngine {
 
   // ── Card de métrica ────────────────────────────────────────────────────────
 
-  criarCard(titulo: string, valorSignal: Signal<any>, container: HTMLElement): void {
+  criarCard(titulo: string, valorSignal: Signal<any>, container: HTMLElement, opcoes?: { variante?: string }): void {
     setEffectOwner(this.telaAtiva);
 
     const card = document.createElement('div');
     card.className = 'jade-card';
+    if (opcoes?.variante && opcoes.variante !== 'neutro') {
+      card.classList.add(`jade-card-${opcoes.variante}`);
+    }
 
     const t = document.createElement('div');
     t.className = 'jade-card-titulo';
@@ -338,11 +374,17 @@ export class UIEngine {
       document.body.appendChild(this.toastContainer);
     }
 
-    const icones: Record<TipoNotificacao, string> = {
-      sucesso: '✓',
-      erro: '✕',
-      aviso: '⚠',
-      info: 'ℹ',
+    // Ignora se já há um toast visível com a mesma mensagem e tipo
+    const duplicado = Array.from(this.toastContainer.children).some(
+      t => t.classList.contains(`jade-toast-${tipo}`) && t.textContent?.includes(mensagem)
+    );
+    if (duplicado) return;
+
+    const iconesNomes: Record<TipoNotificacao, string> = {
+      sucesso: 'sucesso_icone',
+      erro:    'erro_icone',
+      aviso:   'aviso',
+      info:    'info',
     };
 
     const toast = document.createElement('div');
@@ -350,7 +392,9 @@ export class UIEngine {
     toast.setAttribute('role', 'alert');
 
     const icon = document.createElement('span');
-    icon.textContent = icones[tipo];
+    icon.className = 'jade-toast-icone';
+    const iconeEl = criarElementoIcone(iconesNomes[tipo], 16);
+    if (iconeEl) icon.appendChild(iconeEl);
     toast.appendChild(icon);
 
     const msg = document.createTextNode(mensagem);
@@ -373,11 +417,40 @@ export class UIEngine {
    * automaticamente cada elemento declarado na tela.
    * É aqui que "usuário descreve O QUE, sistema decide COMO" se concretiza.
    */
-  renderizarTela(descriptor: TelaDescriptor, container: HTMLElement): HTMLElement {
+  /**
+   * dadosMap: mapa de entidade → registros, carregado pelo bootstrap antes de chamar este método.
+   * Ex: { 'Produto': [{nome:'...', preco:...}, ...], 'Cliente': [...] }
+   */
+  renderizarTela(descriptor: TelaDescriptor, container: HTMLElement, dadosMap: Record<string, any[]> = {}): HTMLElement {
     const div = this.montarTela({ nome: descriptor.nome, titulo: descriptor.titulo }, container);
 
     for (const el of descriptor.elementos) {
       const props = Object.fromEntries(el.propriedades.map(p => [p.chave, p.valor]));
+
+      // Avisa sobre propriedades desconhecidas para facilitar depuração
+      const propsConhecidas: Record<string, Set<string>> = {
+        tabela:     new Set(['entidade', 'colunas', 'filtravel', 'ordenavel', 'paginacao', 'altura']),
+        formulario: new Set(['entidade', 'campos', 'enviar']),
+        botao:      new Set(['acao', 'clique', 'icone', 'tipo']),
+        cartao:     new Set(['titulo', 'conteudo', 'variante']),
+        modal:      new Set(['titulo', 'mensagem', 'variante']),
+        grafico:    new Set(['tipo', 'entidade', 'eixoX', 'eixoY']),
+        abas:       new Set(['aba']),
+        lista:      new Set(['entidade', 'campo', 'subcampo', 'deslizar']),
+        acordeao:   new Set(['secao']),
+        login:      new Set(['enviar', 'titulo']),
+        toolbar:    new Set(['botao']),
+        divisor:    new Set(['rotulo']),
+        busca:      new Set(['acao', 'placeholder', 'modo']),
+      };
+      const conhecidas = propsConhecidas[el.tipo];
+      if (conhecidas) {
+        for (const chave of Object.keys(props)) {
+          if (!conhecidas.has(chave)) {
+            console.warn(`[JADE] ${el.tipo} '${el.nome}': propriedade desconhecida '${chave}' — será ignorada.`);
+          }
+        }
+      }
 
       switch (el.tipo) {
         case 'tabela': {
@@ -385,17 +458,19 @@ export class UIEngine {
           const entidade = String(props['entidade'] ?? el.nome);
           const colunas  = Array.isArray(props['colunas'])
             ? (props['colunas'] as string[]).map(c => ({ campo: c, titulo: c }))
-            : []; // sem colunas declaradas: usa nome do elemento como placeholder
+            : [];
           this.criarTabela(
             {
               entidade,
               colunas,
               filtravel:  props['filtravel'] === 'verdadeiro',
+              ordenavel:  props['ordenavel'] === 'verdadeiro',
               paginacao:  props['paginacao'] === 'verdadeiro' ? true
                         : Number(props['paginacao']) || false,
+              altura:     props['altura'] ? String(props['altura']) : undefined,
             },
             div,
-            []  // dados vindos do runtime/WASM — [] por padrão até carregar
+            dadosMap[entidade] ?? []
           );
           break;
         }
@@ -404,44 +479,418 @@ export class UIEngine {
           const campos = Array.isArray(props['campos'])
             ? (props['campos'] as string[]).map(c => ({ nome: c, titulo: c, tipo: 'texto' as const }))
             : [];
-          this.criarFormulario({ entidade: String(props['entidade'] ?? el.nome), campos }, div);
+          this.criarFormulario({
+            entidade: String(props['entidade'] ?? el.nome),
+            campos,
+            enviar: props['enviar'] ? String(props['enviar']) : undefined,
+          }, div);
           break;
         }
 
         case 'botao': {
           const acao = String(props['acao'] ?? props['clique'] ?? '');
-          this.criarBotao(el.nome, () => {
-            // Dispara evento com o nome da ação para o WASM ou handler registrado
+          const tiposValidos = ['primario', 'secundario', 'perigo', 'sucesso'];
+          const btn = this.criarBotao(el.nome, () => {
+            btn.disabled = true;
+            btn.classList.add('jade-botao-carregando');
+            if (acao) this.acoesPendentes.set(acao, btn);
             window.dispatchEvent(new CustomEvent('jade:acao', { detail: { acao, tela: descriptor.nome } }));
-          }, div);
+          }, div, {
+            tipo:  tiposValidos.includes(String(props['tipo'])) ? String(props['tipo']) as any : 'primario',
+            icone: props['icone'] ? String(props['icone']) : undefined,
+          });
           break;
         }
 
         case 'cartao': {
-          const valor = new Signal<any>(props['valor'] ?? '');
-          this.criarCard(el.nome, valor, div);
+          const conteudo = new Signal<any>(props['conteudo'] ?? '');
+          this.criarCard(
+            String(props['titulo'] ?? el.nome),
+            conteudo,
+            div,
+            { variante: props['variante'] ? String(props['variante']) : undefined }
+          );
           break;
         }
 
-        // grafico e modal: placeholder até implementação completa
-        default: {
-          const placeholder = document.createElement('div');
-          placeholder.className = 'jade-placeholder';
-          placeholder.textContent = `[${el.tipo}: ${el.nome}]`;
-          placeholder.style.cssText = 'padding:12px;border:1px dashed #d1d5db;border-radius:8px;color:#9ca3af;font-size:0.875rem;';
-          div.appendChild(placeholder);
+        case 'grafico': {
+          const entidade = String(props['entidade'] ?? el.nome);
+          const graficoConfig: GraficoConfig = {
+            tipo:    (['linha', 'barras', 'pizza'].includes(String(props['tipo']))
+                        ? String(props['tipo']) : 'barras') as GraficoConfig['tipo'],
+            entidade,
+            eixoX:   props['eixoX'] ? String(props['eixoX']) : undefined,
+            eixoY:   props['eixoY'] ? String(props['eixoY']) : undefined,
+          };
+          div.appendChild(criarGraficoSVG(graficoConfig, dadosMap[entidade] ?? []));
+          break;
         }
+
+        case 'modal': {
+          const titulo   = String(props['titulo']   ?? el.nome);
+          const mensagem = props['mensagem'] ? String(props['mensagem']) : undefined;
+          const variante = (['info', 'alerta', 'perigo'].includes(String(props['variante'])))
+            ? String(props['variante']) as ModalConfig['variante']
+            : undefined;
+          this.modais.criar(el.nome, { titulo, mensagem, variante }, this.telaAtiva);
+          break;
+        }
+
+        case 'abas': {
+          // `aba:` é uma propriedade repetida — lemos direto do array
+          const nomes = el.propriedades
+            .filter(p => p.chave === 'aba')
+            .map(p => String(p.valor));
+          if (nomes.length > 0) {
+            const abasConfig: AbasConfig = { nome: el.nome, abas: nomes, tela: descriptor.nome };
+            criarAbas(abasConfig, div);
+          }
+          break;
+        }
+
+        case 'lista': {
+          const entidade = String(props['entidade'] ?? el.nome);
+          const listaConfig: ListaConfig = {
+            entidade,
+            campo:     props['campo']    ? String(props['campo'])    : undefined,
+            subcampo:  props['subcampo'] ? String(props['subcampo']) : undefined,
+            deslizar:  Array.isArray(props['deslizar'])
+                         ? (props['deslizar'] as string[])
+                         : props['deslizar'] ? [String(props['deslizar'])] : undefined,
+          };
+          criarLista(listaConfig, dadosMap[entidade] ?? [], div, descriptor.nome);
+          break;
+        }
+
+        case 'acordeao': {
+          const secoes = el.propriedades
+            .filter(p => p.chave === 'secao')
+            .map(p => String(p.valor));
+          if (secoes.length > 0) {
+            const acordeaoConfig: AcordeaoConfig = { nome: el.nome, secoes, tela: descriptor.nome };
+            criarAcordeao(acordeaoConfig, div);
+          }
+          break;
+        }
+
+        case 'navegar': {
+          // Cada aba: "label|icone|tela" — ícone é opcional
+          const abas: NavAbaConfig[] = el.propriedades
+            .filter(p => p.chave === 'aba')
+            .map(p => {
+              const partes = String(p.valor).split('|');
+              return { label: partes[0] ?? '', icone: partes[1] || undefined, tela: partes[2] ?? '' };
+            });
+          if (abas.length > 0) {
+            criarNavegacao({ nome: el.nome, abas }, this.telaAtiva ?? undefined);
+          }
+          break;
+        }
+
+        case 'toolbar': {
+          // Cada botao: "Label|acao|icone?|tipo?" dentro do toolbar
+          const tiposValidos = new Set(['primario', 'secundario', 'perigo', 'sucesso']);
+          const wrapper = document.createElement('div');
+          wrapper.className = 'jade-toolbar';
+          wrapper.setAttribute('role', 'toolbar');
+          wrapper.setAttribute('aria-label', el.nome);
+
+          el.propriedades
+            .filter(p => p.chave === 'botao')
+            .forEach(p => {
+              const partes = String(p.valor).split('|');
+              const label = partes[0] ?? '';
+              const acao  = partes[1] ?? '';
+              const icone = partes[2] || undefined;
+              const tipo  = tiposValidos.has(partes[3] ?? '') ? partes[3] as any : 'primario';
+              const btn = this.criarBotao(label, () => {
+                window.dispatchEvent(new CustomEvent('jade:acao', { detail: { acao, tela: descriptor.nome } }));
+              }, wrapper, { tipo, icone });
+              if (acao) this.acoesPendentes.set(acao, btn);
+            });
+
+          div.appendChild(wrapper);
+          break;
+        }
+
+        case 'login': {
+          const acao = props['enviar'] ? String(props['enviar']) : 'login';
+          const titulo = props['titulo'] ? String(props['titulo']) : undefined;
+          this.criarTelaLogin(div, ({ usuario, senha, lembrarMe }) => {
+            // Credenciais viajam no detail do evento — nunca ficam no store reativo
+            return new Promise<void>((resolve, reject) => {
+              const chave = `${acao}:${Date.now()}`;
+
+              // Escuta a resposta da função JADE (sucesso ou erro)
+              const onResposta = (e: Event): void => {
+                const ev = e as CustomEvent;
+                if (ev.detail?.chave !== chave) return;
+                window.removeEventListener('jade:acao:resultado', onResposta);
+                if (ev.detail.erro) reject(new Error(ev.detail.erro));
+                else resolve();
+              };
+              window.addEventListener('jade:acao:resultado', onResposta);
+
+              window.dispatchEvent(new CustomEvent('jade:acao', {
+                detail: { acao, tela: descriptor.nome, chave, credenciais: { usuario, senha, lembrarMe } }
+              }));
+            });
+          }, { titulo });
+          break;
+        }
+
+        case 'gaveta': {
+          // item: "label|icone|tela" ou "label|icone|acao:nomeDaFuncao"
+          const itens = el.propriedades
+            .map(p => {
+              if (p.chave === 'separador') return { tipo: 'separador' as const } as GavetaItemConfig;
+              if (p.chave === 'item') {
+                const partes = String(p.valor).split('|');
+                const destino = partes[2] ?? '';
+                return {
+                  tipo:  'item' as const,
+                  label: partes[0] ?? '',
+                  icone: partes[1] || undefined,
+                  tela:  destino.startsWith('acao:') ? undefined : destino || undefined,
+                  acao:  destino.startsWith('acao:') ? destino.slice(5) : undefined,
+                } as GavetaItemConfig;
+              }
+              return null;
+            })
+            .filter((x): x is GavetaItemConfig => x !== null);
+          if (itens.length > 0) {
+            const handle = criarGaveta({ nome: el.nome, itens });
+            // Injeta o botão hambúrguer no início da tela
+            div.insertBefore(handle.botaoToggle, div.firstChild);
+          }
+          break;
+        }
+
+        case 'divisor': {
+          // Linha divisória horizontal
+          const hr = document.createElement('hr');
+          hr.className = 'jade-divisor';
+          if (props['rotulo']) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'jade-divisor-rotulo';
+            wrapper.setAttribute('data-rotulo', String(props['rotulo']));
+            wrapper.appendChild(hr);
+            div.appendChild(wrapper);
+          } else {
+            div.appendChild(hr);
+          }
+          break;
+        }
+
+        case 'busca': {
+          // Campo de busca independente — dispara jade:acao com a query
+          const acao        = props['acao'] ? String(props['acao']) : '';
+          const ph          = props['placeholder'] ? String(props['placeholder']) : 'Buscar...';
+          const tempoReal   = String(props['modo'] ?? '') === 'tempo-real';
+          const modo        = tempoReal ? 'input' : 'submit';
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'jade-busca-wrapper';
+          wrapper.setAttribute('role', 'search');
+
+          const input = document.createElement('input');
+          input.type = 'search';
+          input.placeholder = ph;
+          input.className = 'jade-busca-input';
+          input.setAttribute('aria-label', ph);
+          input.setAttribute('autocomplete', 'off');
+
+          const btn = document.createElement('button');
+          btn.type = 'submit';
+          btn.className = 'jade-busca-btn';
+          btn.setAttribute('aria-label', 'Buscar');
+          btn.innerHTML = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <circle cx="8.5" cy="8.5" r="5.5"/><path d="M13.5 13.5L18 18"/>
+          </svg>`;
+
+          let debounceTimer: ReturnType<typeof setTimeout>;
+          const disparar = () => {
+            if (acao) {
+              window.dispatchEvent(new CustomEvent('jade:acao', {
+                detail: { acao, tela: descriptor.nome, query: input.value }
+              }));
+            }
+          };
+
+          if (tempoReal) {
+            input.addEventListener('input', () => {
+              clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(disparar, 300);
+            });
+          }
+
+          const form = document.createElement('form');
+          form.className = 'jade-busca-form';
+          form.addEventListener('submit', e => { e.preventDefault(); disparar(); });
+          form.appendChild(input);
+          form.appendChild(btn);
+          wrapper.appendChild(form);
+          div.appendChild(wrapper);
+          break;
+        }
+
+        default: break;
       }
     }
 
     return div;
   }
 
+  // ── Tela de login ─────────────────────────────────────────────────────────
+
+  /**
+   * Renderiza uma tela de login completa no container.
+   * Ao submeter, chama `onLogin` com as credenciais informadas.
+   * Se `onLogin` rejeitar, exibe a mensagem de erro abaixo do formulário.
+   */
+  criarTelaLogin(
+    container: HTMLElement,
+    onLogin: (credenciais: { usuario: string; senha: string; lembrarMe: boolean }) => Promise<void>,
+    opcoes?: { titulo?: string }
+  ): void {
+    container.innerHTML = '';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'jade-login-wrapper';
+
+    const card = document.createElement('div');
+    card.className = 'jade-login-card';
+
+    const titulo = document.createElement('h2');
+    titulo.className = 'jade-login-titulo';
+    titulo.textContent = opcoes?.titulo ?? 'Entrar';
+    card.appendChild(titulo);
+
+    const form = document.createElement('form');
+    form.className = 'jade-formulario';
+    form.noValidate = true;
+
+    // Campo: usuário
+    const campoUsuario = document.createElement('div');
+    campoUsuario.className = 'jade-campo';
+    const lblUsuario = document.createElement('label');
+    lblUsuario.textContent = 'Usuário *';
+    const inputUsuario = document.createElement('input');
+    inputUsuario.type = 'text';
+    inputUsuario.required = true;
+    inputUsuario.autocomplete = 'username';
+    inputUsuario.placeholder = 'Seu usuário';
+    inputUsuario.className = 'jade-campo-input';
+    campoUsuario.appendChild(lblUsuario);
+    campoUsuario.appendChild(inputUsuario);
+    form.appendChild(campoUsuario);
+
+    // Campo: senha
+    const campoSenha = document.createElement('div');
+    campoSenha.className = 'jade-campo';
+    const lblSenha = document.createElement('label');
+    lblSenha.textContent = 'Senha *';
+    const inputSenha = document.createElement('input');
+    inputSenha.type = 'password';
+    inputSenha.required = true;
+    inputSenha.autocomplete = 'current-password';
+    inputSenha.placeholder = 'Sua senha';
+    inputSenha.className = 'jade-campo-input';
+    campoSenha.appendChild(lblSenha);
+    campoSenha.appendChild(inputSenha);
+    form.appendChild(campoSenha);
+
+    // Checkbox: lembrar-me
+    const campoLembrar = document.createElement('div');
+    campoLembrar.className = 'jade-campo jade-campo-inline';
+    const inputLembrar = document.createElement('input');
+    inputLembrar.type = 'checkbox';
+    inputLembrar.id = 'jade-login-lembrar';
+    const lblLembrar = document.createElement('label');
+    lblLembrar.htmlFor = 'jade-login-lembrar';
+    lblLembrar.textContent = 'Lembrar-me por 7 dias';
+    campoLembrar.appendChild(inputLembrar);
+    campoLembrar.appendChild(lblLembrar);
+    form.appendChild(campoLembrar);
+
+    // Área de erro
+    const msgErro = document.createElement('p');
+    msgErro.className = 'jade-login-erro';
+    msgErro.setAttribute('role', 'alert');
+    msgErro.hidden = true;
+    form.appendChild(msgErro);
+
+    // Botão enviar
+    const btn = document.createElement('button');
+    btn.type = 'submit';
+    btn.className = 'jade-botao jade-botao-primario jade-login-btn';
+    btn.textContent = 'Entrar';
+    form.appendChild(btn);
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const usuario = inputUsuario.value.trim();
+      const senha = inputSenha.value;
+      if (!usuario || !senha) {
+        msgErro.textContent = 'Preencha usuário e senha.';
+        msgErro.hidden = false;
+        return;
+      }
+      btn.disabled = true;
+      btn.classList.add('jade-botao-carregando');
+      msgErro.hidden = true;
+      try {
+        await onLogin({ usuario, senha, lembrarMe: inputLembrar.checked });
+      } catch (err: any) {
+        msgErro.textContent = err?.message ?? 'Erro ao entrar. Tente novamente.';
+        msgErro.hidden = false;
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('jade-botao-carregando');
+      }
+    });
+
+    card.appendChild(form);
+    wrapper.appendChild(card);
+    container.appendChild(wrapper);
+
+    // Foca automaticamente no campo de usuário
+    setTimeout(() => inputUsuario.focus(), 0);
+  }
+
+  // ── Estado de botões ──────────────────────────────────────────────────────
+
+  /**
+   * Reabilita o botão associado à ação após a operação concluir.
+   * Chamado automaticamente via evento `jade:acao:concluido` ou manualmente.
+   */
+  concluirAcao(nome: string): void {
+    const btn = this.acoesPendentes.get(nome);
+    if (!btn) return;
+    btn.disabled = false;
+    btn.classList.remove('jade-botao-carregando');
+    this.acoesPendentes.delete(nome);
+  }
+
   // ── Acessores ─────────────────────────────────────────────────────────────
 
   focar(nomeRef: string): void { this.refs.focar(nomeRef); }
+  abrirModal(nome: string): void  { this.modais.abrir(nome); }
+  fecharModal(nome: string): void { this.modais.fechar(nome); }
   getStore(): Store { return this.store; }
   getRefs(): RefManager { return this.refs; }
   getRouter(): Router { return this.router; }
   getResponsivo(): Responsivo { return this.responsivo; }
+
+  /**
+   * Emite o resultado de uma ação de login para o formulário que está aguardando.
+   * Chame isso dentro da função JADE de login após AuthService.login():
+   *   sucesso → emitirResultadoAcao(chave)
+   *   falha   → emitirResultadoAcao(chave, 'Usuário ou senha inválidos')
+   */
+  emitirResultadoAcao(chave: string, erro?: string): void {
+    const detail: Record<string, string> = { chave };
+    if (erro !== undefined) detail.erro = erro;
+    window.dispatchEvent(new CustomEvent('jade:acao:resultado', { detail }));
+  }
 }

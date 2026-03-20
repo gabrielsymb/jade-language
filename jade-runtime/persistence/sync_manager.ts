@@ -140,12 +140,23 @@ export class ConflictManager {
   totalResolvidos(): number { return this.conflitos.filter(c => c.resolvido).length; }
 }
 
+export interface SyncConfig {
+  /** URL do endpoint de sincronização no servidor. Padrão: '/api/sync' */
+  url?: string;
+  /** Token JWT para autenticação. Enviado como `Authorization: Bearer <token>` em cada requisição. */
+  token?: string;
+  /** Intervalo de sincronização em ms (polling). 0 = desativado. Padrão: 0 */
+  intervalo?: number;
+}
+
 export class SyncManager {
   private queue: Change[] = [];
   private isOnline: boolean = typeof navigator !== 'undefined'
     ? navigator.onLine
     : true;
   private serverUrl: string;
+  private token: string | null = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
   private syncing: boolean = false;
 
   // Público para que o código da aplicação possa consultar conflitos pendentes
@@ -162,6 +173,38 @@ export class SyncManager {
         this.isOnline = false;
       });
     }
+  }
+
+  /**
+   * Configura o SyncManager em tempo de execução.
+   * Deve ser chamado após o login para passar o token JWT.
+   *
+   * @example
+   * syncManager.configurar({
+   *   url: 'https://meu-servidor.com/api/sync',
+   *   token: sessao.obterToken(),
+   *   intervalo: 30000
+   * })
+   */
+  configurar(config: SyncConfig): void {
+    if (config.url) this.serverUrl = config.url;
+    if (config.token !== undefined) this.token = config.token ?? null;
+
+    // Reinicia o polling se intervalo mudou
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    if (config.intervalo && config.intervalo > 0 && typeof setInterval !== 'undefined') {
+      this.intervalId = setInterval(() => {
+        if (this.isOnline) this.processQueue();
+      }, config.intervalo);
+    }
+  }
+
+  /** Remove o token (chamar no logout para parar de enviar requests autenticados). */
+  limparToken(): void {
+    this.token = null;
   }
 
   async queueChange(change: Omit<Change, 'timestamp'>): Promise<void> {
@@ -234,9 +277,12 @@ export class SyncManager {
   }
 
   private async sendToServer(change: Change): Promise<void> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+
     const response = await fetch(this.serverUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(change)
     });
 

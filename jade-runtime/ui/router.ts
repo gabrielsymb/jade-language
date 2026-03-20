@@ -18,6 +18,7 @@ export class Router {
   private telaAtiva: string | null = null;
   private container: HTMLElement | null = null;
   private usuarioAtual: UsuarioSessao | null = null;
+  private caminhoLogin: string | null = null;
 
   constructor(
     private store: Store,
@@ -30,6 +31,15 @@ export class Router {
    */
   setUsuario(usuario: UsuarioSessao | null): void {
     this.usuarioAtual = usuario;
+  }
+
+  /**
+   * Define a rota da tela de login.
+   * Quando uma rota protegida é acessada sem usuário, redireciona para esta rota
+   * em vez de exibir "acesso negado".
+   */
+  setTelaLogin(caminho: string): void {
+    this.caminhoLogin = caminho;
   }
 
   /** Registra uma rota com seu handler de renderização. */
@@ -64,14 +74,27 @@ export class Router {
     const rota = this.rotas.get(caminho);
     if (!rota || !this.container) return;
 
-    // CORREÇÃO: verificar permissão antes de renderizar a tela
+    // Verificar permissão antes de renderizar a tela
     if (rota.requerPapel) {
-      const papeis: string[] = this.usuarioAtual?.roles ?? [];
-      if (!papeis.includes(rota.requerPapel)) {
+      // Sem usuário → redireciona para login (se configurado) ou nega acesso
+      if (!this.usuarioAtual) {
+        if (this.caminhoLogin && caminho !== this.caminhoLogin) {
+          this.navegar(this.caminhoLogin);
+        } else {
+          this.container.innerHTML = '';
+          const p = document.createElement('p');
+          p.className = 'jade-acesso-negado';
+          p.textContent = 'Acesso negado: faça login para continuar.';
+          this.container.appendChild(p);
+        }
+        return;
+      }
+      // Usuário logado mas sem o papel necessário
+      if (!this.usuarioAtual.roles.includes(rota.requerPapel)) {
+        this.container.innerHTML = '';
         const p = document.createElement('p');
         p.className = 'jade-acesso-negado';
         p.textContent = 'Acesso negado: você não tem permissão para acessar esta tela.';
-        this.container.innerHTML = '';
         this.container.appendChild(p);
         return;
       }

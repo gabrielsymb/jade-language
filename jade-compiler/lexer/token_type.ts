@@ -10,6 +10,7 @@ export enum TokenType {
   INTERFACE = 'INTERFACE',
   ENUM = 'ENUM',
   TELA = 'TELA',
+  BANCO = 'BANCO',
   FIM = 'FIM',
 
   // Palavras-chave de controle
@@ -35,6 +36,7 @@ export enum TokenType {
 
   // Palavras-chave de variáveis
   VARIAVEL = 'VARIAVEL',
+  CONSTANTE = 'CONSTANTE',
 
   // Tipos primitivos
   TIPO_TEXTO = 'TIPO_TEXTO',

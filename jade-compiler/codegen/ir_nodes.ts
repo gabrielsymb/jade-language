@@ -34,6 +34,7 @@ export interface IRLocalRef {
   kind: 'LocalRef';
   name: string;   // ex: '%temp1', '%x', '%produto'
   type: IRType;
+  typeName?: string; // nome da entidade JADE ('Produto', 'Pedido', etc.)
 }
 
 export interface IRGlobalRef {
@@ -226,6 +227,29 @@ export interface IRTelaDescriptor {
   elementos: IRTelaElemento[];
 }
 
+// ── Configuração de banco (server-side) ───────────────────
+
+export type IRBancoTipo = 'postgres' | 'mysql' | 'sqlite' | 'supabase';
+
+/** Valor resolvido de uma propriedade banco: string literal ou referência a env var */
+export type IRBancoValor =
+  | { tipo: 'literal'; valor: string }
+  | { tipo: 'env'; variavel: string };
+
+/** Política RLS: restringe acesso a registros pelo campo dono = usuario.sub */
+export interface IRPolitica {
+  entidade: string;   // nome da entidade (ex: "Produto")
+  dono: string;       // campo na entidade que deve == usuario.sub (ex: "usuarioId")
+}
+
+export interface IRBancoConfig {
+  tipo: IRBancoTipo;
+  url: IRBancoValor;
+  porta: number;          // padrão: 3000
+  jwt: IRBancoValor;      // padrão: env("JWT_SECRET")
+  politicas: IRPolitica[]; // políticas de acesso por linha
+}
+
 // ── Módulo (raiz da IR) ────────────────────────────────────
 
 export interface IRModule {
@@ -235,4 +259,5 @@ export interface IRModule {
   functions: IRFunction[];
   eventHandlers: IREventHandler[];
   telas: IRTelaDescriptor[];
+  banco?: IRBancoConfig;
 }

@@ -143,6 +143,9 @@ export class TypeChecker {
         case 'Tela':
           this.registrarTela(declaracao as N.TelaNode);
           break;
+        case 'Banco':
+          this.registrarBanco(declaracao as N.BancoNode);
+          break;
       }
     }
   }
@@ -583,6 +586,9 @@ export class TypeChecker {
       case 'Tela':
         this.verificarTela(declaracao as N.TelaNode);
         break;
+      case 'Banco':
+        this.verificarBanco(declaracao as N.BancoNode);
+        break;
     }
   }
 
@@ -593,6 +599,14 @@ export class TypeChecker {
   }
 
   verificarVariavel(node: N.VariavelNode): void {
+    if (node.imutavel && !node.inicializador) {
+      this.erro(
+        `Constante '${node.nome}' deve ter valor na declaração`,
+        node.line, node.column,
+        `Declare com valor: 'constante ${node.nome}: tipo = valor'`
+      );
+    }
+
     let tipoDeclarado: string | undefined;
 
     if (node.tipo) {
@@ -624,7 +638,8 @@ export class TypeChecker {
       tipo: tipoDeclarado || 'desconhecido',
       linha: node.line,
       coluna: node.column,
-      escopo: this.tabela.escopoAtual()
+      escopo: this.tabela.escopoAtual(),
+      imutavel: node.imutavel
     };
 
     try {
@@ -643,6 +658,15 @@ export class TypeChecker {
       if (!simbolo) {
         this.erro(`Variável '${node.alvo}' não declarada`, node.line, node.column,
           `Declare a variável antes de usá-la: 'variavel ${node.alvo}: tipo'`);
+        return;
+      }
+
+      if (simbolo.imutavel) {
+        this.erro(
+          `Não é possível reatribuir a constante '${node.alvo}'`,
+          node.line, node.column,
+          `'${node.alvo}' foi declarada com 'constante' — use 'variavel' se precisar reatribuir`
+        );
         return;
       }
 
@@ -1187,7 +1211,7 @@ export class TypeChecker {
 
   private verificarTela(node: N.TelaNode): void {
     // Tipos válidos em português — sem termos em inglês expostos na DSL
-    const tiposElementosValidos = ['tabela', 'formulario', 'botao', 'cartao', 'modal', 'grafico'];
+    const tiposElementosValidos = ['tabela', 'formulario', 'botao', 'cartao', 'modal', 'grafico', 'abas', 'lista', 'acordeao', 'navegar', 'gaveta'];
     // Tipos válidos para grafico.tipo
     const tiposGrafico = ['linha', 'barras', 'pizza'];
     // Propriedades que referenciam ações (devem ser funções declaradas)
@@ -1201,6 +1225,18 @@ export class TypeChecker {
       'table': 'tabela',
       'form': 'formulario',
       'chart': 'grafico',
+      'tabs': 'abas',
+      'tab': 'aba',
+      'list': 'lista',
+      'swipe': 'deslizar',
+      'accordion': 'acordeao',
+      'section': 'secao',
+      'drawer': 'gaveta',
+      'sidebar': 'gaveta',
+      'navbar': 'navegar',
+      'navigation': 'navegar',
+      'menu': 'gaveta',
+      'icon': 'icone',
     };
 
     for (const elem of node.elementos) {
@@ -1216,9 +1252,9 @@ export class TypeChecker {
 
       if (!tiposElementosValidos.includes(elem.tipo)) {
         this.erro(
-          `Tipo de elemento '${elem.tipo}' inválido. Use: tabela, formulario, botao, cartao, modal ou grafico`,
+          `Tipo de elemento '${elem.tipo}' inválido. Use: tabela, formulario, botao, cartao, modal, grafico, abas, lista ou acordeao`,
           elem.line, elem.column,
-          "Tipos válidos de elementos de tela: tabela, formulario, botao, cartao, modal, grafico"
+          "Tipos válidos de elementos de tela: tabela, formulario, botao, cartao, modal, grafico, abas, lista, acordeao"
         );
         continue;
       }
@@ -1329,6 +1365,132 @@ export class TypeChecker {
             `Adicione a ação do botão: acao: nomeFuncao`
           );
         }
+      }
+
+      // ── abas exige pelo menos um aba: ────────────────────────
+      if (elem.tipo === 'abas') {
+        const temAba = elem.propriedades.some(p => p.chave === 'aba');
+        if (!temAba) {
+          this.erro(
+            `Elemento 'abas' '${elem.nome}' deve declarar pelo menos uma aba com 'aba: NomeDaAba'`,
+            elem.line, elem.column,
+            `Adicione as abas: aba: Informações`
+          );
+        }
+      }
+
+      // ── acordeao exige pelo menos um secao: ─────────────────
+      if (elem.tipo === 'acordeao') {
+        const temSecao = elem.propriedades.some(p => p.chave === 'secao');
+        if (!temSecao) {
+          this.erro(
+            `Elemento 'acordeao' '${elem.nome}' deve declarar pelo menos uma seção com 'secao: TítuloDaSeção'`,
+            elem.line, elem.column,
+            `Adicione as seções: secao: Título`
+          );
+        }
+      }
+
+      // ── lista exige entidade: ────────────────────────────────
+      if (elem.tipo === 'lista' && !propEntidade) {
+        this.erro(
+          `Elemento 'lista' '${elem.nome}' deve declarar 'entidade: NomeDaEntidade'`,
+          elem.line, elem.column,
+          `Informe a fonte de dados: entidade: NomeDaEntidade`
+        );
+      }
+
+      // ── navegar exige pelo menos um aba: ─────────────────────
+      if (elem.tipo === 'navegar') {
+        const temAba = elem.propriedades.some(p => p.chave === 'aba');
+        if (!temAba) {
+          this.erro(
+            `Elemento 'navegar' '${elem.nome}' deve declarar pelo menos uma aba com 'aba: Label|icone|TelaNome'`,
+            elem.line, elem.column,
+            `Adicione destinos: aba: Inicio|casa|TelaInicio`
+          );
+        }
+      }
+
+      // ── gaveta exige pelo menos um item: ─────────────────────
+      if (elem.tipo === 'gaveta') {
+        const temItem = elem.propriedades.some(p => p.chave === 'item');
+        if (!temItem) {
+          this.erro(
+            `Elemento 'gaveta' '${elem.nome}' deve declarar pelo menos um item com 'item: Label|icone|TelaNome'`,
+            elem.line, elem.column,
+            `Adicione itens: item: Dashboard|grafico|TelaDashboard`
+          );
+        }
+      }
+    }
+  }
+
+  private registrarBanco(node: N.BancoNode): void {
+    // Garante que só exista um bloco banco por módulo
+    const existente = this.tabela.buscar('__banco__');
+    if (existente) {
+      this.erro(
+        `Bloco 'banco' declarado mais de uma vez`,
+        node.line, node.column,
+        `Apenas um bloco 'banco' é permitido por projeto`
+      );
+      return;
+    }
+    this.tabela.declarar({
+      nome: '__banco__',
+      kind: 'banco' as SimboloKind,
+      tipo: node.tipo,
+      linha: node.line,
+      coluna: node.column,
+      escopo: this.tabela.escopoAtual()
+    });
+  }
+
+  private verificarBanco(node: N.BancoNode): void {
+    // Valida porta (se declarada)
+    if (node.porta !== undefined) {
+      if (!Number.isInteger(node.porta) || node.porta < 1 || node.porta > 65535) {
+        this.erro(
+          `'porta' deve ser um número inteiro entre 1 e 65535, encontrado '${node.porta}'`,
+          node.line, node.column,
+          `Porta padrão recomendada: 3000`
+        );
+      }
+      if (node.porta < 1024) {
+        this.erro(
+          `'porta' ${node.porta} é uma porta privilegiada (< 1024) — requer permissão root`,
+          node.line, node.column,
+          `Use uma porta acima de 1024, como 3000 ou 8080`
+        );
+      }
+    }
+
+    // Avisa se url for literal (não env) — credenciais não devem estar no código
+    if (node.url.tipo === 'literal') {
+      this.erro(
+        `'url' com valor literal expõe credenciais no código-fonte`,
+        node.line, node.column,
+        `Use env("DATABASE_URL") para ler a URL da variável de ambiente`
+      );
+    }
+    if (node.jwt && node.jwt.tipo === 'literal') {
+      this.erro(
+        `'jwt' com valor literal expõe o segredo no código-fonte`,
+        node.line, node.column,
+        `Use env("JWT_SECRET") para ler o segredo da variável de ambiente`
+      );
+    }
+
+    // Valida políticas RLS
+    for (const politica of node.politicas ?? []) {
+      const entidadeSimbolo = this.tabela.buscar(politica.entidade);
+      if (!entidadeSimbolo || entidadeSimbolo.kind !== 'entidade') {
+        this.erro(
+          `Politica: entidade '${politica.entidade}' não está declarada`,
+          node.line, node.column,
+          `Declare 'entidade ${politica.entidade} ... fim' antes do bloco banco`
+        );
       }
     }
   }

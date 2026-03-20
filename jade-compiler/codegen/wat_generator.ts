@@ -196,7 +196,7 @@ export class WATGenerator {
   private generateTerminator(
     term: IR.IRTerminator,
     _block: IR.IRBlock,
-    _func: IR.IRFunction
+    func: IR.IRFunction
   ): void {
     switch (term.kind) {
       case 'Return':
@@ -211,13 +211,31 @@ export class WATGenerator {
       case 'Branch':
         break;
 
-      case 'CondBranch':
+      case 'CondBranch': {
         this.pushValue(term.condition);
         this.emit('if');
         this.indent++;
+        const trueBlock = func.blocks.find(b => b.label === term.trueBlock);
+        if (trueBlock) {
+          for (const instr of trueBlock.instructions) {
+            this.generateInstruction(instr);
+          }
+          this.generateTerminator(trueBlock.terminator, trueBlock, func);
+        }
         this.indent--;
+        const falseBlock = func.blocks.find(b => b.label === term.falseBlock);
+        if (falseBlock && falseBlock.label !== term.trueBlock) {
+          this.emit('else');
+          this.indent++;
+          for (const instr of falseBlock.instructions) {
+            this.generateInstruction(instr);
+          }
+          this.generateTerminator(falseBlock.terminator, falseBlock, func);
+          this.indent--;
+        }
         this.emit('end');
         break;
+      }
 
       case 'Unreachable':
         this.emit('unreachable');
@@ -283,10 +301,9 @@ export class WATGenerator {
 
   // Resolve o nome do tipo de um IRValue (para lookup de offsets de campo)
   private resolveTypeName(value: IR.IRValue): string {
-    // Na IR atual não temos tipagem de struct no value, então usamos
-    // a typeDefinitions indexada para fazer lookup por campo
-    // Isso é suficiente para o MVP — com múltiplos tipos com campos iguais
-    // precisaria de anotação de tipo no IRValue
+    if (value.kind === 'LocalRef' && (value as any).typeName) {
+      return (value as any).typeName;
+    }
     return 'Unknown';
   }
 

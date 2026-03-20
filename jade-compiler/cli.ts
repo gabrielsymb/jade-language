@@ -11,9 +11,10 @@
  *   jadec --help                     → exibe ajuda
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { resolve, basename, dirname, join, isAbsolute } from 'path';
 import { compileFile } from './index.js';
+import { ServerGenerator } from './codegen/server_generator.js';
 import { Lexer } from './lexer/lexer.js';
 import { Parser } from './parser/parser.js';
 import { Formatter } from './formatter/formatter.js';
@@ -317,6 +318,24 @@ async function main() {
       e(c.yellow('aviso') + ': binário WASM não gerado (wabt não disponível).');
       e(c.dim('         instale com: npm install wabt'));
     }
+  }
+
+  // Gerar servidor de sincronização (quando banco está declarado)
+  if (result.banco) {
+    const serverCode = new ServerGenerator().generate(result.banco);
+    const serverDir  = dirname(outputPrefix);
+    mkdirSync(serverDir, { recursive: true });
+    const serverPath = join(serverDir, 'jade-server.js');
+    writeFileSync(serverPath, serverCode, 'utf-8');
+    const pkgMap: Record<string, string> = {
+      postgres: 'pg',
+      mysql:    'mysql2',
+      sqlite:   'better-sqlite3',
+      supabase: '@supabase/supabase-js',
+    };
+    const pkg = pkgMap[result.banco.tipo] ?? '';
+    console.log(`  ${c.cyan('SRV')} → ${serverPath}`);
+    if (pkg) console.log(c.dim(`         npm install ${pkg} && node ${serverPath}`));
   }
 
   console.log('\n' + c.green('compilação concluída com sucesso.'));

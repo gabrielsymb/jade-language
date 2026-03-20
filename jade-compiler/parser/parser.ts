@@ -8,6 +8,8 @@ import * as N from '../ast/nodes.js';
  * Mapeamento: mensagem de erro → dica de como corrigir.
  */
 const DICAS_PARSER: Record<string, string> = {
+  "Constante deve ter inicializador":
+    "Uma constante precisa de valor na declaração: `constante PI: decimal = 3.14`",
   "Esperado nome do módulo":
     "Dê um nome ao módulo logo após a palavra 'modulo', ex: `modulo estoque`",
   "Esperado 'fim' para fechar módulo":
@@ -180,6 +182,7 @@ export class Parser {
       if (this.match(TokenType.ENUM)) return this.parseEnum();
       if (this.match(TokenType.IMPORTAR)) return this.parseImportacao();
       if (this.match(TokenType.TELA)) return this.parseTela();
+      if (this.match(TokenType.BANCO)) return this.parseBanco();
 
       return null;
     } catch (error: any) {
@@ -562,7 +565,8 @@ export class Parser {
       let valor: string | string[];
 
       if (this.check(TokenType.LITERAL_TEXTO)) {
-        valor = this.advance().value;
+        // Remove aspas: '"Texto aqui"' → 'Texto aqui'
+        valor = this.advance().value.slice(1, -1);
       } else if (this.check(TokenType.VERDADEIRO)) {
         this.advance();
         valor = 'verdadeiro';
@@ -615,6 +619,133 @@ export class Parser {
       nome,
       propriedades
     };
+  }
+
+  private parseBanco(): N.BancoNode {
+    const tok = this.previous(); // token 'banco' já consumido
+    let tipo: N.BancoTipo | null = null;
+    let url: N.BancoValor | null = null;
+    let porta: number | undefined;
+    let jwt: N.BancoValor | undefined;
+    const politicas: N.BancoPolitica[] = [];
+
+    while (!this.check(TokenType.FIM) && !this.isAtEnd()) {
+      const chaveToken = this.peek();
+
+      // Bloco politica ... fim (RLS aplicado no servidor gerado)
+      if (chaveToken.type === TokenType.IDENTIFICADOR && chaveToken.value === 'politica') {
+        this.advance(); // consome 'politica'
+        const entidadeToken = this.consume(TokenType.IDENTIFICADOR, "Esperado nome da entidade após 'politica'");
+        let dono: string | null = null;
+        while (!this.check(TokenType.FIM) && !this.isAtEnd()) {
+          const propToken = this.consume(TokenType.IDENTIFICADOR,
+            "Esperado propriedade dentro de 'politica' (dono)");
+          const prop = propToken.value;
+          this.consume(TokenType.DOIS_PONTOS, `Esperado ':' após '${prop}'`);
+          if (prop === 'dono') {
+            dono = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do campo dono (ex: usuarioId)").value;
+          } else {
+            throw this.error(
+              `Propriedade '${prop}' não reconhecida em politica`,
+              propToken,
+              `Propriedades válidas: dono`
+            );
+          }
+        }
+        this.consume(TokenType.FIM, "Esperado 'fim' para fechar politica");
+        if (!dono) {
+          throw this.error(
+            `Politica '${entidadeToken.value}' exige 'dono: nomeDoCampo'`,
+            entidadeToken,
+            `Exemplo: dono: usuarioId`
+          );
+        }
+        politicas.push({ entidade: entidadeToken.value, dono });
+        continue;
+      }
+
+      const chave = this.consume(TokenType.IDENTIFICADOR,
+        "Esperado propriedade do banco (tipo, url, porta, jwt) ou bloco politica").value;
+      this.consume(TokenType.DOIS_PONTOS, `Esperado ':' após '${chave}'`);
+
+      switch (chave) {
+        case 'tipo': {
+          const v = this.consume(TokenType.IDENTIFICADOR, "Esperado tipo do banco: postgres, mysql, sqlite ou supabase").value;
+          if (!['postgres', 'mysql', 'sqlite', 'supabase'].includes(v)) {
+            throw this.error(
+              `Tipo de banco '${v}' não reconhecido`,
+              chaveToken,
+              `Tipos suportados: postgres, mysql, sqlite, supabase`
+            );
+          }
+          tipo = v as N.BancoTipo;
+          break;
+        }
+        case 'url': {
+          url = this.parseBancoValor('url');
+          break;
+        }
+        case 'porta': {
+          const numToken = this.consume(TokenType.LITERAL_NUMERO, "Esperado número para 'porta' (ex: 3000)");
+          porta = Number(numToken.value);
+          break;
+        }
+        case 'jwt': {
+          jwt = this.parseBancoValor('jwt');
+          break;
+        }
+        default:
+          throw this.error(
+            `Propriedade '${chave}' não reconhecida no bloco banco`,
+            chaveToken,
+            `Propriedades válidas: tipo, url, porta, jwt, politica`
+          );
+      }
+    }
+
+    this.consume(TokenType.FIM, "Esperado 'fim' para fechar banco");
+
+    if (!tipo) {
+      throw this.error("Bloco banco exige 'tipo:' (postgres, mysql, sqlite, supabase)", tok);
+    }
+    if (!url) {
+      throw this.error("Bloco banco exige 'url:' com a string de conexão ou env(\"VAR\")", tok);
+    }
+
+    return {
+      kind: 'Banco',
+      line: tok.line,
+      column: tok.column,
+      tipo,
+      url,
+      porta,
+      jwt,
+      politicas
+    };
+  }
+
+  /** Parseia um valor de propriedade do banco: literal texto ou env("VAR") */
+  private parseBancoValor(prop: string): N.BancoValor {
+    if (this.check(TokenType.LITERAL_TEXTO)) {
+      const val = this.advance().value.slice(1, -1); // remove aspas
+      return { tipo: 'literal', valor: val };
+    }
+
+    // env("NOME_DA_VAR")
+    const identToken = this.consume(TokenType.IDENTIFICADOR,
+      `Esperado texto entre aspas ou env("VAR") para '${prop}'`);
+    if (identToken.value !== 'env') {
+      throw this.error(
+        `Esperado texto entre aspas ou env("VAR") para '${prop}', encontrado '${identToken.value}'`,
+        identToken,
+        `Exemplos: url: "postgres://..." ou url: env("DATABASE_URL")`
+      );
+    }
+    this.consume(TokenType.ABRE_PAREN, "Esperado '(' após 'env'");
+    const varToken = this.consume(TokenType.LITERAL_TEXTO, "Esperado nome da variável de ambiente entre aspas");
+    const varNome = varToken.value.slice(1, -1);
+    this.consume(TokenType.FECHA_PAREN, "Esperado ')' após o nome da variável");
+    return { tipo: 'env', variavel: varNome };
   }
 
   private parseCampo(): N.CampoNode {
@@ -784,7 +915,8 @@ export class Parser {
   }
 
   private parseInstrucao(): N.InstrucaoNode | null {
-    if (this.match(TokenType.VARIAVEL)) return this.parseVariavel();
+    if (this.match(TokenType.CONSTANTE)) return this.parseVariavel(true);
+    if (this.match(TokenType.VARIAVEL)) return this.parseVariavel(false);
     if (this.match(TokenType.RETORNAR)) return this.parseRetorno();
     if (this.match(TokenType.SE)) return this.parseCondicional();
     if (this.match(TokenType.ENQUANTO)) return this.parseEnquanto();
@@ -796,7 +928,7 @@ export class Parser {
     return this.parseAtribuicaoOuChamada();
   }
 
-  private parseVariavel(): N.VariavelNode {
+  private parseVariavel(imutavel: boolean = false): N.VariavelNode {
     const nomeToken = this.consume(TokenType.IDENTIFICADOR, "Esperado nome da variável");
     const nome = nomeToken.value;
 
@@ -816,7 +948,8 @@ export class Parser {
       column: nomeToken.column,
       nome,
       tipo,
-      inicializador
+      inicializador,
+      imutavel
     };
   }
 

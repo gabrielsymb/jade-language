@@ -35,6 +35,7 @@ export class Formatter {
       case 'Importacao': return this.formatImportacao(node, nivel);
       case 'Variavel':   return this.formatVariavel(node, nivel);
       case 'Tela':       return this.formatTela(node, nivel);
+      case 'Banco':      return this.formatBanco(node, nivel);
     }
   }
 
@@ -127,6 +128,20 @@ export class Formatter {
     return `${ind}importar ${node.modulo}`;
   }
 
+  private formatBanco(node: N.BancoNode, nivel: number): string {
+    const ind = this.ind(nivel);
+    const ind2 = this.ind(nivel + 1);
+    const formatVal = (v: N.BancoValor) => v.tipo === 'env' ? `env("${v.variavel}")` : `"${v.valor}"`;
+    const linhas: string[] = [`${ind}banco`, `${ind2}tipo: ${node.tipo}`, `${ind2}url: ${formatVal(node.url)}`];
+    if (node.porta !== undefined) linhas.push(`${ind2}porta: ${node.porta}`);
+    if (node.jwt) linhas.push(`${ind2}jwt: ${formatVal(node.jwt)}`);
+    for (const p of node.politicas) {
+      linhas.push(`${ind2}politica ${p.entidade}`, `${this.ind(nivel + 2)}dono: ${p.dono}`, `${ind2}fim`);
+    }
+    linhas.push(`${ind}fim`);
+    return linhas.join('\n');
+  }
+
   private formatTela(node: N.TelaNode, nivel: number): string {
     const ind = this.ind(nivel);
     const elementos = node.elementos.map(el => this.formatTelaElemento(el, nivel + 1)).join('\n\n');
@@ -189,7 +204,8 @@ export class Formatter {
 
   private formatVariavel(node: N.VariavelNode, nivel: number): string {
     const ind = this.ind(nivel);
-    let s = `${ind}variavel ${node.nome}`;
+    const keyword = node.imutavel ? 'constante' : 'variavel';
+    let s = `${ind}${keyword} ${node.nome}`;
     if (node.tipo) s += `: ${this.formatTipo(node.tipo)}`;
     if (node.inicializador) s += ` = ${this.formatExpressao(node.inicializador)}`;
     return s;

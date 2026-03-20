@@ -13,7 +13,7 @@
 
 import { spawn } from 'child_process';
 import { resolve, basename, dirname, join } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { gerarHTML_dist } from './html.js';
@@ -99,7 +99,33 @@ export async function compilar(args) {
 
   // Geração de HTML (a menos que --so-wasm)
   if (!soWasm) {
-    const nomeProjeto = basename(arquivo, '.jd');
-    await gerarHTML_dist({ prefixo, nome: nomeProjeto });
+    // Lê jade.config.json se existir (tema, nome do projeto)
+    let tema = {};
+    let nomeProjeto = basename(arquivo, '.jd');
+    const configCandidatos = [
+      join(process.cwd(), 'config', 'jade.config.json'),
+      join(process.cwd(), 'jade.config.json'),
+    ];
+    for (const cfg of configCandidatos) {
+      if (existsSync(cfg)) {
+        try {
+          const c = JSON.parse(readFileSync(cfg, 'utf-8'));
+          if (c.nome) nomeProjeto = c.nome;
+          if (c.tema) tema = c.tema;
+        } catch { /* config inválido — ignora */ }
+        break;
+      }
+    }
+
+    // Seeds: procura seeds.json na raiz do projeto
+    const seedsOrigem = (() => {
+      const candidatos = [
+        join(process.cwd(), 'seeds.json'),
+        join(process.cwd(), 'seeds', 'seeds.json'),
+      ];
+      return candidatos.find(p => existsSync(p)) ?? null;
+    })();
+
+    await gerarHTML_dist({ prefixo, nome: nomeProjeto, tema, seedsOrigem });
   }
 }
