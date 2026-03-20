@@ -12,6 +12,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "incremental": true,
     "lib": [
       "ES2022"
     ]
@@ -22,7 +23,10 @@
     "parser/**/*",
     "semantic/**/*",
     "codegen/**/*",
-    "*.ts"
+    "formatter/**/*",
+    "linter/**/*",
+    "*.ts",
+    "*.d.ts"
   ],
   "exclude": [
     "node_modules",
