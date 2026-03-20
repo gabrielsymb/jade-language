@@ -2,7 +2,10 @@
 # jade-compiler/validar.sh
 # Rode isso ANTES de qualquer teste. Se falhar, o código do agente tem bug.
 
-echo "Validando JADE..."
+# Garante que o script roda a partir do diretório jade-compiler/
+cd "$(dirname "$0")"
+
+echo "Validando Jade DSL..."
 echo "======================"
 echo ""
 echo " Fase 1: Compilador "
