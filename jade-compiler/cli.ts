@@ -19,7 +19,7 @@ import { Parser } from './parser/parser.js';
 import { Formatter } from './formatter/formatter.js';
 import { Linter } from './linter/linter.js';
 
-const VERSION = '0.1.2';
+const VERSION = '0.1.6';
 
 const HELP = `
 jadec ${VERSION} — Compilador JADE
