@@ -45,7 +45,7 @@ jobs:
       # ── jade-runtime ───────────────────────────────────────
       - name: Install runtime dependencies
         working-directory: jade-runtime
-        run: npm ci
+        run: npm install --ignore-scripts
 
       - name: Type check — runtime
         working-directory: jade-runtime
@@ -78,7 +78,7 @@ jobs:
       - name: Install all dependencies
         run: |
           cd jade-compiler && npm ci
-          cd ../jade-runtime && npm ci
+          cd ../jade-runtime && npm install --ignore-scripts
 
       - name: Run full validation
         run: bash jade-compiler/validar.sh
