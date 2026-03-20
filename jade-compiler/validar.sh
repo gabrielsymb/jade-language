@@ -42,16 +42,10 @@ if ! echo "$RESULT" | grep -qiE "passed|PASS"; then
 fi
 echo "   OK Testes Automatizados"
 
-# 4. Testes do WASM Generator — legado (também coberto no Vitest acima)
+# 4. Testes WASM — cobertos pelo Vitest (test_wasm.js foi migrado para tests/wasm.test.ts)
 echo ""
-echo "4. Testes do WASM Generator (5/5 obrigatório)..."
-RESULT=$(timeout 30 node test_wasm.js 2>&1)
-echo "$RESULT" | tail -2
-if ! echo "$RESULT" | grep -q "Resultado: 5/5"; then
-  echo "FALHA: WASM Generator com problemas."
-  exit 1
-fi
-echo "   OK WASM Generator"
+echo "4. Testes WASM Generator — cobertos pela suite Vitest acima."
+echo "   OK WASM Generator (via Vitest)"
 
 echo ""
 echo "OK COMPILADOR SAUDAVEL."
