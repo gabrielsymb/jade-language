@@ -460,21 +460,38 @@ export class Parser {
   }
 
   private parseImportacao(): N.ImportacaoNode {
-    const moduloToken = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do módulo");
-    const modulo = moduloToken.value;
+    const moduloToken = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do módulo ou caminho");
+
+    // Constrói o caminho consumindo segmentos separados por '/'
+    // Exemplos:
+    //   importar Produto                         → "Produto"
+    //   importar entidades/Produto               → "entidades/Produto"
+    //   importar entidades/fiscal/RegrasICMS     → "entidades/fiscal/RegrasICMS"
+    let modulo = moduloToken.value;
+    while (this.check(TokenType.BARRA)) {
+      this.advance(); // consome '/'
+      const seg = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do módulo após '/'");
+      modulo += '/' + seg.value;
+    }
 
     let item: string | undefined;
     let wildcard = false;
     let alias: string | undefined;
 
-    if (this.match(TokenType.PONTO)) {
+    // Após o caminho: opcionalmente '.Item' para importar item específico
+    if (this.check(TokenType.PONTO)) {
+      this.advance(); // consome '.'
       if (this.match(TokenType.ASTERISCO)) {
         wildcard = true;
       } else {
-        item = this.consume(TokenType.IDENTIFICADOR, "Esperado item importado").value;
+        item = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do item após '.'").value;
       }
-    } else if (this.match(TokenType.COMO)) {
-      alias = this.consume(TokenType.IDENTIFICADOR, "Esperado alias").value;
+    }
+
+    // Opcionalmente 'como alias'
+    if (this.check(TokenType.COMO)) {
+      this.advance(); // consome 'como'
+      alias = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do alias após 'como'").value;
     }
 
     return {
@@ -519,7 +536,16 @@ export class Parser {
   private parseTelaElemento(): N.TelaElementoNode {
     const tipoToken = this.consume(TokenType.IDENTIFICADOR, "Esperado tipo do elemento (tabela, formulario, botao, cartao)");
     const tipo = tipoToken.value;
-    const nomeToken = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do elemento");
+
+    // O nome do elemento pode colidir com palavras-chave de tipo (ex: lista, mapa, texto)
+    // Por isso aceita IDENTIFICADOR e todos os tokens que representam tipos primitivos
+    const nomeToken = this.consumeAny([
+      TokenType.IDENTIFICADOR,
+      TokenType.TIPO_LISTA, TokenType.TIPO_MAPA, TokenType.TIPO_OBJETO,
+      TokenType.TIPO_TEXTO, TokenType.TIPO_NUMERO, TokenType.TIPO_DECIMAL,
+      TokenType.TIPO_MOEDA, TokenType.TIPO_BOOLEANO, TokenType.TIPO_DATA,
+      TokenType.TIPO_HORA, TokenType.TIPO_ID,
+    ], "Esperado nome do elemento");
     const nome = nomeToken.value;
 
     const propriedades: { chave: string; valor: string | string[] }[] = [];

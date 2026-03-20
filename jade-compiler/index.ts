@@ -153,9 +153,9 @@ export async function compileFile(
     };
   }
 
-  // Resolve imports, flattening imported declarations into the program
+  // Resolve imports — basePath = dir do arquivo atual, rootPath = dir do arquivo de entrada
   const baseDir = dirname(absPath);
-  const { declarations, errors: importErrors } = resolveImports(parseResult.program, baseDir);
+  const { declarations, errors: importErrors } = resolveImports(parseResult.program, baseDir, baseDir);
 
   if (importErrors.length > 0) {
     return {
@@ -163,7 +163,7 @@ export async function compileFile(
       errors: importErrors.map(e => ({
         phase: 'parse' as const,
         message: e.message,
-        hint: undefined,
+        hint: e.hint,
         line: e.line,
         column: e.column
       })),
