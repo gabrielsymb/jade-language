@@ -25,10 +25,11 @@ title: Vitrine — ERP/WMS feito com Jade DSL
 
 | Módulo | O que demonstra |
 |--------|----------------|
-| **Estoque / WMS** | Entidades, serviços, regras de negócio, validação EAN-13 |
-| **PDV** | Cálculo de ICMS/PIS/COFINS com stdlib fiscal |
-| **Financeiro** | Moeda centavos-based, relatórios estatísticos |
-| **Dashboard** | Gráficos com `grafico tipo: barras`, mobile-first automático |
+| **Dashboard** | 4 cartões de métricas + gráfico de barras + lista de alertas |
+| **Produtos** | Toolbar, busca em tempo real, tabela paginada, formulário |
+| **Clientes** | Busca + tabela com ordenação e filtros |
+| **Vendas** | Gráfico de linha, cartões de resumo, histórico paginado |
+| **Navegação** | Gaveta lateral com menu, roteamento entre telas |
 
 ## Como foi feito
 
@@ -37,49 +38,94 @@ O demo foi criado com três comandos:
 ```bash
 npm install -g @yakuzaa/jade
 jade init erp-demo
-cd erp-demo && jade compilar src/principal.jd
+cd erp-demo && jade compilar src/modulos/app.jd
 ```
 
 Depois disso, o compilador gerou o WASM e o runtime cuidou de tudo — layout mobile, navegação, persistência offline.
 
 ## Código-fonte
 
-### Entidade Produto
+### Entidades com tipos financeiros
 
 ```jd
 entidade Produto
   id: id
   nome: texto
-  codigo: texto
+  descricao: texto
   preco: moeda
+  custo: moeda
   estoque: numero
-  categoria: texto
+  estoqueMinimo: numero
+  categoriaId: id
+  ativo: booleano
+fim
+
+entidade Venda
+  id: id
+  clienteId: id
+  clienteNome: texto
+  total: moeda
+  desconto: moeda
+  status: texto
+  criadaEm: data
 fim
 ```
 
-### Regra de negócio
+### Serviço com regras de negócio
 
 ```jd
-regra EstoqueMinimo para Produto
-  se produto.estoque < 5
-    erro "Estoque crítico: " + produto.nome
+servico estoqueService
+  funcao calcularSubtotal(preco: moeda, quantidade: numero) -> moeda
+    retornar preco * quantidade
+  fim
+
+  funcao aplicarDesconto(total: moeda, percentual: decimal) -> moeda
+    constante desconto: moeda = total * (percentual / 100)
+    retornar total - desconto
+  fim
+
+  funcao estaEmEstoqueMinimo(estoque: numero, estoqueMinimo: numero) -> booleano
+    retornar estoque <= estoqueMinimo
   fim
 fim
 ```
 
-### Tela mobile-first
+### Tela com todos os elementos UI
 
 ```jd
-tela ListaProdutos "Produtos"
-  tabela ListaProdutos
-    entidade: Produto
-    colunas: nome, preco, estoque
-    busca: verdadeiro
-    paginacao: 20
+tela TelaVendas "Vendas"
+  toolbar AcoesVendas
+    botao: "Nova Venda|abrirNovaVenda|mais|primario"
   fim
 
-  botao NovoProduto "Novo Produto"
-    acao: abrirFormulario
+  divisor SecaoResumo
+    rotulo: "Resumo de vendas"
+  fim
+
+  cartao TotalVendasMes
+    titulo: "Total do Mês"
+    conteudo: "R$ 28.450,00"
+    variante: sucesso
+  fim
+
+  grafico GraficoVendasPorDia
+    tipo: linha
+    entidade: Venda
+    eixoX: criadaEm
+    eixoY: total
+  fim
+
+  busca BuscaVenda
+    acao: buscarVenda
+    placeholder: "Buscar por cliente ou status..."
+  fim
+
+  tabela TabelaVendas
+    entidade: Venda
+    colunas: clienteNome, total, desconto, status, criadaEm
+    filtravel: verdadeiro
+    ordenavel: verdadeiro
+    paginacao: 15
   fim
 fim
 ```
