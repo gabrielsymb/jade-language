@@ -12,7 +12,7 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import { Lexer, Parser, SemanticAnalyzer } from 'jade-compiler';
+import { Lexer, Parser, SemanticAnalyzer, Linter } from 'jade-compiler';
 import type * as N from 'jade-compiler/ast';
 
 import { buildIndex, DocumentIndex } from './ast-walker.js';
@@ -51,6 +51,7 @@ function parseDocument(text: string): { ast: N.ProgramaNode | null; diagnostics:
   for (const err of parseResult.errors) {
     const ln = Math.max(0, (err.line ?? 1) - 1);
     const ch = Math.max(0, (err.column ?? 1) - 1);
+    const msg = err.dica ? `${err.message}\n💡 ${err.dica}` : err.message;
     diagnostics.push({
       range: {
         start: { line: ln, character: ch },
@@ -58,7 +59,7 @@ function parseDocument(text: string): { ast: N.ProgramaNode | null; diagnostics:
       },
       severity: DiagnosticSeverity.Error,
       source: 'jade',
-      message: err.message,
+      message: msg,
     });
   }
 
@@ -71,6 +72,7 @@ function parseDocument(text: string): { ast: N.ProgramaNode | null; diagnostics:
   for (const err of semanticResult.erros) {
     const ln = Math.max(0, (err.linha ?? 1) - 1);
     const ch = Math.max(0, (err.coluna ?? 1) - 1);
+    const msg = err.dica ? `${err.mensagem}\n💡 ${err.dica}` : err.mensagem;
     diagnostics.push({
       range: {
         start: { line: ln, character: ch },
@@ -78,7 +80,24 @@ function parseDocument(text: string): { ast: N.ProgramaNode | null; diagnostics:
       },
       severity: DiagnosticSeverity.Error,
       source: 'jade',
-      message: err.mensagem,
+      message: msg,
+    });
+  }
+
+  // Linter warnings (only if parse + semantic passed)
+  const lintWarnings = new Linter().lint(parseResult.program);
+  for (const w of lintWarnings) {
+    const ln = Math.max(0, (w.line ?? 1) - 1);
+    const ch = Math.max(0, (w.column ?? 1) - 1);
+    diagnostics.push({
+      range: {
+        start: { line: ln, character: ch },
+        end: { line: ln, character: ch + 20 },
+      },
+      severity: w.severity === 'error' ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
+      source: 'jade-lint',
+      code: w.code,
+      message: w.message,
     });
   }
 

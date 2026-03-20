@@ -2,7 +2,7 @@
 
 Eventos são a forma que os serviços têm de se comunicar sem se conhecerem diretamente. Em vez de `ServicoA` chamar `ServicoB` diretamente, ele **emite** um evento. Qualquer serviço que quiser reagir **escuta** esse evento.
 
-Isso é chamado de **arquitetura orientada a eventos** — e em JADE, é parte da linguagem, não uma biblioteca externa.
+Isso é chamado de **arquitetura orientada a eventos** — e em Jade DSL, é parte da linguagem, não uma biblioteca externa.
 
 ## Declarando um evento
 

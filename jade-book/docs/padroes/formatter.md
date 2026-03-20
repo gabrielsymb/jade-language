@@ -1,6 +1,6 @@
 # Formatter — Formatação Automática
 
-O JADE inclui um formatter embutido que padroniza o estilo do código automaticamente, sem alterar o comportamento do programa.
+Jade DSL inclui um formatter embutido que padroniza o estilo do código automaticamente, sem alterar o comportamento do programa.
 
 ## Como usar
 
@@ -16,7 +16,7 @@ jadec programa.jd --format-write
 
 ### Via VS Code
 
-Com a extensão JADE instalada, o formatter é executado automaticamente ao salvar o arquivo (`Format on Save`). Você também pode invocar manualmente com `Shift+Alt+F` (ou `Cmd+Shift+F` no macOS).
+Com a extensão Jade DSL instalada, o formatter é executado automaticamente ao salvar o arquivo (`Format on Save`). Você também pode invocar manualmente com `Shift+Alt+F` (ou `Cmd+Shift+F` no macOS).
 
 ::: tip Seguro por design
 Se o arquivo contiver erros de sintaxe, o formatter não faz nada — nunca corrompe seu código.

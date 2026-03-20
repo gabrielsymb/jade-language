@@ -1,6 +1,6 @@
 # Telas — Interface Declarativa
 
-A palavra-chave `tela` permite declarar interfaces de usuário diretamente no código JADE, sem HTML, sem CSS, sem frameworks externos. Você descreve **o que** quer mostrar — o JADE cuida do **como**.
+A palavra-chave `tela` permite declarar interfaces de usuário diretamente no código Jade DSL, sem HTML, sem CSS, sem frameworks externos. Você descreve **o que** quer mostrar — a Jade DSL cuida do **como**.
 
 ## Sintaxe básica
 
@@ -22,7 +22,7 @@ fim
 | `grafico`    | Gráfico de dados (linhas, barras, pizza)        |
 
 ::: tip DSL 100% em português
-JADE bloqueia termos em inglês em tempo de compilação. Use sempre os nomes em português:
+Jade DSL bloqueia termos em inglês em tempo de compilação. Use sempre os nomes em português:
 - `card` → **`cartao`**
 - `click` → **`clique`**
 - `submit` → **`enviar`**
@@ -302,7 +302,7 @@ fim
 
 ## Validações em tempo de compilação
 
-O compilador JADE verifica telas rigorosamente antes de gerar código:
+O compilador Jade DSL verifica telas rigorosamente antes de gerar código:
 
 ```jd
 // ❌ ERRO — termo em inglês
@@ -311,7 +311,7 @@ tela Dashboard "Painel"
     titulo: "Resumo"
   fim
 fim
-// Erro: Termo 'card' não é válido na DSL JADE — use 'cartao' (português)
+// Erro: Termo 'card' não é válido na DSL Jade — use 'cartao' (português)
 
 // ❌ ERRO — botao sem acao
 tela Dashboard "Painel"
@@ -354,9 +354,9 @@ fim
 
 ---
 
-## Como o JADE renderiza as telas
+## Como a Jade DSL renderiza as telas
 
-O JADE não gera HTML diretamente. Em vez disso, a declaração `tela` é interpretada pelo **UIEngine** do runtime JADE, que:
+Jade DSL não gera HTML diretamente. Em vez disso, a declaração `tela` é interpretada pelo **UIEngine** do runtime Jade DSL, que:
 
 1. Lê a estrutura da tela declarada no código
 2. Gera os componentes HTML correspondentes

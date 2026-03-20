@@ -1,6 +1,6 @@
 # Matematica
 
-A stdlib `Matematica` fornece funções estatísticas e matemáticas prontas para uso em código JADE. Não requer importação — está disponível globalmente como `Matematica.metodo(args)`.
+A stdlib `Matematica` fornece funções estatísticas e matemáticas prontas para uso em código Jade DSL. Não requer importação — está disponível globalmente como `Matematica.metodo(args)`.
 
 ## Funções básicas
 

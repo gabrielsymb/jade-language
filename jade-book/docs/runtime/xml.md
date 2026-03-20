@@ -1,6 +1,6 @@
 # XML e NF-e
 
-A stdlib `XML` fornece parse e navegação de documentos XML diretamente em código JADE. Inclui suporte nativo a NF-e (Nota Fiscal Eletrônica) brasileira.
+A stdlib `XML` fornece parse e navegação de documentos XML diretamente em código Jade DSL. Inclui suporte nativo a NF-e (Nota Fiscal Eletrônica) brasileira.
 
 ## Parse básico
 

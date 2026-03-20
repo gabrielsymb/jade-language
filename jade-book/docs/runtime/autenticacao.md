@@ -1,6 +1,6 @@
 # Autenticação
 
-O JADE oferece `AuthService` para login, sessão e controle de permissões.
+Jade DSL oferece `AuthService` para login, sessão e controle de permissões.
 
 ## Login
 

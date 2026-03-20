@@ -1,6 +1,6 @@
 # Entidades
 
-A **entidade** é o bloco mais fundamental do JADE. Ela representa um dado do seu domínio de negócio — um produto, um cliente, um pedido, uma nota fiscal.
+A **entidade** é o bloco mais fundamental da Jade DSL. Ela representa um dado do seu domínio de negócio — um produto, um cliente, um pedido, uma nota fiscal.
 
 Se você já trabalhou com banco de dados, pense na entidade como uma tabela. Se já usou orientação a objetos, pense como uma classe de dados.
 
@@ -124,8 +124,8 @@ entidade ItemPedido
 fim
 ```
 
-::: tip Relacionamentos em JADE
-JADE usa a convenção `entidadeId` para campos de referência. Isso é intencional — você armazena o ID, não o objeto inteiro. Para buscar o objeto relacionado, use `EntityManager.buscarPorId`.
+::: tip Relacionamentos em Jade DSL
+Jade DSL usa a convenção `entidadeId` para campos de referência. Isso é intencional — você armazena o ID, não o objeto inteiro. Para buscar o objeto relacionado, use `EntityManager.buscarPorId`.
 :::
 
 ## Passando entidades para funções

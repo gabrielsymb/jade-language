@@ -11,6 +11,8 @@ export class WATGenerator {
   private stringData: Array<{ offset: number, data: string }> = [];
   // Guarda typeDefinitions para calcular offsets reais de campos
   private typeDefinitions: Map<string, IR.IRTypeDefinition> = new Map();
+  // Tipo de retorno da função sendo gerada — usado pelo Return para coerção
+  private currentReturnType: IR.IRType = 'void';
 
   generate(module: IR.IRModule): string {
     this.lines = [];
@@ -74,6 +76,7 @@ export class WATGenerator {
       .map(l => `(local $${this.sanitizeName(l.name)} ${this.mapTypeToWASM(l.type)})`)
       .join(' ');
 
+    this.currentReturnType = func.returnType;
     this.emit(`(func ${this.sanitizeName(func.name)} ${params} ${result}`);
     this.indent++;
 
@@ -104,21 +107,22 @@ export class WATGenerator {
   private generateInstruction(instr: IR.IRInstruction): void {
     switch (instr.kind) {
       case 'BinaryOp':
-        this.pushValue(instr.left);
-        this.pushValue(instr.right);
+        // Coerce ambos os operandos para o tipo da operação antes de emitir
+        this.pushValueAs(instr.left, instr.type);
+        this.pushValueAs(instr.right, instr.type);
         this.emit(this.mapBinaryOp(instr.op, instr.type));
         this.emit(`local.set $${this.sanitizeName(instr.result)}`);
         break;
 
       case 'UnaryOp':
-        this.pushValue(instr.operand);
+        this.pushValueAs(instr.operand, instr.type);
         if (instr.op === 'neg') {
-          if (instr.type === 'i32') {
-            this.emit('i32.const 0');
-            this.emit('local.get $temp');
-            this.emit('i32.sub');
-          } else {
+          if (instr.type === 'f64') {
             this.emit('f64.neg');
+          } else {
+            // i32: subtrai de zero
+            this.emit('i32.const -1');
+            this.emit('i32.mul');
           }
         } else if (instr.op === 'not') {
           this.emit('i32.eqz');
@@ -127,7 +131,8 @@ export class WATGenerator {
         break;
 
       case 'Store':
-        this.pushValue(instr.value);
+        // Coerce value para o tipo declarado do local
+        this.pushValueAs(instr.value, instr.type);
         this.emit(`local.set $${this.sanitizeName(instr.target)}`);
         break;
 
@@ -177,7 +182,7 @@ export class WATGenerator {
         break;
 
       case 'Assign':
-        this.pushValue(instr.value);
+        this.pushValueAs(instr.value, instr.type);
         this.emit(`local.set $${this.sanitizeName(instr.result)}`);
         break;
 
@@ -195,7 +200,11 @@ export class WATGenerator {
   ): void {
     switch (term.kind) {
       case 'Return':
-        if (term.value) this.pushValue(term.value);
+        if (term.value && this.currentReturnType !== 'void') {
+          this.pushValueAs(term.value, this.currentReturnType);
+        } else if (term.value) {
+          this.pushValue(term.value);
+        }
         this.emit('return');
         break;
 
@@ -214,6 +223,38 @@ export class WATGenerator {
         this.emit('unreachable');
         break;
     }
+  }
+
+  // Retorna o tipo WASM concreto de um IRType
+  // i1/ptr/i32 → 'i32' | i64 → 'i64' | f64 → 'f64'
+  private wasmTypeOf(irType: IR.IRType): 'i32' | 'i64' | 'f64' {
+    if (irType === 'f64') return 'f64';
+    if (irType === 'i64') return 'i64';
+    return 'i32'; // i32, i1, ptr, void
+  }
+
+  // Empurra value na stack e emite instrução de conversão se necessário.
+  // Cobre todos os pares possíveis de tipos WASM.
+  private pushValueAs(value: IR.IRValue, targetType: IR.IRType): void {
+    this.pushValue(value);
+    const src = this.wasmTypeOf(value.type);
+    const dst = this.wasmTypeOf(targetType);
+    if (src === dst) return;
+
+    if (src === 'i32' && dst === 'f64') {
+      this.emit('f64.convert_i32_s');
+    } else if (src === 'f64' && dst === 'i32') {
+      this.emit('i32.trunc_f64_s');
+    } else if (src === 'i32' && dst === 'i64') {
+      this.emit('i64.extend_i32_s');
+    } else if (src === 'i64' && dst === 'i32') {
+      this.emit('i32.wrap_i64');
+    } else if (src === 'i64' && dst === 'f64') {
+      this.emit('f64.convert_i64_s');
+    } else if (src === 'f64' && dst === 'i64') {
+      this.emit('i64.trunc_f64_s');
+    }
+    // src === dst já tratado acima
   }
 
   private pushValue(value: IR.IRValue): void {

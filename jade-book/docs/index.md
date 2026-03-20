@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "A Linguagem JADE"
+  name: "Jade DSL"
   text: "Programe em português.\nCompile para WebAssembly."
-  tagline: Uma DSL empresarial para desenvolvedores brasileiros — simples de aprender, poderosa em produção.
+  tagline: Uma linguagem empresarial para desenvolvedores brasileiros — simples de aprender, poderosa em produção.
   actions:
     - theme: brand
       text: Começar a ler
@@ -12,11 +12,14 @@ hero:
     - theme: alt
       text: Instalação
       link: /introducao/instalacao
+    - theme: alt
+      text: Ver Demo ao Vivo
+      link: /demo/
 
 features:
   - icon: 🇧🇷
     title: Português nativo
-    details: Escreva código em português real. Nada de traduzir lógica de negócio para inglês — JADE fala a mesma língua que o seu domínio.
+    details: Escreva código em português real. Nada de traduzir lógica de negócio para inglês — Jade DSL fala a mesma língua que o seu domínio.
 
   - icon: ⚡
     title: Compila para WebAssembly
@@ -28,7 +31,7 @@ features:
 
   - icon: 📡
     title: Offline-first por padrão
-    details: Dados são salvos localmente e sincronizados automaticamente quando há conexão. Funciona como PWA sem configuração extra.
+    details: Dados são salvos localmente via IndexedDB e sincronizados automaticamente quando há conexão. Funciona como PWA sem configuração extra.
 
   - icon: 🔒
     title: Tipagem estática rigorosa
@@ -37,4 +40,12 @@ features:
   - icon: 🧩
     title: Eventos como primitivo
     details: Comunicação entre serviços via eventos é parte da linguagem, não uma biblioteca. emitir e escutar são palavras-chave.
+
+  - icon: 📱
+    title: Mobile-first automático
+    details: O runtime decide o layout — tabela vira lista de cards no celular, grade no desktop. Você não toca em CSS.
+
+  - icon: 🚀
+    title: Pipeline completo com um comando
+    details: jade init → jade compilar → jade servir. Do zero ao browser em minutos, sem configurar bundler, webpack ou qualquer ferramenta.
 ---

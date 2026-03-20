@@ -2,26 +2,27 @@ import { defineConfig } from 'vitepress'
 
 
 export default defineConfig({
-  title: 'A Linguagem JADE',
-  description: 'O guia completo da linguagem JADE — DSL empresarial em português compilada para WebAssembly',
+  title: 'Jade DSL',
+  description: 'O guia completo da Jade DSL — linguagem empresarial em português compilada para WebAssembly',
   lang: 'pt-BR',
   base: '/jade-language/',
 
   themeConfig: {
     logo: '/icon-file.svg',
-    siteTitle: 'A Linguagem JADE',
+    siteTitle: 'Jade DSL',
 
     nav: [
       { text: 'Início', link: '/' },
       { text: 'Guia', link: '/introducao/o-que-e-jade' },
       { text: 'Referência', link: '/estruturas/entidades' },
+      { text: 'Demo ao Vivo', link: '/demo/' },
     ],
 
     sidebar: [
       {
         text: '📖 Introdução',
         items: [
-          { text: 'O que é JADE?', link: '/introducao/o-que-e-jade' },
+          { text: 'O que é Jade DSL?', link: '/introducao/o-que-e-jade' },
           { text: 'Instalação e Configuração', link: '/introducao/instalacao' },
           { text: 'Olá, Mundo!', link: '/introducao/ola-mundo' },
         ],
@@ -59,7 +60,7 @@ export default defineConfig({
       {
         text: '💾 Persistência',
         items: [
-          { text: 'Como o JADE salva dados', link: '/persistencia/visao-geral' },
+          { text: 'Como a Jade DSL salva dados', link: '/persistencia/visao-geral' },
           { text: 'EntityManager', link: '/persistencia/entity-manager' },
           { text: 'Sincronização Offline', link: '/persistencia/offline-sync' },
         ],
@@ -98,15 +99,21 @@ export default defineConfig({
           { text: 'Sistema de Estoque', link: '/projeto/sistema-estoque' },
         ],
       },
+      {
+        text: '🎯 Demo ao Vivo',
+        items: [
+          { text: 'ERP/WMS Demonstração', link: '/demo/' },
+        ],
+      },
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/jade-lang' },
+      { icon: 'github', link: 'https://github.com/gabrielsymb/jade-language' },
     ],
 
     footer: {
       message: 'Feito com ❤️ para desenvolvedores brasileiros.',
-      copyright: 'JADE Language — Licença MIT',
+      copyright: 'Jade DSL — Licença MIT',
     },
 
     search: {

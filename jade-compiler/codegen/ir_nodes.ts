@@ -205,6 +205,27 @@ export interface IRTypeDefinition {
   fields: Array<{ name: string; type: IRType }>;
 }
 
+// ── Handlers de evento (metadata para o runtime registrar) ─
+
+export interface IREventHandler {
+  eventName: string;     // nome do evento JADE (ex: "ProdutoCriado")
+  functionName: string;  // nome da função WASM exportada (ex: "Estoque_on_ProdutoCriado")
+}
+
+// ── Descritores de tela (UI declarativa) ──────────────────
+
+export interface IRTelaElemento {
+  tipo: string;
+  nome: string;
+  propriedades: Array<{ chave: string; valor: string | string[] }>;
+}
+
+export interface IRTelaDescriptor {
+  nome: string;
+  titulo: string;
+  elementos: IRTelaElemento[];
+}
+
 // ── Módulo (raiz da IR) ────────────────────────────────────
 
 export interface IRModule {
@@ -212,4 +233,6 @@ export interface IRModule {
   typeDefinitions: IRTypeDefinition[];
   globals: IRGlobal[];
   functions: IRFunction[];
+  eventHandlers: IREventHandler[];
+  telas: IRTelaDescriptor[];
 }

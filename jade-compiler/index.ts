@@ -14,6 +14,9 @@ export type { ParseResult, ParseError } from './parser/parse_result.js';
 export { SemanticAnalyzer } from './semantic/semantic_analyzer.js';
 export type { ResultadoSemantico } from './semantic/semantic_analyzer.js';
 
+export { Formatter } from './formatter/formatter.js';
+export { Linter } from './linter/linter.js';
+export type { LintWarning } from './linter/linter.js';
 export { IRGenerator } from './codegen/ir_generator.js';
 export { IRPrinter } from './codegen/ir_printer.js';
 export { WATGenerator } from './codegen/wat_generator.js';
@@ -31,6 +34,7 @@ import { IRGenerator } from './codegen/ir_generator.js';
 import { WASMGenerator } from './codegen/wasm_generator.js';
 import { resolveImports } from './import_resolver.js';
 
+
 /**
  * Compila source JADE e retorna o binário WebAssembly.
  *
@@ -47,6 +51,7 @@ export async function compile(source: string, moduleName = 'jade_module') {
       errors: parseResult.errors.map(e => ({
         phase: 'parse' as const,
         message: e.message,
+        hint: e.dica,
         line: e.line,
         column: e.column
       })),
@@ -62,6 +67,7 @@ export async function compile(source: string, moduleName = 'jade_module') {
       errors: semanticResult.erros.map(e => ({
         phase: 'semantic' as const,
         message: e.mensagem,
+        hint: e.dica,
         line: e.linha,
         column: e.coluna
       })),
@@ -79,6 +85,7 @@ export async function compile(source: string, moduleName = 'jade_module') {
       errors: wasmResult.errors.map(msg => ({
         phase: 'codegen' as const,
         message: msg,
+        hint: undefined,
         line: 0,
         column: 0
       })),
@@ -91,7 +98,9 @@ export async function compile(source: string, moduleName = 'jade_module') {
     success: true as const,
     errors: [],
     wasm: wasmResult.wasm ?? null,
-    wat: wasmResult.wat
+    wat: wasmResult.wat,
+    eventHandlers: ir.eventHandlers,
+    telas: ir.telas
   };
 }
 
@@ -117,6 +126,7 @@ export async function compileFile(
       errors: [{
         phase: 'parse' as const,
         message: `Não foi possível ler o arquivo '${absPath}'`,
+        hint: undefined,
         line: 0,
         column: 0
       }],
@@ -134,6 +144,7 @@ export async function compileFile(
       errors: parseResult.errors.map(e => ({
         phase: 'parse' as const,
         message: e.message,
+        hint: e.dica,
         line: e.line,
         column: e.column
       })),
@@ -152,6 +163,7 @@ export async function compileFile(
       errors: importErrors.map(e => ({
         phase: 'parse' as const,
         message: e.message,
+        hint: undefined,
         line: e.line,
         column: e.column
       })),
@@ -173,6 +185,7 @@ export async function compileFile(
       errors: semanticResult.erros.map(e => ({
         phase: 'semantic' as const,
         message: e.mensagem,
+        hint: e.dica,
         line: e.linha,
         column: e.coluna
       })),
@@ -190,6 +203,7 @@ export async function compileFile(
       errors: wasmResult.errors.map(msg => ({
         phase: 'codegen' as const,
         message: msg,
+        hint: undefined,
         line: 0,
         column: 0
       })),
@@ -202,6 +216,8 @@ export async function compileFile(
     success: true as const,
     errors: [],
     wasm: wasmResult.wasm ?? null,
-    wat: wasmResult.wat
+    wat: wasmResult.wat,
+    eventHandlers: ir.eventHandlers,
+    telas: ir.telas
   };
 }

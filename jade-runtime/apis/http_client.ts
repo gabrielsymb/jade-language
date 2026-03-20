@@ -53,6 +53,8 @@ export class HttpClient {
     timeout?: number;
     retries?: number;
   }): Promise<HttpResponse<T>> {
+    this.validateUrl(config.url);
+
     // Aplicar interceptors
     let finalConfig = { ...config };
     for (const interceptor of this.interceptors) {
@@ -119,5 +121,46 @@ export class HttpClient {
     }
 
     throw lastError ?? new Error('Requisição falhou');
+  }
+
+  private validateUrl(url: string): void {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new Error(`URL inválida: ${url}`);
+    }
+
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new Error(`Protocolo não permitido: ${parsed.protocol}`);
+    }
+
+    const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, ''); // remove [] do IPv6
+
+    // Loopback e localhost
+    if (host === 'localhost' || host === '::1' || host.endsWith('.localhost')) {
+      throw new Error('Requisição bloqueada: destino interno não permitido');
+    }
+
+    // IPv4 privado
+    const ipv4 = host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+    if (ipv4) {
+      const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+      const privado =
+        a === 127 ||                              // 127.0.0.0/8 loopback
+        a === 10 ||                               // 10.0.0.0/8
+        a === 0 ||                                // 0.0.0.0/8
+        (a === 172 && b >= 16 && b <= 31) ||      // 172.16.0.0/12
+        (a === 192 && b === 168) ||               // 192.168.0.0/16
+        (a === 169 && b === 254);                 // 169.254.0.0/16 link-local
+      if (privado) {
+        throw new Error('Requisição bloqueada: endereço IP privado não permitido');
+      }
+    }
+
+    // IPv6 privado
+    if (/^(::1$|fc|fd|fe80)/i.test(host)) {
+      throw new Error('Requisição bloqueada: endereço IPv6 privado não permitido');
+    }
   }
 }

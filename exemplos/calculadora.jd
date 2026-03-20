@@ -1,0 +1,42 @@
+// Exemplo 1 — Calculadora
+// Demonstra funções matemáticas básicas em JADE
+
+funcao somar(a: numero, b: numero) -> numero
+    retornar a + b
+fim
+
+funcao subtrair(a: numero, b: numero) -> numero
+    retornar a - b
+fim
+
+funcao multiplicar(a: decimal, b: decimal) -> decimal
+    retornar a * b
+fim
+
+funcao dividir(a: decimal, b: decimal) -> decimal
+    retornar a / b
+fim
+
+funcao maximo(a: numero, b: numero) -> numero
+    se a > b
+        retornar a
+    senao
+        retornar b
+    fim
+fim
+
+funcao minimo(a: numero, b: numero) -> numero
+    se a < b
+        retornar a
+    senao
+        retornar b
+    fim
+fim
+
+funcao ehPositivo(n: numero) -> booleano
+    se n > 0
+        retornar verdadeiro
+    senao
+        retornar falso
+    fim
+fim

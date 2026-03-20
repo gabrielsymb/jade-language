@@ -1,0 +1,45 @@
+// Exemplo 2 — Gestão de Estoque
+// Demonstra entidades, eventos e serviços com ouvintes
+
+entidade Produto
+    id: id
+    nome: texto
+    preco: decimal
+    estoque: numero
+fim
+
+entidade Categoria
+    id: id
+    nome: texto
+    descricao: texto
+fim
+
+evento EstoqueAtualizado
+    produtoId: id
+    quantidade: numero
+fim
+
+evento ProdutoCriado
+    produtoId: id
+    nome: texto
+fim
+
+servico estoqueService
+    funcao calcularValorEstoque(preco: decimal, qtd: numero) -> decimal
+        retornar preco * qtd
+    fim
+
+    funcao temEstoque(qtd: numero) -> booleano
+        se qtd > 0
+            retornar verdadeiro
+        senao
+            retornar falso
+        fim
+    fim
+
+    escutar EstoqueAtualizado
+    fim
+
+    escutar ProdutoCriado
+    fim
+fim

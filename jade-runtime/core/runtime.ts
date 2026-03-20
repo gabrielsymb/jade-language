@@ -20,7 +20,11 @@ export class JadeRuntime {
 
   // Carrega e instancia um módulo WASM.
   // Aceita: BufferSource (Uint8Array), Response (streaming), ou WebAssembly.Module
-  async load(wasmSource: BufferSource | Response | WebAssembly.Module): Promise<void> {
+  // eventHandlers: lista gerada pelo compilador mapeando evento → função WASM exportada
+  async load(
+    wasmSource: BufferSource | Response | WebAssembly.Module,
+    eventHandlers?: Array<{ eventName: string; functionName: string }>
+  ): Promise<void> {
     const imports = this.buildImports();
 
     let instance: WebAssembly.Instance;
@@ -46,6 +50,18 @@ export class JadeRuntime {
     // O WASM exporta "memory" — é esse buffer que devemos ler/escrever
     if (instance.exports.memory instanceof WebAssembly.Memory) {
       this.memory.connectWasmMemory(instance.exports.memory);
+    }
+
+    // Registrar automaticamente os handlers de evento gerados pelo compilador
+    if (eventHandlers) {
+      for (const { eventName, functionName } of eventHandlers) {
+        const exportName = functionName.startsWith('@') ? functionName.slice(1) : functionName;
+        const fn = this.exports[exportName];
+        if (typeof fn === 'function') {
+          this.events.on(eventName, fn);
+          if (this.debug) console.log(`[JADE Runtime] Handler registrado: ${eventName} → ${exportName}`);
+        }
+      }
     }
 
     if (this.debug) {

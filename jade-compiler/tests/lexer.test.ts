@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Lexer } from '../dist/lexer/lexer.js';
+import { Lexer } from '../lexer/lexer.js';
 
 describe('Lexer Tests', () => {
   // Caso 1 — Entidade simples

@@ -1,20 +1,23 @@
 {
   "name": "jade-lang",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "JADE — DSL empresarial com sintaxe em português, compilação para WebAssembly e runtime reativo",
   "private": true,
   "type": "module",
   "workspaces": [
     "jade-compiler",
     "jade-runtime",
-    "jade-vscode"
+    "jade-vscode",
+    "jade"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "validate": "bash jade-compiler/validar.sh",
-    "clean": "rm -rf jade-compiler/dist jade-runtime/dist"
+    "clean": "rm -rf jade-compiler/dist jade-runtime/dist",
+    "sync-version": "node scripts/sync-version.js",
+    "check-version": "node scripts/sync-version.js --check"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

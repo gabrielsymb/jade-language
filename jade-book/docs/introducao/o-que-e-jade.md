@@ -1,8 +1,8 @@
-# O que é JADE?
+# O que é Jade DSL?
 
-JADE é uma **linguagem de programação de domínio específico (DSL)** projetada para o desenvolvimento de sistemas empresariais no Brasil.
+Jade DSL é uma **linguagem de programação de domínio específico (DSL)** projetada para o desenvolvimento de sistemas empresariais no Brasil.
 
-Ao contrário de linguagens de uso geral como Python ou JavaScript, JADE foi construída com um objetivo claro: permitir que desenvolvedores brasileiros escrevam sistemas de negócio de forma natural, sem traduzir o vocabulário do domínio para o inglês.
+Ao contrário de linguagens de uso geral como Python ou JavaScript, Jade DSL foi construída com um objetivo claro: permitir que desenvolvedores brasileiros escrevam sistemas de negócio de forma natural, sem traduzir o vocabulário do domínio para o inglês.
 
 ## A ideia central
 
@@ -10,7 +10,7 @@ Pense em como você descreveria um sistema de estoque para um colega:
 
 > *"Quando o estoque de um produto ficar abaixo de 10 unidades, o sistema deve emitir um alerta e gerar um pedido de compra automático."*
 
-Em JADE, isso se escreve assim:
+Em Jade DSL, isso se escreve assim:
 
 ```jd
 regra reposicaoAutomatica quando produto.estoque < 10 entao
@@ -19,11 +19,11 @@ regra reposicaoAutomatica quando produto.estoque < 10 entao
 fim
 ```
 
-A lógica de negócio ficou idêntica ao que você descreveria em reunião. Essa é a proposta do JADE.
+A lógica de negócio ficou idêntica ao que você descreveria em reunião. Essa é a proposta da Jade DSL.
 
 ## Como funciona
 
-O código JADE passa por um pipeline de compilação completo:
+O código Jade DSL passa por um pipeline de compilação completo:
 
 ```
 Código .jd
@@ -47,14 +47,14 @@ O resultado final é um arquivo `.wasm` que roda diretamente no browser — sem 
 
 ## Para quem é
 
-JADE foi feita para:
+Jade DSL foi feita para:
 
 - **Desenvolvedores de sistemas empresariais** que trabalham com ERP, CRM, e-commerce, gestão financeira
 - **Equipes com domínio em português** que querem que o código reflita o vocabulário do negócio
 - **Projetos PWA** que precisam funcionar offline e sincronizar dados quando há conexão
 - **Quem está aprendendo programação** e prefere começar em português antes de migrar para linguagens em inglês
 
-## O que JADE não é
+## O que Jade DSL não é
 
 - Não é uma linguagem de uso geral como Python ou Java
 - Não substitui JavaScript no frontend para tudo — é para lógica de negócio

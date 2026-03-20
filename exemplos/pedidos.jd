@@ -1,0 +1,57 @@
+// Exemplo 3 — Sistema de Pedidos
+// Demonstra enums, múltiplas entidades e fluxo de eventos
+
+enum StatusPedido
+    PENDENTE
+    CONFIRMADO
+    ENVIADO
+    ENTREGUE
+    CANCELADO
+fim
+
+entidade Cliente
+    id: id
+    nome: texto
+    email: texto
+fim
+
+entidade Pedido
+    id: id
+    valor: decimal
+    desconto: decimal
+fim
+
+evento PedidoCriado
+    pedidoId: id
+    clienteId: id
+    valor: decimal
+fim
+
+evento PedidoCancelado
+    pedidoId: id
+    motivo: texto
+fim
+
+servico pedidoService
+    funcao calcularDesconto(valor: decimal, percentual: decimal) -> decimal
+        retornar valor * percentual
+    fim
+
+    funcao calcularTotal(valor: decimal, desconto: decimal) -> decimal
+        retornar valor - desconto
+    fim
+
+    funcao ehValorValido(valor: decimal) -> booleano
+        se valor > 0
+            retornar verdadeiro
+        senao
+            retornar falso
+        fim
+    fim
+
+    escutar PedidoCriado
+    fim
+
+    escutar PedidoCancelado
+    fim
+fim

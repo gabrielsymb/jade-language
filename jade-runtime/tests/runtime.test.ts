@@ -121,4 +121,65 @@ describe('EventLoop', () => {
     loop.emitSync('Off');
     expect(count).toBe(0);
   });
+
+  it('emit processa mais de 100 eventos normais sem erro', async () => {
+    const loop = new EventLoop();
+    let count = 0;
+    loop.on('Tick', () => { count++; });
+
+    // Emitir 150 eventos independentes — não deve lançar erro
+    for (let i = 0; i < 150; i++) {
+      loop.emit('Tick');
+    }
+
+    // Aguardar processamento assíncrono
+    await new Promise(r => setTimeout(r, 50));
+    expect(count).toBe(150);
+  });
+
+  it('handler que lança erro não impede processamento dos eventos seguintes', async () => {
+    const loop = new EventLoop();
+    let okDepois = false;
+
+    loop.on('Falha', () => { throw new Error('erro proposital'); });
+    loop.on('Ok', () => { okDepois = true; });
+
+    loop.emit('Falha');
+    loop.emit('Ok');
+
+    await new Promise(r => setTimeout(r, 50));
+    expect(okDepois).toBe(true);
+  });
+
+  it('emit detecta loop infinito quando handler re-emite o mesmo evento', async () => {
+    const loop = new EventLoop();
+    let erroCapturado = false;
+    let count = 0;
+
+    const originalError = console.error;
+    console.error = (...args: any[]) => {
+      if (String(args[1]).includes('loop infinito') || String(args[0]).includes('loop infinito') || String(args[1]).includes('cadeia')) {
+        erroCapturado = true;
+      }
+    };
+
+    loop.on('Loop', () => { count++; loop.emit('Loop'); });
+    loop.emit('Loop');
+
+    await new Promise(r => setTimeout(r, 100));
+    console.error = originalError;
+
+    // Handler rodou múltiplas vezes (loop real aconteceu), mas foi contido
+    expect(count).toBeGreaterThan(10);
+    expect(count).toBeLessThanOrEqual(101); // MAX_CADEIA + 1
+    // E o erro de detecção foi disparado
+    expect(erroCapturado).toBe(true);
+
+    // Após o erro, novos emits devem funcionar normalmente
+    let ok = false;
+    loop.on('Recuperado', () => { ok = true; });
+    loop.emit('Recuperado');
+    await new Promise(r => setTimeout(r, 50));
+    expect(ok).toBe(true);
+  });
 });

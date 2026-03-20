@@ -1,6 +1,6 @@
-# Padrões de Design em JADE
+# Padrões de Design em Jade DSL
 
-Padrões são soluções consagradas para problemas recorrentes. Aqui estão os mais úteis em sistemas JADE.
+Padrões são soluções consagradas para problemas recorrentes. Aqui estão os mais úteis em sistemas Jade DSL.
 
 ## Padrão Entidade + Serviço
 

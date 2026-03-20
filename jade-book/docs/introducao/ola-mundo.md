@@ -1,6 +1,6 @@
 # Olá, Mundo!
 
-Vamos escrever e executar o primeiro programa em JADE.
+Vamos escrever e executar o primeiro programa em Jade DSL.
 
 ## O programa mais simples
 
@@ -62,7 +62,7 @@ Nasceu por volta de 1996
 
 ## Sua primeira entidade
 
-O bloco mais importante do JADE é a **entidade** — representa um dado do negócio:
+O bloco mais importante da Jade DSL é a **entidade** — representa um dado do negócio:
 
 ```jd
 entidade Pessoa

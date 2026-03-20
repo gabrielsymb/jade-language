@@ -1,4 +1,4 @@
-# JADE — Linguagem de Programação Empresarial em Português
+# Jade DSL — Linguagem de Programação Empresarial em Português
 
 > Escreva código em português. Compile para WebAssembly. Rode no browser e no servidor.
 
@@ -9,9 +9,11 @@
 
 ---
 
-## O que é JADE?
+## O que é Jade DSL?
 
-JADE é uma DSL (linguagem de domínio específico) para desenvolvimento de sistemas empresariais com sintaxe em português. O código JADE é compilado para **WebAssembly**, rodando com performance próxima ao nativo tanto no browser quanto no Node.js.
+Jade DSL é uma linguagem de domínio específico para desenvolvimento de sistemas empresariais com sintaxe em português. O código é compilado para **WebAssembly**, rodando com performance próxima ao nativo tanto no browser quanto no Node.js.
+
+> **Por que "Jade DSL"?** O nome `jade` como pacote npm pertence ao Pug (antigo template engine). Nosso ecossistema fica em `@yakuzaa/jade-*` e a linguagem se chama **Jade DSL** para evitar ambiguidade.
 
 ```jd
 entidade Produto
@@ -38,28 +40,23 @@ fim
 - **Compila para WebAssembly** — performance próxima ao nativo
 - **Eventos como primitivo** — `emitir` e `escutar` são palavras-chave
 - **UI declarativa** — declare telas sem HTML com a keyword `tela`
-- **Offline-first** — PWA com sincronização automática
+- **Mobile-first automático** — o runtime decide o layout, você não toca em CSS
+- **Offline-first** — PWA com sincronização automática via IndexedDB
 - **APIs empresariais** — HTTP, autenticação, permissões, auditoria, data/hora
 
 ## Instalação
 
 ```bash
-# Instalação completa (compilador + runtime)
-npm install @yakuzaa/jade
+# Instalação completa (compilador + runtime + CLI)
+npm install -g @yakuzaa/jade
 
-# Ou separadamente:
-npm install @yakuzaa/jade-compiler   # compilador (CLI + API)
-npm install @yakuzaa/jade-runtime    # runtime (browser + Node.js)
-```
+# Criar um projeto
+jade init meu-sistema
 
-## CLI
-
-```bash
-# Compilar um arquivo .jd para WebAssembly
-npx jadec meu_sistema.jd
-
-# Verificar tipos sem compilar
-npx jadec --check meu_sistema.jd
+# Compilar e abrir no browser
+cd meu-sistema
+jade compilar src/principal.jd
+jade servir dist
 ```
 
 ## Estrutura do monorepo
@@ -67,8 +64,8 @@ npx jadec --check meu_sistema.jd
 | Pacote | Descrição | npm |
 |--------|-----------|-----|
 | [`jade-compiler`](./jade-compiler) | Compilador: lexer, parser, type checker, IR → WAT → WASM | [![npm](https://img.shields.io/npm/v/@yakuzaa/jade-compiler)](https://www.npmjs.com/package/@yakuzaa/jade-compiler) |
-| [`jade-runtime`](./jade-runtime) | Runtime: event loop, UI Engine, APIs, stdlib | [![npm](https://img.shields.io/npm/v/@yakuzaa/jade-runtime)](https://www.npmjs.com/package/@yakuzaa/jade-runtime) |
-| [`jade-vscode`](./jade-vscode) | Extensão VSCode: syntax highlighting, snippets, diagnósticos básicos | [Marketplace](https://marketplace.visualstudio.com/items?itemName=yakuzaa.jade-lang-vscode) |
+| [`jade-runtime`](./jade-runtime) | Runtime: event loop, UI Engine mobile-first, APIs, stdlib | [![npm](https://img.shields.io/npm/v/@yakuzaa/jade-runtime)](https://www.npmjs.com/package/@yakuzaa/jade-runtime) |
+| [`jade-vscode`](./jade-vscode) | Extensão VSCode: syntax highlighting, snippets, diagnósticos | [Marketplace](https://marketplace.visualstudio.com/items?itemName=yakuzaa.jade-lang-vscode) |
 | [`jade-book`](./jade-book) | Documentação completa (VitePress) | [gabrielsymb.github.io/jade-language](https://gabrielsymb.github.io/jade-language) |
 
 ## Documentação
@@ -96,8 +93,8 @@ git clone https://github.com/gabrielsymb/jade-language.git
 cd jade-language
 
 # Instalar dependências
-cd jade-compiler && npm install
-cd ../jade-runtime && npm install
+npm install
+npm run build --workspaces
 ```
 
 ### Comandos
@@ -109,9 +106,6 @@ npm run build --workspaces
 # Testar tudo
 npm run test --workspaces
 
-# Validação completa (compilador + runtime)
-bash jade-compiler/validar.sh
-
 # Rodar o book localmente
 cd jade-book && npm run dev
 ```
@@ -120,8 +114,8 @@ cd jade-book && npm run dev
 
 | Suíte | Testes | Ferramenta |
 |-------|--------|------------|
-| Compiler (lexer, parser, type checker, IR, WASM) | 72 | Vitest |
-| Runtime (core, APIs, UI/PWA, stdlib) | 163 | Vitest |
+| Compiler (lexer, parser, type checker, IR, WASM) | 72+ | Vitest |
+| Runtime (core, APIs, UI/PWA, stdlib) | 163+ | Vitest |
 
 ## Status
 
@@ -132,11 +126,13 @@ cd jade-book && npm run dev
 | Type Checker | ✅ Completo |
 | IR Generator | ✅ Completo |
 | WAT/WASM Generator | ✅ Completo |
+| CLI `jade` (init/compilar/servir) | ✅ Implementado |
 | CLI `jadec` | ✅ Implementado |
 | Runtime Core | ✅ Completo |
 | APIs Runtime | ✅ Completo |
-| UI Engine + `tela` | ✅ Completo |
-| Stdlib (Texto, Matemática, Moeda, XML) | ✅ Completo |
+| UI Engine + `tela` + mobile-first | ✅ Completo |
+| Stdlib (Texto, Matemática, Moeda, Fiscal, WMS) | ✅ Completo |
+| Persistência IndexedDB + LocalStorage | ✅ Completo |
 | Resolução de módulos multi-arquivo | ✅ v0.1.2 |
 | VSCode: syntax highlighting + snippets | ✅ Completo |
 | LSP completo (autocomplete, go-to-def, refatoração) | ⏳ v0.2.0 |

@@ -68,8 +68,11 @@ export class Router {
     if (rota.requerPapel) {
       const papeis: string[] = this.usuarioAtual?.roles ?? [];
       if (!papeis.includes(rota.requerPapel)) {
-        this.container.innerHTML =
-          '<p class="jade-acesso-negado">Acesso negado: você não tem permissão para acessar esta tela.</p>';
+        const p = document.createElement('p');
+        p.className = 'jade-acesso-negado';
+        p.textContent = 'Acesso negado: você não tem permissão para acessar esta tela.';
+        this.container.innerHTML = '';
+        this.container.appendChild(p);
         return;
       }
     }

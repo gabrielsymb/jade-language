@@ -1,6 +1,6 @@
 # Controle de Fluxo
 
-Controle de fluxo define **quais instruções executar** e **quantas vezes**. JADE tem três estruturas principais: `se/senao`, `enquanto` e `para/em`.
+Controle de fluxo define **quais instruções executar** e **quantas vezes**. Jade DSL tem três estruturas principais: `se/senao`, `enquanto` e `para/em`.
 
 ## Condicional — `se`
 

@@ -1,6 +1,6 @@
 # Sincronização Offline
 
-O JADE foi projetado para funcionar mesmo sem internet. Quando a conexão volta, os dados sincronizam automaticamente.
+Jade DSL foi projetada para funcionar mesmo sem internet. Quando a conexão volta, os dados sincronizam automaticamente.
 
 ## Como funciona
 

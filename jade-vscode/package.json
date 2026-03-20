@@ -1,8 +1,8 @@
 {
   "name": "jade-lang-vscode",
-  "displayName": "JADE Language",
-  "description": "Suporte à linguagem JADE — DSL empresarial em português compilada para WebAssembly",
-  "version": "0.1.0",
+  "displayName": "Jade DSL",
+  "description": "Suporte à Jade DSL — linguagem empresarial em português compilada para WebAssembly",
+  "version": "0.1.4",
   "publisher": "yakuzaa",
   "license": "MIT",
   "icon": "assets/icon.png",
@@ -33,8 +33,14 @@
     "languages": [
       {
         "id": "jd",
-        "aliases": ["JADE", "jade", "jd"],
-        "extensions": [".jd"],
+        "aliases": [
+          "JADE",
+          "jade",
+          "jd"
+        ],
+        "extensions": [
+          ".jd"
+        ],
         "configuration": "./language-configuration.json",
         "icon": {
           "light": "./assets/icon-file.svg",
@@ -58,12 +64,12 @@
     "iconThemes": [
       {
         "id": "jade-icons",
-        "label": "JADE Icons",
+        "label": "Jade DSL Icons",
         "path": "./jade-icon-theme.json"
       }
     ],
     "configuration": {
-      "title": "JADE Language",
+      "title": "Jade DSL",
       "properties": {
         "jade.format.enable": {
           "type": "boolean",
@@ -84,7 +90,11 @@
         },
         "jade.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Rastreamento da comunicação com o servidor LSP"
         }

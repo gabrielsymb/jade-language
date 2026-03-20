@@ -5,6 +5,18 @@ import { VirtualList } from './virtual_list.js';
 import { aplicarTema, Tema } from './theme.js';
 import { Router } from './router.js';
 import { MemoryManager } from '../core/memory_manager.js';
+import { Responsivo } from './responsive.js';
+
+// Formato gerado pelo compilador (jade-ui.json)
+export interface TelaDescriptor {
+  nome: string;
+  titulo: string;
+  elementos: Array<{
+    tipo: string;
+    nome: string;
+    propriedades: Array<{ chave: string; valor: string | string[] }>;
+  }>;
+}
 
 // ── Interfaces de configuração ───────────────────────────────────────────────
 
@@ -57,6 +69,7 @@ export class UIEngine {
   private refs: RefManager;
   private memory: MemoryManager;
   private router: Router;
+  private responsivo: Responsivo;
   private telaAtiva: string | null = null;
   private toastContainer: HTMLElement | null = null;
 
@@ -65,8 +78,10 @@ export class UIEngine {
     this.store = new Store();
     this.refs = new RefManager();
     this.router = new Router(this.store, memory);
+    this.responsivo = new Responsivo();
     if (typeof document !== 'undefined') {
       aplicarTema(tema);
+      this.responsivo.injetarEstilos();
     }
   }
 
@@ -109,237 +124,41 @@ export class UIEngine {
   // ── Tabela ────────────────────────────────────────────────────────────────
 
   /**
-   * Cria uma tabela com dados reativos.
-   * Suporta: filtro por texto, ordenação por coluna, paginação, VirtualList.
+   * Cria uma tabela com layout adaptativo mobile-first.
+   *   mobile  → lista de cards empilhados (responsivo.ts)
+   *   desktop → grid com colunas, ordenação, paginação (responsivo.ts)
+   * O runtime decide automaticamente — o usuário não controla o layout.
    */
   criarTabela(config: TabelaConfig, container: HTMLElement, dados: any[]): void {
     setEffectOwner(this.telaAtiva);
 
-    const linhasPorPagina = config.paginacao === true
-      ? 20
-      : typeof config.paginacao === 'number'
-        ? config.paginacao
-        : 0;
-
-    // Estado reativo da tabela
-    const termoBusca   = new Signal('');
-    const campOrdem    = new Signal<string | null>(null);
-    const direcaoOrdem = new Signal<'asc' | 'desc'>('asc');
-    const paginaAtual  = new Signal(0);
-
     const wrapper = document.createElement('div');
     wrapper.className = 'jade-tabela-wrapper';
 
-    // ── Barra de controles (busca) ──────────────────────────────────────────
+    // Barra de busca (acima da tabela/lista, visível em ambos os layouts)
+    const termoBusca  = new Signal('');
+    const paginaAtual = new Signal(0);
+
     if (config.filtravel) {
       const controles = document.createElement('div');
       controles.className = 'jade-tabela-controles';
-
       const busca = document.createElement('input');
-      busca.type = 'text';
+      busca.type = 'search';
       busca.placeholder = 'Buscar...';
       busca.className = 'jade-tabela-busca';
+      busca.setAttribute('aria-label', 'Buscar na tabela');
       busca.addEventListener('input', () => {
         termoBusca.set(busca.value.toLowerCase());
-        paginaAtual.set(0); // voltar para primeira página ao filtrar
+        paginaAtual.set(0);
       });
-
       controles.appendChild(busca);
       wrapper.appendChild(controles);
     }
 
-    // ── Tabela HTML ─────────────────────────────────────────────────────────
-    const tabelaDiv = document.createElement('div');
-    tabelaDiv.className = 'jade-tabela';
-
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-
-    config.colunas.forEach(col => {
-      const th = document.createElement('th');
-      th.textContent = col.titulo;
-
-      if (config.ordenavel !== false && col.ordenavel !== false) {
-        th.className = 'ordenavel';
-        const icon = document.createElement('span');
-        icon.className = 'jade-sort-icon';
-        icon.textContent = '↕';
-        th.appendChild(icon);
-
-        th.addEventListener('click', () => {
-          if (campOrdem.peek() === col.campo) {
-            direcaoOrdem.set(direcaoOrdem.peek() === 'asc' ? 'desc' : 'asc');
-          } else {
-            campOrdem.set(col.campo);
-            direcaoOrdem.set('asc');
-          }
-          paginaAtual.set(0);
-          // Atualizar classes dos cabeçalhos
-          headerRow.querySelectorAll('th').forEach(t => {
-            t.classList.remove('sort-asc', 'sort-desc');
-          });
-          th.classList.add(direcaoOrdem.peek() === 'asc' ? 'sort-asc' : 'sort-desc');
-          icon.textContent = direcaoOrdem.peek() === 'asc' ? '↑' : '↓';
-          atualizarTabela();
-        });
-      }
-
-      headerRow.appendChild(th);
-    });
-
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-
-    // ── Corpo da tabela ─────────────────────────────────────────────────────
-    const tbody = document.createElement('tbody');
-    table.appendChild(tbody);
-    tabelaDiv.appendChild(table);
-
-    // ── Rodapé de paginação ─────────────────────────────────────────────────
-    let paginacaoDiv: HTMLElement | null = null;
-    if (linhasPorPagina > 0) {
-      paginacaoDiv = document.createElement('div');
-      paginacaoDiv.className = 'jade-tabela-paginacao';
-      tabelaDiv.appendChild(paginacaoDiv);
-    }
-
-    wrapper.appendChild(tabelaDiv);
     container.appendChild(wrapper);
 
-    // ── Função que re-renderiza o corpo com dados filtrados/ordenados/paginados
-    const atualizarTabela = (): void => {
-      let linhas = [...dados];
-
-      // Filtro por texto
-      const termo = termoBusca.peek();
-      if (termo) {
-        linhas = linhas.filter(item =>
-          config.colunas.some(col =>
-            String(item[col.campo] ?? '').toLowerCase().includes(termo)
-          )
-        );
-      }
-
-      // Ordenação
-      const campo = campOrdem.peek();
-      if (campo) {
-        const dir = direcaoOrdem.peek() === 'asc' ? 1 : -1;
-        linhas.sort((a, b) => {
-          const va = a[campo] ?? '';
-          const vb = b[campo] ?? '';
-          if (va < vb) return -1 * dir;
-          if (va > vb) return 1 * dir;
-          return 0;
-        });
-      }
-
-      // Paginação
-      const pagina = paginaAtual.peek();
-      if (linhasPorPagina > 0 && paginacaoDiv) {
-        const totalPaginas = Math.max(1, Math.ceil(linhas.length / linhasPorPagina));
-        const paginaCorreta = Math.min(pagina, totalPaginas - 1);
-        if (paginaCorreta !== pagina) paginaAtual.set(paginaCorreta);
-
-        linhas = linhas.slice(paginaCorreta * linhasPorPagina, (paginaCorreta + 1) * linhasPorPagina);
-
-        // Re-renderizar controles de paginação
-        paginacaoDiv.innerHTML = '';
-        const info = document.createElement('span');
-        info.textContent = `Página ${paginaCorreta + 1} de ${totalPaginas}`;
-        paginacaoDiv.appendChild(info);
-
-        const btnAnterior = document.createElement('button');
-        btnAnterior.textContent = '←';
-        btnAnterior.className = 'jade-pag-btn';
-        btnAnterior.disabled = paginaCorreta === 0;
-        btnAnterior.addEventListener('click', () => {
-          paginaAtual.set(paginaCorreta - 1);
-          atualizarTabela();
-        });
-        paginacaoDiv.appendChild(btnAnterior);
-
-        // Botões de página (máximo 5 visíveis)
-        const inicio = Math.max(0, paginaCorreta - 2);
-        const fim = Math.min(totalPaginas, inicio + 5);
-        for (let p = inicio; p < fim; p++) {
-          const btn = document.createElement('button');
-          btn.textContent = String(p + 1);
-          btn.className = `jade-pag-btn${p === paginaCorreta ? ' ativo' : ''}`;
-          btn.addEventListener('click', () => { paginaAtual.set(p); atualizarTabela(); });
-          paginacaoDiv.appendChild(btn);
-        }
-
-        const btnProximo = document.createElement('button');
-        btnProximo.textContent = '→';
-        btnProximo.className = 'jade-pag-btn';
-        btnProximo.disabled = paginaCorreta >= totalPaginas - 1;
-        btnProximo.addEventListener('click', () => {
-          paginaAtual.set(paginaCorreta + 1);
-          atualizarTabela();
-        });
-        paginacaoDiv.appendChild(btnProximo);
-      }
-
-      // Renderizar linhas
-      tbody.innerHTML = '';
-
-      if (linhas.length === 0) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = config.colunas.length;
-        td.className = 'jade-tabela-vazio';
-        td.textContent = 'Nenhum registro encontrado.';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-        return;
-      }
-
-      linhas.forEach((item: any, index: number) => {
-        const tr = document.createElement('tr');
-        config.colunas.forEach(col => {
-          const td = document.createElement('td');
-          const signal = this.store.get(
-            `${config.entidade}.${index}.${col.campo}`,
-            item[col.campo]
-          );
-          bind(signal, td, 'textContent');
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-    };
-
-    // VirtualList só é usado quando não há filtro/paginação interativa
-    // (VirtualList e tabela paginada são mutuamente exclusivos)
-    if (config.virtualList && dados.length > 100 && linhasPorPagina === 0 && !config.filtravel) {
-      const listContainer = document.createElement('div');
-      listContainer.style.height = config.altura ?? '400px';
-      wrapper.appendChild(listContainer);
-
-      new VirtualList({
-        container: listContainer,
-        items: dados,
-        rowHeight: config.rowHeight ?? 41,
-        renderRow: (item: any, index: number) => {
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;border-bottom:1px solid var(--jade-borda);';
-          config.colunas.forEach(col => {
-            const cell = document.createElement('div');
-            cell.style.cssText = 'flex:1;padding:10px 14px;font-size:14px;';
-            const signal = this.store.get(
-              `${config.entidade}.${index}.${col.campo}`,
-              item[col.campo]
-            );
-            bind(signal, cell, 'textContent');
-            row.appendChild(cell);
-          });
-          return row;
-        }
-      });
-    } else {
-      atualizarTabela();
-    }
+    // Delega ao Responsivo — ele decide mobile vs desktop e troca quando viewport muda
+    this.responsivo.adaptarTabela(config, wrapper, dados, termoBusca, paginaAtual);
 
     setEffectOwner(null);
   }
@@ -547,10 +366,82 @@ export class UIEngine {
     setTimeout(remover, duracao);
   }
 
+  // ── Bridge: descriptor do compilador → componentes ───────────────────────
+
+  /**
+   * Recebe o descriptor gerado pelo compilador (.jade-ui.json) e renderiza
+   * automaticamente cada elemento declarado na tela.
+   * É aqui que "usuário descreve O QUE, sistema decide COMO" se concretiza.
+   */
+  renderizarTela(descriptor: TelaDescriptor, container: HTMLElement): HTMLElement {
+    const div = this.montarTela({ nome: descriptor.nome, titulo: descriptor.titulo }, container);
+
+    for (const el of descriptor.elementos) {
+      const props = Object.fromEntries(el.propriedades.map(p => [p.chave, p.valor]));
+
+      switch (el.tipo) {
+        case 'tabela': {
+          // Converte propriedades do descriptor em TabelaConfig
+          const entidade = String(props['entidade'] ?? el.nome);
+          const colunas  = Array.isArray(props['colunas'])
+            ? (props['colunas'] as string[]).map(c => ({ campo: c, titulo: c }))
+            : []; // sem colunas declaradas: usa nome do elemento como placeholder
+          this.criarTabela(
+            {
+              entidade,
+              colunas,
+              filtravel:  props['filtravel'] === 'verdadeiro',
+              paginacao:  props['paginacao'] === 'verdadeiro' ? true
+                        : Number(props['paginacao']) || false,
+            },
+            div,
+            []  // dados vindos do runtime/WASM — [] por padrão até carregar
+          );
+          break;
+        }
+
+        case 'formulario': {
+          const campos = Array.isArray(props['campos'])
+            ? (props['campos'] as string[]).map(c => ({ nome: c, titulo: c, tipo: 'texto' as const }))
+            : [];
+          this.criarFormulario({ entidade: String(props['entidade'] ?? el.nome), campos }, div);
+          break;
+        }
+
+        case 'botao': {
+          const acao = String(props['acao'] ?? props['clique'] ?? '');
+          this.criarBotao(el.nome, () => {
+            // Dispara evento com o nome da ação para o WASM ou handler registrado
+            window.dispatchEvent(new CustomEvent('jade:acao', { detail: { acao, tela: descriptor.nome } }));
+          }, div);
+          break;
+        }
+
+        case 'cartao': {
+          const valor = new Signal<any>(props['valor'] ?? '');
+          this.criarCard(el.nome, valor, div);
+          break;
+        }
+
+        // grafico e modal: placeholder até implementação completa
+        default: {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'jade-placeholder';
+          placeholder.textContent = `[${el.tipo}: ${el.nome}]`;
+          placeholder.style.cssText = 'padding:12px;border:1px dashed #d1d5db;border-radius:8px;color:#9ca3af;font-size:0.875rem;';
+          div.appendChild(placeholder);
+        }
+      }
+    }
+
+    return div;
+  }
+
   // ── Acessores ─────────────────────────────────────────────────────────────
 
   focar(nomeRef: string): void { this.refs.focar(nomeRef); }
   getStore(): Store { return this.store; }
   getRefs(): RefManager { return this.refs; }
   getRouter(): Router { return this.router; }
+  getResponsivo(): Responsivo { return this.responsivo; }
 }

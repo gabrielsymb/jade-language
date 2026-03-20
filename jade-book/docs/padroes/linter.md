@@ -1,6 +1,6 @@
 # Linter — Avisos de Estilo
 
-O linter JADE analisa seu código em busca de problemas de nomenclatura, estrutura e lógica — sem impedir a compilação.
+O linter Jade DSL analisa seu código em busca de problemas de nomenclatura, estrutura e lógica — sem impedir a compilação.
 
 ## Como usar
 

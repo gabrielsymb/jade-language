@@ -55,7 +55,7 @@ normalizado = texto_digitado.normalizar()  // NFC Unicode
 
 ## Validações brasileiras
 
-JADE inclui validadores específicos para o contexto brasileiro:
+Jade DSL inclui validadores específicos para o contexto brasileiro:
 
 ```jd
 variavel cpf = "123.456.789-09"
@@ -135,4 +135,4 @@ fim
 
 ## Próximo passo
 
-→ [Como o JADE salva dados](/persistencia/visao-geral)
+→ [Como a Jade DSL salva dados](/persistencia/visao-geral)

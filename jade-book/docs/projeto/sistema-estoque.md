@@ -442,7 +442,7 @@ fim
 
 ```jd
 funcao demonstracao()
-  Console.escrever("=== Sistema de Estoque JADE ===\n")
+  Console.escrever("=== Sistema de Estoque Jade DSL ===\n")
 
   // 1. Criar categorias
   eletronicos = Categoria()
@@ -515,7 +515,7 @@ Movimentações hoje: 4
 
 ## Parabéns!
 
-Você acabou de construir um sistema de estoque completo em JADE com:
+Você acabou de construir um sistema de estoque completo em Jade DSL com:
 
 - ✅ 5 entidades bem modeladas
 - ✅ 4 enumerações
@@ -527,4 +527,4 @@ Você acabou de construir um sistema de estoque completo em JADE com:
 - ✅ Autenticação e permissões
 - ✅ Relatórios e histórico
 
-A partir daqui, você tem o conhecimento para construir qualquer sistema empresarial em JADE.
+A partir daqui, você tem o conhecimento para construir qualquer sistema empresarial em Jade DSL.

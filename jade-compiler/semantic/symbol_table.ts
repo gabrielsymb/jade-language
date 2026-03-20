@@ -141,4 +141,15 @@ export class TabelaSimbolos {
     }
     return todos;
   }
+
+  // Retorna todos os nomes visíveis no escopo atual (do mais interno ao global)
+  buscarTodosNomesVisiveis(): string[] {
+    const nomes: string[] = [];
+    for (let i = this.escopos.length - 1; i >= 0; i--) {
+      for (const nome of this.escopos[i].keys()) {
+        if (!nomes.includes(nome)) nomes.push(nome);
+      }
+    }
+    return nomes;
+  }
 }

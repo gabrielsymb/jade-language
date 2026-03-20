@@ -31,7 +31,6 @@ export class WASMGenerator {
       }
     } catch (e: any) {
       errors.push(`Erro ao compilar WAT para binário: ${e.message}`);
-      console.error('Erro no wabt:', e);
     }
 
     return {

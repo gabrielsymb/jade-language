@@ -1,0 +1,54 @@
+// Exemplo 4 — Módulo Financeiro
+// Demonstra módulos, interfaces e cálculos financeiros
+
+interface Calculavel
+    funcao calcular(valor: decimal) -> decimal
+fim
+
+entidade Lancamento
+    id: id
+    descricao: texto
+    valor: decimal
+    tipo: texto
+fim
+
+entidade ContaBancaria
+    id: id
+    titular: texto
+    saldo: decimal
+fim
+
+evento LancamentoCriado
+    lancamentoId: id
+    valor: decimal
+    tipo: texto
+fim
+
+evento SaldoAtualizado
+    contaId: id
+    novoSaldo: decimal
+fim
+
+servico financeiroService
+    funcao calcularJuros(principal: decimal, taxa: decimal, meses: numero) -> decimal
+        retornar principal * taxa * meses
+    fim
+
+    funcao calcularSaldoFinal(saldoInicial: decimal, creditos: decimal, debitos: decimal) -> decimal
+        retornar saldoInicial + creditos - debitos
+    fim
+
+    funcao ehCredito(tipo: texto) -> booleano
+        se tipo == "credito"
+            retornar verdadeiro
+        senao
+            retornar falso
+        fim
+    fim
+
+    escutar LancamentoCriado
+    fim
+
+    escutar SaldoAtualizado
+    fim
+fim

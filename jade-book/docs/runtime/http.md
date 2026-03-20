@@ -1,6 +1,6 @@
 # HTTP e Redes
 
-O JADE oferece `HttpClient` para fazer requisições HTTP e `WebSocketClient` para comunicação em tempo real.
+Jade DSL oferece `HttpClient` para fazer requisições HTTP e `WebSocketClient` para comunicação em tempo real.
 
 ## HttpClient
 

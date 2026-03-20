@@ -1,6 +1,6 @@
 # Tipos e Variáveis
 
-JADE é uma linguagem de **tipagem estática** — todo valor tem um tipo conhecido em tempo de compilação. Isso significa que o compilador encontra erros de tipo antes do código rodar.
+Jade DSL é uma linguagem de **tipagem estática** — todo valor tem um tipo conhecido em tempo de compilação. Isso significa que o compilador encontra erros de tipo antes do código rodar.
 
 ## Tipos primitivos
 

@@ -3,7 +3,7 @@
 A stdlib `Moeda` fornece aritmética monetária segura, formatação BRL e operações de negócio. Não requer importação — está disponível globalmente como `Moeda.metodo(args)`.
 
 > **Por que usar Moeda em vez de operadores normais?**
-> JavaScript (e portanto JADE) usa IEEE 754 de ponto flutuante:
+> JavaScript (e portanto Jade DSL) usa IEEE 754 de ponto flutuante:
 > `0.1 + 0.2` resulta em `0.30000000000000004`, não `0.30`.
 > `Moeda.somar(0.1, 0.2)` retorna exatamente `0.30`.
 > Toda aritmética da `Moeda` é feita em centavos inteiros internamente.

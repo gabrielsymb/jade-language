@@ -1,7 +1,7 @@
 {
   "name": "@yakuzaa/jade-compiler",
-  "version": "0.1.5",
-  "description": "Compilador da linguagem JADE — DSL empresarial com sintaxe em português compilada para WebAssembly",
+  "version": "0.1.6",
+  "description": "Compilador da Jade DSL — linguagem empresarial em português compilada para WebAssembly",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

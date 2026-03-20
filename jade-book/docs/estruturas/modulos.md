@@ -72,7 +72,7 @@ fatura = fin.Fatura()
 
 ## Organizando um sistema real
 
-Um sistema de ERP típico em JADE:
+Um sistema de ERP típico em Jade DSL:
 
 ```
 sistema-erp/

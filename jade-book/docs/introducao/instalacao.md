@@ -7,7 +7,7 @@
 
 ## 1. Instale o compilador
 
-O compilador JADE (`jadec`) é instalado via npm:
+O compilador Jade DSL (`jadec`) é instalado via npm:
 
 ```bash
 # Instalação completa (compilador + runtime)
@@ -26,7 +26,7 @@ jadec --version
 
 ## 2. Instale a extensão VS Code
 
-A extensão JADE para VS Code oferece:
+A extensão Jade DSL para VS Code oferece:
 
 - Destaque de sintaxe para arquivos `.jd`
 - Snippets para estruturas comuns (`entidade`, `servico`, `funcao`, etc.)
@@ -34,7 +34,7 @@ A extensão JADE para VS Code oferece:
 
 ### Via marketplace
 
-Procure por **"JADE Language"** no marketplace do VS Code ou instale via terminal:
+Procure por **"Jade DSL"** no marketplace do VS Code ou instale via terminal:
 
 ```bash
 code --install-extension yakuzaa.jade-lang-vscode
@@ -96,7 +96,7 @@ A partir da v0.1.2, o compilador resolve importações entre arquivos `.jd` auto
 | `jadec --version` | Mostra a versão |
 
 ::: tip VS Code integrado
-O formatter e o linter também funcionam automaticamente no VS Code com a extensão JADE instalada. O formatter é executado ao salvar; os avisos do linter aparecem como sublinhados amarelos no editor.
+O formatter e o linter também funcionam automaticamente no VS Code com a extensão Jade DSL instalada. O formatter é executado ao salvar; os avisos do linter aparecem como sublinhados amarelos no editor.
 :::
 
 ## Próximo passo

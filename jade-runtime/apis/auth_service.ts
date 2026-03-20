@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from 'crypto';
+import { createHmac, scrypt, timingSafeEqual, randomBytes, randomUUID } from 'crypto';
 
 export interface LoginCredentials {
   username: string;
@@ -36,10 +36,23 @@ export class AuthService {
   private sessions: Map<string, { userId: string; expiresAt: number }> = new Map();
   private jwtSecret: string;
   private tokenExpirySeconds: number;
+  private scryptN: number;
 
-  constructor(jwtSecret: string = 'jade-secret-key', tokenExpirySeconds: number = 86400) {
+  constructor(
+    jwtSecret: string,
+    tokenExpirySeconds: number = 86400,
+    /** Custo do scrypt (N). Padrão: 16384 para produção. Use 1024 em testes. */
+    scryptN: number = 16384
+  ) {
+    if (!jwtSecret || jwtSecret.length < 32) {
+      throw new Error(
+        'AuthService: jwtSecret é obrigatório e deve ter no mínimo 32 caracteres. ' +
+        'Use uma string aleatória segura (ex: crypto.randomBytes(32).toString("hex")).'
+      );
+    }
     this.jwtSecret = jwtSecret;
     this.tokenExpirySeconds = tokenExpirySeconds;
+    this.scryptN = scryptN;
   }
 
   // Registra usuário no sistema
@@ -60,7 +73,7 @@ export class AuthService {
       email: userData.email,
       roles: userData.roles ?? ['usuario'],
       permissions: userData.permissions ?? [],
-      passwordHash: this.hashPassword(userData.password)
+      passwordHash: await this.hashPassword(userData.password)
     };
 
     this.users.set(user.id, user);
@@ -75,8 +88,8 @@ export class AuthService {
       throw new Error('Usuário ou senha inválidos');
     }
 
-    const hash = this.hashPassword(credentials.password);
-    if (hash !== user.passwordHash) {
+    const senhaValida = await this.verifyPassword(credentials.password, user.passwordHash!);
+    if (!senhaValida) {
       throw new Error('Usuário ou senha inválidos');
     }
 
@@ -147,10 +160,23 @@ export class AuthService {
     return undefined;
   }
 
-  private hashPassword(password: string): string {
-    return createHmac('sha256', this.jwtSecret)
-      .update(password)
-      .digest('hex');
+  // scrypt com salt aleatório — resistente a brute-force e rainbow tables
+  private async hashPassword(password: string): Promise<string> {
+    const salt = randomBytes(16);
+    const hash = await new Promise<Buffer>((resolve, reject) => {
+      scrypt(password, salt, 64, { N: this.scryptN }, (err, key) => err ? reject(err) : resolve(key));
+    });
+    return `${salt.toString('hex')}:${hash.toString('hex')}`;
+  }
+
+  private async verifyPassword(password: string, stored: string): Promise<boolean> {
+    const [saltHex, hashHex] = stored.split(':');
+    const salt = Buffer.from(saltHex, 'hex');
+    const expected = Buffer.from(hashHex, 'hex');
+    const actual = await new Promise<Buffer>((resolve, reject) => {
+      scrypt(password, salt, 64, { N: this.scryptN }, (err, key) => err ? reject(err) : resolve(key));
+    });
+    return timingSafeEqual(actual, expected);
   }
 
   private generateToken(user: User, expiresIn: number): string {

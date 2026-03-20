@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Lexer } from '../dist/lexer/lexer.js';
-import { Parser } from '../dist/parser/parser.js';
-import { SemanticAnalyzer } from '../dist/semantic/semantic_analyzer.js';
-import { IRGenerator } from '../dist/codegen/ir_generator.js';
-import { IRPrinter } from '../dist/codegen/ir_printer.js';
+import { Lexer } from '../lexer/lexer.js';
+import { Parser } from '../parser/parser.js';
+import { SemanticAnalyzer } from '../semantic/semantic_analyzer.js';
+import { IRGenerator } from '../codegen/ir_generator.js';
+import { IRPrinter } from '../codegen/ir_printer.js';
 
 function gerarIR(source: string) {
   const tokens = new Lexer(source).tokenize();

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Lexer } from '../dist/lexer/lexer.js';
-import { Parser } from '../dist/parser/parser.js';
+import { Lexer } from '../lexer/lexer.js';
+import { Parser } from '../parser/parser.js';
 
 function parse(source: string) {
   const tokens = new Lexer(source).tokenize();

@@ -1,6 +1,6 @@
 # EntityManager
 
-O `EntityManager` é a API principal para operações de dados em JADE. Ele abstrai o IndexedDB local e a sincronização com servidor.
+O `EntityManager` é a API principal para operações de dados em Jade DSL. Ele abstrai o IndexedDB local e a sincronização com servidor.
 
 ## Referência completa
 

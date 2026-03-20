@@ -1,6 +1,6 @@
 # Erros Comuns
 
-Uma lista dos erros mais frequentes em JADE e como corrigi-los.
+Uma lista dos erros mais frequentes em Jade DSL e como corrigi-los.
 
 ## Entidade sem campo `id`
 
@@ -136,7 +136,7 @@ se produto.ativo
 
 ## Tokens que não existem
 
-Esses tokens **não existem** em JADE:
+Esses tokens **não existem** em Jade DSL:
 
 | Errado | Correto |
 |--------|---------|

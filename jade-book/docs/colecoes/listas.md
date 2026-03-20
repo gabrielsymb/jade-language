@@ -1,6 +1,6 @@
 # Listas
 
-Uma **lista** é uma coleção ordenada de elementos do mesmo tipo. É o tipo de coleção mais usado em JADE.
+Uma **lista** é uma coleção ordenada de elementos do mesmo tipo. É o tipo de coleção mais usado em Jade DSL.
 
 ## Criando uma lista
 

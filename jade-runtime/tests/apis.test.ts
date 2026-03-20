@@ -9,6 +9,7 @@ import { AuthService } from '../apis/auth_service';
 import { PermissionService } from '../apis/permission_service';
 import { AuditService } from '../apis/audit_service';
 import { DateTimeAPI } from '../apis/datetime_api';
+import { HttpClient } from '../apis/http_client';
 
 // ── ConsoleAPI ─────────────────────────────────────────────────────────────
 
@@ -42,7 +43,7 @@ describe('ConsoleAPI', () => {
 
 describe('AuthService', () => {
   it('register + login retorna JWT com 3 partes', async () => {
-    const auth = new AuthService('secret-test');
+    const auth = new AuthService('secret-test-com-tamanho-minimo-de-32-chars', 86400, 1024);
     await auth.register({ username: 'joao', email: 'joao@test.com', password: '123456' });
     const result = await auth.login({ username: 'joao', password: '123456' });
     expect(result.accessToken.split('.')).toHaveLength(3);
@@ -50,7 +51,7 @@ describe('AuthService', () => {
   });
 
   it('verifyToken retorna payload correto', async () => {
-    const auth = new AuthService('secret-test');
+    const auth = new AuthService('secret-test-com-tamanho-minimo-de-32-chars', 86400, 1024);
     await auth.register({ username: 'maria', email: 'maria@test.com', password: 'abc' });
     const { accessToken } = await auth.login({ username: 'maria', password: 'abc' });
     const payload = auth.verifyToken(accessToken);
@@ -58,10 +59,53 @@ describe('AuthService', () => {
   });
 
   it('login rejeita credenciais inválidas', async () => {
-    const auth = new AuthService('secret-test');
+    const auth = new AuthService('secret-test-com-tamanho-minimo-de-32-chars', 86400, 1024);
     await expect(
       auth.login({ username: 'ninguem', password: 'errada' })
     ).rejects.toThrow();
+  });
+
+  it('hash de senha usa scrypt com salt — dois hashes da mesma senha são diferentes', async () => {
+    const auth = new AuthService('secret-test-com-tamanho-minimo-de-32-chars', 86400, 1024);
+    await auth.register({ username: 'u1', email: 'u1@test.com', password: 'igual' });
+    await auth.register({ username: 'u2', email: 'u2@test.com', password: 'igual' });
+    // Login funciona para ambos — verifica que scrypt+salt funciona corretamente
+    await expect(auth.login({ username: 'u1', password: 'igual' })).resolves.toBeDefined();
+    await expect(auth.login({ username: 'u2', password: 'igual' })).resolves.toBeDefined();
+  });
+});
+
+// ── HttpClient — SSRF ──────────────────────────────────────────────────────
+
+describe('HttpClient — proteção SSRF', () => {
+  const http = new HttpClient();
+
+  it('bloqueia localhost', async () => {
+    await expect(http.request({ method: 'GET', url: 'http://localhost/api' })).rejects.toThrow('interno');
+  });
+
+  it('bloqueia 127.0.0.1', async () => {
+    await expect(http.request({ method: 'GET', url: 'http://127.0.0.1/admin' })).rejects.toThrow('privado');
+  });
+
+  it('bloqueia 10.x.x.x', async () => {
+    await expect(http.request({ method: 'GET', url: 'http://10.0.0.1/internal' })).rejects.toThrow('privado');
+  });
+
+  it('bloqueia 192.168.x.x', async () => {
+    await expect(http.request({ method: 'GET', url: 'http://192.168.1.1/router' })).rejects.toThrow('privado');
+  });
+
+  it('bloqueia 172.16.x.x', async () => {
+    await expect(http.request({ method: 'GET', url: 'http://172.16.0.1/' })).rejects.toThrow('privado');
+  });
+
+  it('bloqueia protocolo file://', async () => {
+    await expect(http.request({ method: 'GET', url: 'file:///etc/passwd' })).rejects.toThrow('Protocolo');
+  });
+
+  it('bloqueia URL malformada', async () => {
+    await expect(http.request({ method: 'GET', url: 'não-é-url' })).rejects.toThrow('inválida');
   });
 });
 

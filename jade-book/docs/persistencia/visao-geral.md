@@ -1,11 +1,11 @@
-# Como o JADE salva dados
+# Como a Jade DSL salva dados
 
-Esta é uma das partes mais únicas do JADE. Esqueça SQL, esqueça configurar conexão com banco, esqueça migrations — o JADE usa um modelo **offline-first** que funciona sem servidor.
+Esta é uma das partes mais únicas da Jade DSL. Esqueça SQL, esqueça configurar conexão com banco, esqueça migrations — a Jade DSL usa um modelo **offline-first** que funciona sem servidor.
 
 ## O modelo offline-first
 
 ```
-Você escreve código JADE
+Você escreve código Jade DSL
         ↓
 Runtime salva no IndexedDB (banco local do browser)
         ↓
@@ -83,7 +83,7 @@ salvar produto
 
 ## Excluindo dados
 
-Em JADE, a exclusão é sempre **lógica** — o registro é desativado, não apagado:
+Em Jade DSL, a exclusão é sempre **lógica** — o registro é desativado, não apagado:
 
 ```jd
 produto = EntityManager.buscarPorId(Produto, id)
