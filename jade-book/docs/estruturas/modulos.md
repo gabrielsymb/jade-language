@@ -1,178 +1,191 @@
 # Módulos e Importações
 
-Módulos organizam o código em namespaces (espaços de nomes), evitando conflitos e agrupando elementos relacionados.
+Jade DSL suporta projetos com múltiplos arquivos organizados em diretórios.
+Cada arquivo `.jd` é um módulo independente — entidades, serviços, eventos e telas
+podem ser separados por responsabilidade e importados onde forem necessários.
 
-## Declarando um módulo
+## Sintaxe de importação
+
+### Mesmo diretório
 
 ```jd
-modulo estoque
-  entidade Produto
-    id: id
-    nome: texto
-    quantidade: numero
-  fim
+importar Produto
+importar Cliente
+```
 
-  servico EstoqueService
-    funcao adicionar(produtoId: id, qtd: numero)
-      // ...
-    fim
+Resolve `Produto.jd` e `Cliente.jd` no mesmo diretório do arquivo atual.
+
+### Subdiretório (caminho com `/`)
+
+```jd
+importar entidades/Produto
+importar servicos/EstoqueServico
+importar relatorios/fiscal/RegrasICMS
+```
+
+Caminhos com `/` são **sempre relativos à raiz do projeto** — o diretório do arquivo
+passado ao `jadec`. Isso significa que qualquer arquivo, em qualquer subdiretório,
+usa o mesmo caminho e resolve para o mesmo lugar.
+
+### Item específico
+
+Importa apenas uma declaração do arquivo, ignorando o resto:
+
+```jd
+importar entidades/Produto.Produto
+importar entidades/Cliente.Cliente
+```
+
+### Alias
+
+Renomeia o módulo ou o item importado:
+
+```jd
+importar servicos/EstoqueServico como Estoque
+importar entidades/Produto.Produto como ProdutoModel
+```
+
+### Tabela de formas válidas
+
+| Sintaxe | O que importa |
+|---------|---------------|
+| `importar Produto` | Tudo de `Produto.jd` (mesmo dir) |
+| `importar entidades/Produto` | Tudo de `entidades/Produto.jd` |
+| `importar entidades/Produto.Produto` | Só a entidade `Produto` |
+| `importar entidades/Produto como Prod` | Tudo, com alias `Prod` |
+| `importar entidades/Produto.Produto como P` | Item específico com alias |
+
+## Estrutura de projeto real
+
+O `jade init` cria esta estrutura — cada pasta tem sua responsabilidade:
+
+```
+meu-erp/
+├── src/
+│   ├── entidades/
+│   │   ├── Produto.jd
+│   │   ├── Cliente.jd
+│   │   └── Pedido.jd
+│   ├── servicos/
+│   │   ├── EstoqueServico.jd
+│   │   └── VendaServico.jd
+│   ├── eventos/
+│   │   └── EstoqueAbaixoMinimo.jd
+│   ├── telas/
+│   │   ├── ListaProdutos.jd
+│   │   └── PDV.jd
+│   └── app.jd          ← ponto de entrada
+└── dist/
+```
+
+Compile o ponto de entrada:
+
+```bash
+jade compilar src/app.jd
+```
+
+O compilador resolve todos os imports recursivamente a partir de `src/`.
+
+## Exemplo completo
+
+**src/entidades/Produto.jd**
+```jd
+entidade Produto
+  id: id
+  nome: texto
+  preco: moeda
+  estoque: numero
+  estoqueMinimo: numero
+fim
+```
+
+**src/entidades/Cliente.jd**
+```jd
+entidade Cliente
+  id: id
+  nome: texto
+  email: texto
+  ativo: booleano
+fim
+```
+
+**src/eventos/EstoqueAbaixoMinimo.jd**
+```jd
+importar entidades/Produto
+
+evento EstoqueAbaixoMinimo
+  produto: Produto
+  estoqueAtual: numero
+fim
+```
+
+**src/servicos/EstoqueServico.jd**
+```jd
+importar entidades/Produto
+importar eventos/EstoqueAbaixoMinimo
+
+servico EstoqueServico
+  funcao registrarEntrada(produtoId: texto, quantidade: numero)
+    emitir EstoqueAbaixoMinimo
   fim
 fim
 ```
 
-Tudo dentro do módulo pertence ao namespace `estoque`.
-
-## Importando de um módulo
-
-### Importar item específico
-
+**src/telas/ListaProdutos.jd**
 ```jd
-importar estoque.Produto
-importar estoque.EstoqueService
-```
+importar entidades/Produto
 
-Depois de importar, use diretamente pelo nome:
-
-```jd
-importar estoque.Produto
-
-produto = Produto()
-produto.nome = "Caneta"
-```
-
-### Importar tudo do módulo
-
-::: warning Wildcard bloqueado
-`importar estoque.*` é rejeitado pelo compilador. Importações wildcard dificultam rastrear de onde cada símbolo vem. Prefira importações explícitas:
-```jd
-importar estoque.Produto
-importar estoque.EstoqueService
-```
-:::
-
-### Importar com alias
-
-Quando dois módulos têm nomes em conflito, use `como` para renomear:
-
-```jd
-importar estoque.Produto como ProdutoEstoque
-importar catalogo.Produto como ProdutoCatalogo
-
-p1 = ProdutoEstoque()
-p2 = ProdutoCatalogo()
-```
-
-Ou renomear o módulo inteiro:
-
-```jd
-importar financeiro como fin
-
-fatura = fin.Fatura()
-```
-
-## Organizando um sistema real
-
-Um sistema de ERP típico em Jade DSL:
-
-```
-sistema-erp/
-├── modulos/
-│   ├── clientes.jd
-│   ├── produtos.jd
-│   ├── estoque.jd
-│   ├── pedidos.jd
-│   ├── financeiro.jd
-│   └── relatorios.jd
-└── principal.jd
-```
-
-**clientes.jd:**
-```jd
-modulo clientes
-
-  entidade Cliente
-    id: id
-    nome: texto
-    cpf: texto
-    email: texto
-    ativo: booleano
+tela ListaProdutos "Produtos"
+  tabela ListaProdutos
+    entidade: Produto
+    filtravel: verdadeiro
+    paginacao: verdadeiro
   fim
-
-  evento ClienteCadastrado
-    clienteId: id
-    email: texto
-  fim
-
-  servico ClienteService
-    funcao cadastrar(nome: texto, cpf: texto, email: texto) -> Cliente
-      c = Cliente()
-      c.nome = nome
-      c.cpf = cpf
-      c.email = email
-      c.ativo = verdadeiro
-      salvar c
-      emitir ClienteCadastrado(c.id, c.email)
-      retornar c
-    fim
-  fim
-
 fim
 ```
 
-**pedidos.jd:**
+**src/app.jd** — ponto de entrada, une tudo:
 ```jd
-modulo pedidos
+importar entidades/Produto
+importar entidades/Cliente
+importar servicos/EstoqueServico
+importar telas/ListaProdutos
 
-importar clientes.Cliente
-importar produtos.Produto
-
-  entidade Pedido
-    id: id
-    clienteId: id
-    valorTotal: decimal
-    status: StatusPedido
+tela Dashboard "Dashboard"
+  cartao ResumoEstoque
   fim
-
-  enum StatusPedido
-    PENDENTE
-    CONFIRMADO
-    ENTREGUE
-    CANCELADO
-  fim
-
-  servico PedidoService
-    funcao criar(clienteId: id) -> Pedido
-      // verifica se cliente existe
-      cliente = EntityManager.buscarPorId(Cliente, clienteId)
-      se nao cliente
-        erro "Cliente não encontrado"
-      fim
-
-      p = Pedido()
-      p.clienteId = clienteId
-      p.status = StatusPedido.PENDENTE
-      salvar p
-      retornar p
-    fim
-  fim
-
 fim
 ```
 
-**principal.jd:**
-```jd
-importar clientes.ClienteService
-importar pedidos.PedidoService
+## Regras importantes
 
-funcao principal()
-  cliente = ClienteService.cadastrar("Ana Lima", "123.456.789-09", "ana@email.com")
-  pedido = PedidoService.criar(cliente.id)
-  Console.escrever("Pedido " + pedido.id + " criado para " + cliente.nome)
-fim
+**Ciclo detectado automaticamente**
+
+Se `A.jd` importar `B.jd` e `B.jd` importar `A.jd`, o compilador detecta
+o ciclo e para com erro, indicando o arquivo responsável.
+
+**Importação duplicada é ignorada**
+
+Se dois arquivos importam o mesmo módulo, as declarações são incluídas
+apenas uma vez no programa compilado.
+
+**Erro com localização precisa**
+
+```
+erro[sintaxe]: Módulo 'entidades/NaoExiste' não encontrado:
+               arquivo '/meu-erp/src/entidades/NaoExiste.jd' não existe
+  --> src/app.jd:1:10
+  |
+1 | importar entidades/NaoExiste
+  |          ^^^^^^^^^
+  |
+   = dica: verifique se o arquivo 'entidades/NaoExiste.jd' existe
+           relativo à raiz do projeto
 ```
 
-::: tip Multi-arquivo disponível a partir da v0.1.2
-A partir da v0.1.2, o compilador `jadec` resolve automaticamente as importações entre arquivos `.jd`. Basta ter os arquivos na mesma pasta e usar `importar modulo.Tipo` normalmente.
+::: tip Disponível a partir da v0.1.7
+O sistema de imports com caminhos (`/`) foi introduzido na v0.1.7.
+Versões anteriores suportavam apenas imports do mesmo diretório (`importar Modulo`).
 :::
 
 ## Próximo passo
