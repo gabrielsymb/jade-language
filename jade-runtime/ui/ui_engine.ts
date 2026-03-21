@@ -1,4 +1,4 @@
-import { Store, Signal, disposeOwner, setEffectOwner } from './reactive.js';
+import { Store, Signal, createEffect, disposeOwner, setEffectOwner } from './reactive.js';
 import { sessao } from './session.js';
 import { bind, bindInput } from './binding.js';
 import { RefManager } from './refs.js';
@@ -7,7 +7,7 @@ import { aplicarTema, Tema } from './theme.js';
 import { Router } from './router.js';
 import { MemoryManager } from '../core/memory_manager.js';
 import { Responsivo } from './responsive.js';
-import { criarGraficoSVG, GraficoConfig } from './grafico.js';
+import { criarGraficoSVG, montarGraficoReativo, GraficoConfig } from './grafico.js';
 import { ModalManager, ModalConfig } from './modal.js';
 import { criarAbas, AbasConfig } from './abas.js';
 import { criarLista, ListaConfig } from './lista.js';
@@ -85,6 +85,8 @@ export class UIEngine {
   private telaAtiva: string | null = null;
   private bannerTimer: ReturnType<typeof setTimeout> | null = null;
   private filtrosPorTela = new Map<string, Signal<string>>();
+  /** Signals de dados por entidade — usados por cartões/gráficos reativos */
+  private dadosSignals = new Map<string, Signal<any[]>>();
   private acoesPendentes: Map<string, HTMLButtonElement> = new Map();
 
   constructor(memory: MemoryManager, tema?: Tema) {
@@ -121,6 +123,8 @@ export class UIEngine {
       this.refs.limpar();
       this.modais.limpar();
       this.acoesPendentes.clear();
+      this.filtrosPorTela.clear();
+      this.dadosSignals.clear();
     }
 
     this.telaAtiva = config.nome;
@@ -155,6 +159,42 @@ export class UIEngine {
     return this.filtrosPorTela.get(nome);
   }
 
+  /**
+   * Atualiza os dados de uma entidade e propaga para todos os
+   * cartões/gráficos reativos que a referenciam na tela atual.
+   */
+  setDadosEntidade(nome: string, dados: any[]): void {
+    const s = this.dadosSignals.get(nome);
+    if (s) s.set(dados);
+  }
+
+  /** Retorna os nomes das entidades com signals ativos na tela atual. */
+  getEntidadesAtivas(): string[] {
+    return [...this.dadosSignals.keys()];
+  }
+
+  /**
+   * Computa o valor de uma função de agregação sobre um array de registros.
+   * Formata automaticamente como moeda se o campo sugerir valor monetário.
+   */
+  private computarAgregacao(funcao: string, registros: any[], campo: string | undefined): string {
+    const c = campo ?? '';
+    if (funcao === 'contagem') return registros.length.toLocaleString('pt-BR');
+    const nums = registros.map(r => Number(r[c]) || 0);
+    let val = 0;
+    switch (funcao) {
+      case 'soma':   val = nums.reduce((a, b) => a + b, 0); break;
+      case 'media':  val = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0; break;
+      case 'maximo': val = nums.length ? Math.max(...nums) : 0; break;
+      case 'minimo': val = nums.length ? Math.min(...nums) : 0; break;
+      default:       return '';
+    }
+    if (c && /preco|total|valor|custo|receita|salario|fatura|pagamento|desconto|saldo|lucro|despesa/i.test(c)) {
+      return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return val.toLocaleString('pt-BR');
+  }
+
   criarTabela(config: TabelaConfig, container: HTMLElement, dados: any[], filtroBusca?: Signal<string>): void {
     setEffectOwner(this.telaAtiva);
 
@@ -175,9 +215,13 @@ export class UIEngine {
       busca.placeholder = 'Buscar...';
       busca.className = 'jade-tabela-busca';
       busca.setAttribute('aria-label', 'Buscar na tabela');
+      let debounceTimer: ReturnType<typeof setTimeout> | null = null;
       busca.addEventListener('input', () => {
-        termoBusca.set(busca.value.toLowerCase());
-        paginaAtual.set(0);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          termoBusca.set(busca.value.toLowerCase());
+          paginaAtual.set(0);
+        }, 200);
       });
       controles.appendChild(busca);
       wrapper.appendChild(controles);
@@ -436,6 +480,15 @@ export class UIEngine {
   renderizarTela(descriptor: TelaDescriptor, container: HTMLElement, dadosMap: Record<string, any[]> = {}): HTMLElement {
     const div = this.montarTela({ nome: descriptor.nome, titulo: descriptor.titulo }, container);
 
+    // Inicializa/atualiza signals de dados por entidade para esta tela
+    for (const [entidade, dados] of Object.entries(dadosMap)) {
+      if (this.dadosSignals.has(entidade)) {
+        this.dadosSignals.get(entidade)!.set(dados);
+      } else {
+        this.dadosSignals.set(entidade, new Signal<any[]>(dados));
+      }
+    }
+
     for (const el of descriptor.elementos) {
       const props = Object.fromEntries(el.propriedades.map(p => [p.chave, p.valor]));
 
@@ -525,7 +578,23 @@ export class UIEngine {
         }
 
         case 'cartao': {
-          const conteudo = new Signal<any>(props['conteudo'] ?? '');
+          const valorRaw = String(props['conteudo'] ?? '');
+          let conteudo: Signal<any>;
+
+          if (valorRaw.startsWith('@')) {
+            // Valor reativo: recomputa quando a entidade muda
+            const [funcao, entidade, campo] = valorRaw.slice(1).split(':');
+            const dadosSignal = this.dadosSignals.get(entidade) ?? new Signal<any[]>([]);
+            conteudo = new Signal<any>(this.computarAgregacao(funcao, dadosSignal.peek(), campo));
+            setEffectOwner(this.telaAtiva);
+            createEffect(() => {
+              conteudo.set(this.computarAgregacao(funcao, dadosSignal.get(), campo));
+            });
+            setEffectOwner(null);
+          } else {
+            conteudo = new Signal<any>(valorRaw);
+          }
+
           this.criarCard(
             String(props['titulo'] ?? el.nome),
             conteudo,
@@ -544,7 +613,10 @@ export class UIEngine {
             eixoX:   props['eixoX'] ? String(props['eixoX']) : undefined,
             eixoY:   props['eixoY'] ? String(props['eixoY']) : undefined,
           };
-          div.appendChild(criarGraficoSVG(graficoConfig, dadosMap[entidade] ?? []));
+          const dadosSignal = this.dadosSignals.get(entidade) ?? new Signal<any[]>(dadosMap[entidade] ?? []);
+          setEffectOwner(this.telaAtiva);
+          montarGraficoReativo(graficoConfig, dadosSignal, div, createEffect);
+          setEffectOwner(null);
           break;
         }
 

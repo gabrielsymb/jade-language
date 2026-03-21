@@ -12,6 +12,9 @@ export interface GraficoConfig {
   eixoY?: string;
 }
 
+// importado aqui para não criar dependência circular no bundle
+import type { Signal } from './reactive.js';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const CORES = [
@@ -237,6 +240,27 @@ function renderPizza(dados: any[], config: GraficoConfig, vb: Element): void {
 // ── Ponto de entrada ──────────────────────────────────────────────────────────
 
 const MSG_SEM_DADOS = 'Sem dados para exibir';
+
+/**
+ * Monta um gráfico reativo: re-renderiza o SVG automaticamente
+ * sempre que `dadosSignal` emitir novos dados.
+ */
+export function montarGraficoReativo(
+  config: GraficoConfig,
+  dadosSignal: Signal<any[]>,
+  container: HTMLElement,
+  createEffect: (fn: () => void) => void
+): void {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'jade-grafico-reativo';
+  container.appendChild(wrapper);
+
+  createEffect(() => {
+    const dados = dadosSignal.get();
+    wrapper.innerHTML = '';
+    wrapper.appendChild(criarGraficoSVG(config, dados));
+  });
+}
 
 export function criarGraficoSVG(config: GraficoConfig, dados: any[]): HTMLElement {
   const wrapper = document.createElement('div');
