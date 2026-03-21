@@ -334,7 +334,7 @@ Linha divisória horizontal para separar seções visuais dentro de uma tela. Po
 tela Dashboard "Painel"
   cartao TotalVendas
     titulo: "Total de Vendas"
-    conteudo: "R$ 12.450,00"
+    conteudo: soma(Venda.total)
   fim
   divisor LinhaMetricas
   fim
@@ -418,35 +418,76 @@ Use `busca` quando precisar de controle total sobre o que acontece com a query (
 
 ## Cartão
 
-Exibe informações resumidas de um único registro:
+Exibe métricas e resumos calculados diretamente das entidades — sem hardcode.
 
 ```jd
+entidade Venda
+  id: id
+  clienteNome: texto
+  total: moeda
+  criadaEm: data
+fim
+
+entidade Produto
+  id: id
+  nome: texto
+  preco: moeda
+  estoque: numero
+fim
+
 tela Dashboard "Painel"
   cartao TotalVendas
     titulo: "Total de Vendas"
-    conteudo: "R$ 12.450,00"
-    variante: destaque
-  fim
-  cartao EstoqueMinimo
-    titulo: "Produtos em falta"
-    conteudo: "3 itens"
-    variante: alerta
-  fim
-  cartao MetaAtingida
-    titulo: "Meta do mês"
-    conteudo: "✓ Atingida"
+    conteudo: soma(Venda.total)
     variante: sucesso
+  fim
+  cartao TotalProdutos
+    titulo: "Produtos Cadastrados"
+    conteudo: contagem(Produto)
+    variante: info
+  fim
+  cartao TicketMedio
+    titulo: "Ticket Médio"
+    conteudo: media(Venda.total)
+    variante: aviso
   fim
 fim
 ```
+
+O runtime calcula os valores automaticamente do banco local (IndexedDB) a cada vez que a tela é aberta — os cartões sempre mostram dados reais.
 
 **Propriedades do cartão:**
 
 | Propriedade  | Tipo                                              | Obrigatório | Descrição                                              |
 |--------------|---------------------------------------------------|-------------|--------------------------------------------------------|
 | `titulo`     | texto                                             | não         | Título exibido no cabeçalho (padrão: nome do elemento) |
-| `conteudo`   | valor                                             | não         | Valor inicial exibido no corpo do cartão               |
-| `variante`   | `neutro`, `destaque`, `sucesso`, `alerta`, `perigo` | não       | Estilo visual semântico do cartão (padrão: `neutro`)   |
+| `conteudo`   | texto literal ou agregação                        | não         | Valor ou cálculo sobre uma entidade                    |
+| `variante`   | `primario`, `sucesso`, `aviso`, `info`, `perigo`  | não         | Estilo visual semântico do cartão                      |
+
+### Agregações disponíveis
+
+| Função                      | Descrição                              | Exemplo                        |
+|-----------------------------|----------------------------------------|--------------------------------|
+| `soma(Entidade.campo)`      | Soma todos os valores de um campo      | `soma(Venda.total)`            |
+| `contagem(Entidade)`        | Conta o total de registros             | `contagem(Produto)`            |
+| `media(Entidade.campo)`     | Média aritmética de um campo           | `media(Venda.total)`           |
+| `maximo(Entidade.campo)`    | Maior valor de um campo                | `maximo(Produto.preco)`        |
+| `minimo(Entidade.campo)`    | Menor valor de um campo                | `minimo(Produto.estoque)`      |
+
+::: tip Formatação automática
+Campos do tipo `moeda` são formatados automaticamente como BRL (`R$ 1.234,56`). Campos numéricos inteiros usam separador de milhar (`1.234`).
+:::
+
+::: tip Texto estático ainda é válido
+Para mensagens fixas ou textos que não dependem de dados:
+```jd
+cartao Versao
+  titulo: "Versão"
+  conteudo: "2.1.0"
+  variante: info
+fim
+```
+:::
 
 ---
 
@@ -837,8 +878,8 @@ Formato de `item`: `Label|icone|NomeDaTela` para navegação, ou `Label|icone|ac
 | `Label\|icone\|acao:funcao`  | Chama a função via `jade:acao`                |
 | `separador`                  | Linha divisória visual                        |
 
-::: tip Botão hambúrguer automático
-O runtime injeta automaticamente o botão de abrir a gaveta no topo da tela. Nenhuma configuração extra necessária.
+::: tip Header fixo e hambúrguer automáticos
+O runtime gera automaticamente um **header fixo** no topo da aplicação com o nome do app e o botão hambúrguer. No mobile, o hambúrguer abre a gaveta como drawer overlay. No desktop, ele colapsa/expande a sidebar. Nenhuma configuração extra necessária.
 :::
 
 ---
