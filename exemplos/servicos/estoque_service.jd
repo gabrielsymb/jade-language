@@ -1,0 +1,23 @@
+// Serviço com lógica de negócio
+
+servico estoqueService
+    funcao temEstoque(quantidade: numero) -> booleano
+        se quantidade > 0
+            retornar verdadeiro
+        senao
+            retornar falso
+        fim
+    fim
+
+    funcao calcularValorTotal(preco: moeda, quantidade: numero) -> moeda
+        retornar preco * quantidade
+    fim
+
+    funcao precisaReposicao(estoque: numero, minimo: numero) -> booleano
+        se estoque < minimo
+            retornar verdadeiro
+        senao
+            retornar falso
+        fim
+    fim
+fim

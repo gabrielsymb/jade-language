@@ -245,6 +245,31 @@ variavel preco: decimal = 99.90
 // lista<T>, mapa<K,V>, objeto
 ```
 
+## Exemplo executável
+
+O arquivo abaixo está em `exemplos/fundamentos/variaveis.jd` e é validado automaticamente no CI.
+
+<!-- @jade:begin exemplos/fundamentos/variaveis.jd -->
+```jd
+// Declaração e uso de variáveis em JADE
+
+funcao demonstrarVariaveis() -> numero
+    variavel nome: texto = "Maria"
+    variavel idade: numero = 30
+    variavel preco: decimal = 99.90
+    variavel ativo: booleano = verdadeiro
+
+    variavel dobro: numero = idade * 2
+
+    se ativo
+        retornar dobro
+    senao
+        retornar 0
+    fim
+fim
+```
+<!-- @jade:end -->
+
 ## Próximo passo
 
 → [Operadores](/fundamentos/operadores)

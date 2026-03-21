@@ -1,0 +1,16 @@
+// Declaração e uso de variáveis em JADE
+
+funcao demonstrarVariaveis() -> numero
+    variavel nome: texto = "Maria"
+    variavel idade: numero = 30
+    variavel preco: decimal = 99.90
+    variavel ativo: booleano = verdadeiro
+
+    variavel dobro: numero = idade * 2
+
+    se ativo
+        retornar dobro
+    senao
+        retornar 0
+    fim
+fim

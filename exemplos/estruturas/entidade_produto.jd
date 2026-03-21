@@ -1,0 +1,15 @@
+// Definição de entidades com relacionamento
+
+entidade Categoria
+    id: id
+    nome: texto
+fim
+
+entidade Produto
+    id: id
+    nome: texto
+    preco: moeda
+    estoque: numero
+    ativo: booleano
+    categoriaId: id
+fim

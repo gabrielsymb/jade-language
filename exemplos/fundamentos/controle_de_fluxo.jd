@@ -1,0 +1,27 @@
+// Controle de fluxo: se/senao e enquanto
+
+funcao ehAdulto(idade: numero) -> booleano
+    se idade >= 18
+        retornar verdadeiro
+    senao
+        retornar falso
+    fim
+fim
+
+funcao ehPositivo(n: numero) -> booleano
+    se n > 0
+        retornar verdadeiro
+    senao
+        retornar falso
+    fim
+fim
+
+funcao somarAte(limite: numero) -> numero
+    variavel soma: numero = 0
+    variavel i: numero = 1
+    enquanto i <= limite
+        soma = soma + i
+        i = i + 1
+    fim
+    retornar soma
+fim

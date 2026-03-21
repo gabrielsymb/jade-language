@@ -1,0 +1,21 @@
+// Eventos e escuta de eventos
+
+evento ProdutoCriado
+    produtoId: id
+    nome: texto
+    preco: moeda
+fim
+
+evento EstoqueAtualizado
+    produtoId: id
+    quantidadeAnterior: numero
+    quantidadeNova: numero
+fim
+
+servico notificacaoService
+    escutar ProdutoCriado
+    fim
+
+    escutar EstoqueAtualizado
+    fim
+fim

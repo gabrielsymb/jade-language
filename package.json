@@ -14,6 +14,10 @@
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "validate": "bash jade-compiler/validar.sh",
+    "validate:examples": "node scripts/validate-examples.js",
+    "validate:examples:verbose": "node scripts/validate-examples.js --verbose",
+    "build:docs": "node scripts/build-docs.js",
+    "check:docs": "node scripts/build-docs.js --check",
     "clean": "rm -rf jade-compiler/dist jade-runtime/dist",
     "sync-version": "node scripts/sync-version.js",
     "check-version": "node scripts/sync-version.js --check"

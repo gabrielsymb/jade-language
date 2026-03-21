@@ -82,3 +82,29 @@ jobs:
 
       - name: Run full validation
         run: bash jade-compiler/validar.sh
+
+  # Valida que todos os exemplos .jd compilam sem erro
+  validate-examples:
+    name: Validate Examples
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Build compiler
+        working-directory: jade-compiler
+        run: npm ci && npm run build
+
+      - name: Validate all .jd examples
+        run: node scripts/validate-examples.js --verbose
+
+      - name: Check docs are in sync with examples
+        run: node scripts/build-docs.js --check

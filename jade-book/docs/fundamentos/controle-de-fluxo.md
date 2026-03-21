@@ -246,6 +246,42 @@ fim
 
 Esse padrão — verificar condições e retornar cedo — se chama *early return* e deixa o código mais legível do que vários `se/senao` aninhados.
 
+## Exemplo executável
+
+O arquivo abaixo está em `exemplos/fundamentos/controle_de_fluxo.jd` e é validado automaticamente no CI.
+
+<!-- @jade:begin exemplos/fundamentos/controle_de_fluxo.jd -->
+```jd
+// Controle de fluxo: se/senao e enquanto
+
+funcao ehAdulto(idade: numero) -> booleano
+    se idade >= 18
+        retornar verdadeiro
+    senao
+        retornar falso
+    fim
+fim
+
+funcao ehPositivo(n: numero) -> booleano
+    se n > 0
+        retornar verdadeiro
+    senao
+        retornar falso
+    fim
+fim
+
+funcao somarAte(limite: numero) -> numero
+    variavel soma: numero = 0
+    variavel i: numero = 1
+    enquanto i <= limite
+        soma = soma + i
+        i = i + 1
+    fim
+    retornar soma
+fim
+```
+<!-- @jade:end -->
+
 ## Próximo passo
 
 → [Funções](/fundamentos/funcoes)
