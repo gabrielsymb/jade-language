@@ -49,13 +49,15 @@ variavel nome = "João"
 
 ## `fim` esquecido
 
-```jd
+```jd-invalido
 // ❌ ERRO
 entidade Produto
   id: id
   nome: texto
   // faltou o 'fim'
+```
 
+```jd
 // ✅ CORRETO
 entidade Produto
   id: id
@@ -123,15 +125,21 @@ fim
 
 ## Confundir `=` com `==`
 
-```jd
+```jd-invalido
 // ❌ ERRO — atribuição dentro de condicional
 se produto.ativo = verdadeiro   // isso tenta atribuir, não comparar
+```
 
+```jd
 // ✅ CORRETO — use == para comparar
 se produto.ativo == verdadeiro
+  Console.escrever("ativo")
+fim
 
 // ✅ MAIS SIMPLES — booleano direto
 se produto.ativo
+  Console.escrever("ativo")
+fim
 ```
 
 ## Tokens que não existem

@@ -334,6 +334,9 @@ export class IRGenerator {
       case 'EmissaoEvento':
         this.generateEmissaoEvento(node as N.EmissaoEventoNode);
         break;
+      case 'Salvar':
+        // salvar <entidade> é tratado pelo runtime — IR não gera código para isso
+        break;
       case 'ChamadaFuncao':
         this.generateExpressao(node as N.ChamadaFuncaoNode); // Chamada como instrução
         break;

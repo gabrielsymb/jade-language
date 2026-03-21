@@ -125,7 +125,6 @@ tela TelaVendas "Vendas"
     colunas: clienteNome, total, desconto, status, criadaEm
     filtravel: verdadeiro
     ordenavel: verdadeiro
-    paginacao: 15
   fim
 fim
 ```

@@ -7,7 +7,7 @@ A stdlib `Matematica` fornece funções estatísticas e matemáticas prontas par
 ### `soma`
 
 ```jd
-total = Matematica.soma(lista)
+total = Matematica.soma(numeros)
 ```
 
 Soma todos os valores de uma lista numérica.
@@ -25,13 +25,13 @@ Console.escrever("Total: R$ " + total)  // R$ 4600.00
 ### `media`
 
 ```jd
-resultado = Matematica.media(lista)
+resultado = Matematica.media(numeros)
 ```
 
 ### `mediana`
 
 ```jd
-resultado = Matematica.mediana(lista)
+resultado = Matematica.mediana(numeros)
 ```
 
 Retorna o valor central (ordenado). Para listas pares, é a média dos dois valores centrais.
@@ -39,20 +39,20 @@ Retorna o valor central (ordenado). Para listas pares, é a média dos dois valo
 ### `desvioPadrao`
 
 ```jd
-dp = Matematica.desvioPadrao(lista)
+dp = Matematica.desvioPadrao(numeros)
 ```
 
 ### `variancia`
 
 ```jd
-v = Matematica.variancia(lista)
+v = Matematica.variancia(numeros)
 ```
 
 ### `minimo` / `maximo`
 
 ```jd
-menor = Matematica.minimo(lista)
-maior = Matematica.maximo(lista)
+menor = Matematica.minimo(numeros)
+maior = Matematica.maximo(numeros)
 ```
 
 ### `arredondar`
@@ -99,18 +99,11 @@ fim
 
 servico EstoqueService
   funcao analisarABC(itens: lista<Item>)
-    dados = lista()
-    para item em itens
-      dados.adicionar({ id: item.descricao, valor: item.faturamento })
-    fim
-
-    abc = Matematica.curvaABC(dados)
+    abc = Matematica.curvaABC(itens)
 
     para linha em abc
-      Console.escrever(
-        linha.id + " | Classe " + linha.classe +
-        " | " + linha.percentual + "% | Acum: " + linha.acumulado + "%"
-      )
+      info = linha.nome + " | Classe " + linha.categoria + " | " + linha.percentual + "%"
+      Console.escrever(info)
     fim
   fim
 fim
@@ -128,13 +121,13 @@ Cabo     | Classe C |  5.00% | Acum: 100.00%
 ### `percentil`
 
 ```jd
-p90 = Matematica.percentil(lista, 90)
+p90 = Matematica.percentil(numeros, 90)
 ```
 
 Retorna o valor no percentil `p` (0–100). Útil para análises de distribuição.
 
 ```jd
-tempos: lista<numero> = lista()
+variavel tempos: lista<numero> = lista()
 // ... preencher com tempos de resposta
 
 p50 = Matematica.percentil(tempos, 50)  // mediana
@@ -156,8 +149,8 @@ corr = Matematica.correlacao(x, y)
 
 ```jd
 // Há correlação entre temperatura e vendas de sorvete?
-temperaturas: lista<numero> = lista()
-vendasSorvete: lista<numero> = lista()
+variavel temperaturas: lista<numero> = lista()
+variavel vendasSorvete: lista<numero> = lista()
 // ...
 
 corr = Matematica.correlacao(temperaturas, vendasSorvete)
@@ -169,7 +162,7 @@ Console.escrever("Correlação: " + corr)
 Média Móvel Simples (SMA) com janela configurável.
 
 ```jd
-resultados = Matematica.mediaMóvel(lista, janela)
+resultados = Matematica.mediaMóvel(numeros, janela)
 ```
 
 ```jd

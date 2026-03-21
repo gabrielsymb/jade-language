@@ -922,6 +922,7 @@ export class Parser {
     if (this.match(TokenType.ENQUANTO)) return this.parseEnquanto();
     if (this.match(TokenType.PARA)) return this.parsePara();
     if (this.match(TokenType.EMITIR)) return this.parseEmissaoEvento();
+    if (this.match(TokenType.SALVAR)) return this.parseSalvar();
     if (this.match(TokenType.ERRO)) return this.parseErro();
 
     // Atribuição ou chamada de função
@@ -954,8 +955,8 @@ export class Parser {
   }
 
   private parseAtribuicaoOuChamada(): N.InstrucaoNode | null {
-    // Só age se o token atual for IDENTIFICADOR
-    if (!this.check(TokenType.IDENTIFICADOR)) {
+    // Age para IDENTIFICADOR ou palavras-chave de tipo usadas como variável (ex: 'id')
+    if (!this.check(TokenType.IDENTIFICADOR) && !this.check(TokenType.TIPO_ID)) {
       return null;
     }
 
@@ -1192,6 +1193,16 @@ export class Parser {
     };
   }
 
+  private parseSalvar(): N.SalvarNode {
+    const entidade = this.parseExpressao();
+    return {
+      kind: 'Salvar',
+      line: entidade.line,
+      column: entidade.column,
+      entidade
+    };
+  }
+
   private parseErro(): N.ErroNode {
     const mensagem = this.parseExpressao();
 
@@ -1379,6 +1390,32 @@ export class Parser {
         column: token.column,
         valor: Number(token.value),
         tipoLiteral: 'decimal'
+      };
+    }
+
+    // lista() e mapa() como construtores de coleção; ou tipo usado como variável (ex: id)
+    if (this.check(TokenType.TIPO_LISTA) || this.check(TokenType.TIPO_MAPA) || this.check(TokenType.TIPO_ID)) {
+      const token = this.advance();
+      if (this.match(TokenType.ABRE_PAREN)) {
+        const argumentos: N.ExpressaoNode[] = [];
+        if (!this.check(TokenType.FECHA_PAREN)) {
+          do { argumentos.push(this.parseExpressao()); } while (this.match(TokenType.VIRGULA));
+        }
+        this.consume(TokenType.FECHA_PAREN, "Esperado ')' após argumentos");
+        return {
+          kind: 'ChamadaFuncao',
+          line: token.line,
+          column: token.column,
+          nome: token.value,
+          argumentos
+        };
+      }
+      // Usado como identificador (ex: variavel com nome 'id')
+      return {
+        kind: 'Identificador',
+        line: token.line,
+        column: token.column,
+        nome: token.value
       };
     }
 

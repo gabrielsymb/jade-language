@@ -220,17 +220,29 @@ fim
 
 // Bom — cada função faz uma coisa
 funcao validarPedido(pedido: Pedido) -> booleano
+  retornar pedido.clienteId != ""
+fim
+
 funcao calcularTotal(pedido: Pedido) -> decimal
-funcao aplicarDesconto(pedido: Pedido, taxa: decimal)
+  retornar pedido.valorTotal
+fim
+
+funcao aplicarDesconto(pedido: Pedido, taxa: decimal) -> decimal
+  retornar pedido.valorTotal * (1 - taxa)
+fim
 ```
 
 **Nomes descritivos:**
 ```jd
 // Ruim
 funcao proc(p: Produto) -> booleano
+  retornar p.estoque > 0
+fim
 
 // Bom
 funcao verificarDisponibilidade(produto: Produto) -> booleano
+  retornar produto.estoque > 0
+fim
 ```
 
 ## Próximo passo

@@ -73,7 +73,7 @@ Console.escrever(telefone.formatarTelefone()) // "(11) 98765-4321"
 
 ```jd
 funcao validarCadastro(cpf: texto, email: texto, cep: texto) -> lista<texto>
-  erros: lista<texto> = lista()
+  variavel erros: lista<texto> = lista()
 
   se nao cpf.validarCPF()
     erros.adicionar("CPF inválido")
@@ -96,7 +96,7 @@ fim
 
 ```jd
 funcao gerarResumo(pedido: Pedido, cliente: Cliente) -> texto
-  linhas: lista<texto> = lista()
+  variavel linhas: lista<texto> = lista()
 
   linhas.adicionar("=== RESUMO DO PEDIDO ===")
   linhas.adicionar("Pedido:  " + pedido.id)

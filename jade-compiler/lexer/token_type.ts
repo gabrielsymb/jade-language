@@ -33,6 +33,7 @@ export enum TokenType {
   EMITIR = 'EMITIR',
   ESCUTAR = 'ESCUTAR',
   QUANDO = 'QUANDO',
+  SALVAR = 'SALVAR',
 
   // Palavras-chave de variáveis
   VARIAVEL = 'VARIAVEL',

@@ -146,9 +146,7 @@ servico UsuarioService
   fim
 
   funcao autenticar(email: texto, senha: texto) -> booleano
-    usuarios = EntityManager.buscar(Usuario, {
-      onde: { email: email, ativo: verdadeiro }
-    })
+    usuarios = EntityManager.buscar(Usuario)
 
     se usuarios.tamanho() == 0
       retornar falso
@@ -174,7 +172,7 @@ servico ProdutoService
     categoriaId: id,
     fornecedorId: id
   ) -> Produto
-    se nao PermissionService.hasAnyPermission(["produtos.criar", "administrador"])
+    se nao PermissionService.hasPermission("produtos.criar")
       erro "Sem permissão para cadastrar produtos"
     fim
 
@@ -211,15 +209,12 @@ servico ProdutoService
   fim
 
   funcao listar() -> lista<Produto>
-    retornar EntityManager.buscar(Produto, {
-      onde: { ativo: verdadeiro },
-      ordenarPor: { nome: "asc" }
-    })
+    retornar EntityManager.buscar(Produto)
   fim
 
   funcao buscarAbaixoMinimo() -> lista<Produto>
     todos = listar()
-    criticos: lista<Produto> = lista()
+    variavel criticos: lista<Produto> = lista()
 
     para produto em todos
       se produto.estoque <= produto.estoqueMinimo
@@ -299,10 +294,7 @@ servico EstoqueService
   fim
 
   funcao historico(produtoId: id) -> lista<MovimentoEstoque>
-    retornar EntityManager.buscar(MovimentoEstoque, {
-      onde: { produtoId: produtoId },
-      ordenarPor: { realizadoEm: "desc" }
-    })
+    retornar EntityManager.buscar(MovimentoEstoque)
   fim
 
   funcao verificarNivelEstoque(produto: Produto)
@@ -312,12 +304,7 @@ servico EstoqueService
     fim
 
     se produto.estoque <= produto.estoqueMinimo
-      emitir EstoqueBaixo(
-        produto.id,
-        produto.nome,
-        produto.estoque,
-        produto.estoqueMinimo
-      )
+      emitir EstoqueBaixo(produto.id, produto.nome, produto.estoque, produto.estoqueMinimo)
     fim
   fim
 fim
@@ -329,7 +316,7 @@ fim
 servico RelatorioService
   funcao resumoEstoque() -> texto
     produtos = ProdutoService.listar()
-    total = EntityManager.contar(Produto, { onde: { ativo: verdadeiro } })
+    total = EntityManager.contar(Produto)
     criticos = ProdutoService.buscarAbaixoMinimo()
 
     resumo = "=== RESUMO DO ESTOQUE ===\n"
@@ -349,10 +336,7 @@ servico RelatorioService
   fim
 
   funcao movimentacoesHoje() -> lista<MovimentoEstoque>
-    retornar EntityManager.buscar(MovimentoEstoque, {
-      onde: { realizadoEm: DateTime.today() },
-      ordenarPor: { realizadoEm: "desc" }
-    })
+    retornar EntityManager.buscar(MovimentoEstoque)
   fim
 fim
 
@@ -369,7 +353,7 @@ servico AlertaService
   fim
 
   escutar EstoqueZerado
-    Console.erro("🚨 ESTOQUE ZERADO: " + nomeProduto)
+    Console.escrever("ALERTA: ESTOQUE ZERADO: " + nomeProduto)
   fim
 
   escutar ProdutoCadastrado
@@ -383,7 +367,7 @@ fim
 
 servico ValidacaoService
   funcao validarProduto(nome: texto, preco: decimal, precoCusto: decimal) -> lista<texto>
-    erros: lista<texto> = lista()
+    variavel erros: lista<texto> = lista()
 
     se nome.aparar().tamanho() < 2
       erros.adicionar("Nome do produto muito curto")
@@ -402,7 +386,7 @@ servico ValidacaoService
   fim
 
   funcao validarUsuario(nome: texto, email: texto, senha: texto) -> lista<texto>
-    erros: lista<texto> = lista()
+    variavel erros: lista<texto> = lista()
 
     se nome.tamanho() < 2
       erros.adicionar("Nome muito curto")
@@ -470,15 +454,11 @@ O servidor gerado expõe `POST /api/sync` com autenticação JWT e resolução d
 ### Tela de login
 
 ```jd
-funcao fazerLogin(evento)
-  credenciais = evento.credenciais
-  chave       = evento.chave
+funcao fazerLogin(dados: objeto)
+  credenciais = dados.credenciais
+  chave       = dados.chave
 
-  resultado = AuthService.login({
-    username:   credenciais.usuario,
-    password:   credenciais.senha,
-    rememberMe: credenciais.lembrarMe
-  })
+  resultado = AuthService.login(credenciais.usuario, credenciais.senha)
 
   sessao.definir(resultado.accessToken, resultado.refreshToken, resultado.expiresIn)
   ui.emitirResultadoAcao(chave)
@@ -497,6 +477,7 @@ fim
 
 ```jd
 funcao abrirFormProduto()
+  router.navegar("/produtos/novo")
 fim
 
 funcao fazerLogout()
@@ -505,13 +486,6 @@ funcao fazerLogout()
 fim
 
 tela TelaDashboard "Dashboard"
-  gaveta MenuLateral
-    item: Dashboard|casa|TelaDashboard
-    item: Produtos|caixa|TelaProdutos
-    item: Movimentos|relatorio|TelaMovimentos
-    separador
-    item: Sair|sair|acao:fazerLogout
-  fim
   cartao TotalProdutos
     titulo: "Produtos Ativos"
     variante: destaque
@@ -534,7 +508,7 @@ tela TelaProdutos "Catálogo de Produtos"
     colunas: nome, sku, preco, estoque, ativo
     filtravel: verdadeiro
     ordenavel: verdadeiro
-    paginacao: 20
+    paginacao: verdadeiro
   fim
   botao NovoProduto
     acao: abrirFormProduto

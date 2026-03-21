@@ -6,11 +6,7 @@ Jade DSL oferece `AuthService` para registro, login e controle de acesso, e `Ses
 
 ```jd
 // 1. Chama AuthService.login — ocorre no servidor ou bootstrap
-resultado = AuthService.login({
-  username: "joao",
-  password: "minhasenha",
-  rememberMe: verdadeiro
-})
+resultado = AuthService.login("joao", "minhasenha")
 
 // 2. Salva os tokens na sessão do navegador
 sessao.definir(resultado.accessToken, resultado.refreshToken, resultado.expiresIn)
@@ -73,7 +69,7 @@ Para criar uma tela de login completa, use o elemento `login` na DSL:
 
 ```jd
 tela TelaLogin "Entrar no Sistema"
-  login
+  login FormLogin
     enviar: fazerLogin
     titulo: "Bem-vindo"
   fim
@@ -83,15 +79,11 @@ fim
 A função `fazerLogin` recebe as credenciais via evento. O resultado (sucesso ou erro) deve ser comunicado de volta com `ui.emitirResultadoAcao`:
 
 ```jd
-funcao fazerLogin(evento)
-  credenciais = evento.credenciais
-  chave = evento.chave
+funcao fazerLogin(dados: objeto)
+  credenciais = dados.credenciais
+  chave = dados.chave
 
-  resultado = AuthService.login({
-    username: credenciais.usuario,
-    password: credenciais.senha,
-    rememberMe: credenciais.lembrarMe
-  })
+  resultado = AuthService.login(credenciais.usuario, credenciais.senha)
 
   sessao.definir(resultado.accessToken, resultado.refreshToken, resultado.expiresIn)
   ui.emitirResultadoAcao(chave)          // sinaliza sucesso para o formulário
@@ -102,13 +94,11 @@ fim
 Se o login falhar, passe a mensagem de erro:
 
 ```jd
-funcao fazerLogin(evento)
-  tentativa AuthService.login(evento.credenciais)
-    resultado -> sessao.definir(resultado.accessToken, resultado.refreshToken, resultado.expiresIn)
-                 ui.emitirResultadoAcao(evento.chave)
-                 router.navegar("/inicio")
-  erro msg -> ui.emitirResultadoAcao(evento.chave, msg)
-  fim
+funcao fazerLogin(dados: objeto)
+  resultado = AuthService.login(dados.credenciais.usuario, dados.credenciais.senha)
+  sessao.definir(resultado.accessToken, resultado.refreshToken, resultado.expiresIn)
+  ui.emitirResultadoAcao(dados.chave)
+  router.navegar("/inicio")
 fim
 ```
 
@@ -149,7 +139,7 @@ se PermissionService.hasRole("administrador")
 fim
 
 // Pelo menos uma das permissões
-se PermissionService.hasAnyPermission(["relatorios.ver", "relatorios.exportar"])
+se PermissionService.hasPermission("relatorios.ver")
   mostrarMenuRelatorios()
 fim
 ```
@@ -217,15 +207,11 @@ tela TelaLogin "Sistema de Estoque"
   fim
 fim
 
-funcao fazerLogin(evento)
-  credenciais = evento.credenciais
-  chave       = evento.chave
+funcao fazerLogin(dados: objeto)
+  credenciais = dados.credenciais
+  chave       = dados.chave
 
-  resultado = AuthService.login({
-    username:   credenciais.usuario,
-    password:   credenciais.senha,
-    rememberMe: credenciais.lembrarMe
-  })
+  resultado = AuthService.login(credenciais.usuario, credenciais.senha)
 
   sessao.definir(resultado.accessToken, resultado.refreshToken, resultado.expiresIn)
   ui.emitirResultadoAcao(chave)

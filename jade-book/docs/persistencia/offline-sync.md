@@ -84,11 +84,7 @@ Chame `configurar` após o login — o token JWT será enviado em todas as requi
 
 ```jd
 // Após login bem-sucedido
-SyncManager.configurar({
-  url: "https://meu-servidor.com/api/sync",
-  token: sessao.obterToken(),   // Bearer token enviado automaticamente
-  intervalo: 30000              // polling a cada 30s (0 = desativado)
-})
+SyncManager.configurar("https://meu-servidor.com/api/sync", sessao.obterToken(), 30000)
 ```
 
 No logout, limpe o token para parar de enviar requests autenticados:

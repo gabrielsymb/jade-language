@@ -15,7 +15,7 @@ A stdlib `Moeda` fornece aritmética monetária segura, formatação BRL e opera
 ### `formatarBRL`
 
 ```jd
-texto = Moeda.formatarBRL(valor)
+formatado = Moeda.formatarBRL(valor)
 ```
 
 Formata um número como moeda brasileira.
@@ -30,16 +30,16 @@ Console.escrever(Moeda.formatarBRL(0))         // "R$ 0,00"
 ### `formatarCompacto`
 
 ```jd
-texto = Moeda.formatarCompacto(valor)
+formatado = Moeda.formatarCompacto(valor)
 ```
 
 Formato abreviado para dashboards.
 
 ```jd
-Console.escrever(Moeda.formatarCompacto(1_500_000))  // "R$ 1,5mi"
-Console.escrever(Moeda.formatarCompacto(2_000_000))  // "R$ 2mi"
-Console.escrever(Moeda.formatarCompacto(45_000))     // "R$ 45mil"
-Console.escrever(Moeda.formatarCompacto(1_500))      // "R$ 1,5mil"
+Console.escrever(Moeda.formatarCompacto(1500000))  // "R$ 1,5mi"
+Console.escrever(Moeda.formatarCompacto(2000000))  // "R$ 2mi"
+Console.escrever(Moeda.formatarCompacto(45000))     // "R$ 45mil"
+Console.escrever(Moeda.formatarCompacto(1500))      // "R$ 1,5mil"
 Console.escrever(Moeda.formatarCompacto(500))        // "R$ 500,00"
 ```
 
@@ -50,7 +50,7 @@ Console.escrever(Moeda.formatarCompacto(500))        // "R$ 500,00"
 ### `parseBRL`
 
 ```jd
-valor = Moeda.parseBRL(texto)
+valor = Moeda.parseBRL(entrada)
 ```
 
 Converte texto no formato brasileiro para número. Retorna `NaN` se o formato não for reconhecido.
@@ -166,12 +166,8 @@ total = Moeda.totalItens(lista_itens)
 Calcula o total de um carrinho (quantidade × preço unitário), sem erros de ponto flutuante.
 
 ```jd
-itens = lista()
-itens.adicionar({ quantidade: 2, precoUnitario: 99.99 })
-itens.adicionar({ quantidade: 1, precoUnitario: 149.90 })
-itens.adicionar({ quantidade: 3, precoUnitario: 9.99  })
-
-total = Moeda.totalItens(itens)  // 379.85
+itens = EntityManager.buscar(ItemCarrinho)
+total = Moeda.totalItens(itens)  // soma quantidade * precoUnitario de cada item
 ```
 
 ---

@@ -171,7 +171,66 @@ function gerarCSS(tema = {}) {
       color: #fff !important;
     }
 
-    .jade-nav-icone { font-size: 1rem; }
+    .jade-nav-icone { display: flex; align-items: center; }
+
+    /* Toolbar */
+    .jade-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* Busca */
+    .jade-busca-wrapper { margin-bottom: 16px; }
+    .jade-busca-form { display: flex; gap: 0; }
+    .jade-busca-input {
+      flex: 1;
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--jade-cor-borda);
+      border-right: none;
+      border-radius: var(--jade-raio) 0 0 var(--jade-raio);
+      font-size: 1rem;
+      background: #fff;
+    }
+    .jade-busca-btn {
+      min-height: 44px;
+      padding: 0 14px;
+      border: 1.5px solid var(--jade-cor-primaria);
+      background: var(--jade-cor-primaria);
+      color: #fff;
+      border-radius: 0 var(--jade-raio) var(--jade-raio) 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Divisor */
+    .jade-divisor { border: none; border-top: 1px solid var(--jade-cor-borda); margin: 20px 0 12px; }
+    .jade-divisor-rotulo {
+      position: relative;
+      text-align: center;
+      margin: 20px 0 12px;
+    }
+    .jade-divisor-rotulo::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0; right: 0;
+      border-top: 1px solid var(--jade-cor-borda);
+    }
+    .jade-divisor-rotulo::after {
+      content: attr(data-rotulo);
+      position: relative;
+      background: var(--jade-cor-fundo);
+      padding: 0 12px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--jade-cor-texto-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
 
     /* Área de conteúdo */
     #jade-conteudo {
@@ -245,26 +304,40 @@ function gerarCSS(tema = {}) {
 
 function gerarBootstrap(uiArquivo, wasmArquivo, nomeApp) {
   return `
-import { JadeRuntime, UIEngine, LocalDatastore } from './runtime.js';
+import { JadeRuntime, UIEngine, LocalDatastore, criarElementoIcone } from './runtime.js';
 
 const NOME_APP    = ${JSON.stringify(nomeApp)};
 const WASM_FILE   = ${JSON.stringify('./' + wasmArquivo)};
 const UI_FILE     = ${JSON.stringify('./' + uiArquivo)};
 const SEEDS_FILE  = './seeds.json';
 
-function icone(nome) {
+// Mapeia nome da tela para ícone do catálogo JADE (nomes em português)
+function nomeIcone(nome) {
   const n = (nome || '').toLowerCase();
-  if (/produto|estoque|item|mercadoria/.test(n)) return '📦';
-  if (/cliente|pessoa|contato|fornecedor/.test(n)) return '👥';
-  if (/pedido|venda|ordem|compra/.test(n)) return '🛒';
-  if (/fiscal|nota|nfe|imposto|tributo/.test(n)) return '🧾';
-  if (/relatorio|relat|estatistica/.test(n)) return '📊';
-  if (/config|configurac|preferencia/.test(n)) return '⚙️';
-  if (/dashboard|painel|resumo|inicio/.test(n)) return '🏠';
-  if (/caixa|pagamento|financ|receber|pagar/.test(n)) return '💰';
-  if (/usuario|user|acesso|perfil/.test(n)) return '👤';
-  if (/moviment|lancament|transac/.test(n)) return '↕️';
-  return '📋';
+  if (/produto|estoque|item|mercadoria/.test(n)) return 'caixa';
+  if (/cliente|pessoa|contato|fornecedor/.test(n)) return 'usuarios';
+  if (/pedido|venda|ordem|compra/.test(n)) return 'carrinho';
+  if (/fiscal|nota|nfe|imposto|tributo/.test(n)) return 'relatorio';
+  if (/relatorio|relat|estatistica/.test(n)) return 'grafico';
+  if (/config|configurac|preferencia/.test(n)) return 'configuracoes';
+  if (/dashboard|painel|resumo|inicio/.test(n)) return 'casa';
+  if (/caixa|pagamento|financ|receber|pagar/.test(n)) return 'dinheiro';
+  if (/usuario|user|acesso|perfil/.test(n)) return 'usuario';
+  if (/moviment|lancament|transac/.test(n)) return 'atualizar';
+  return 'tabela_icone';
+}
+
+// Telas que não entram no nav (shells de login/formulário/navegação)
+function ehTelaDeNav(tela) {
+  const tipos = (tela.elementos || []).map(e => e.tipo);
+  if (tipos.length === 0) return false;
+  // Shell pura de gaveta — é o menu, não uma tela navegável
+  if (tipos.every(t => t === 'gaveta')) return false;
+  // Tela de login
+  if (tipos.includes('login')) return false;
+  // Formulários de criação (somente formulario + botao)
+  if (tipos.every(t => t === 'formulario' || t === 'botao')) return false;
+  return true;
 }
 
 function coletarEntidades(telas) {
@@ -279,16 +352,16 @@ function coletarEntidades(telas) {
   return [...nomes];
 }
 
-async function mudarTela(idx, telas, db, ui) {
-  document.querySelectorAll('.jade-nav-item').forEach((el, i) => {
-    el.classList.toggle('jade-nav-ativo', i === idx);
-  });
+async function mudarTela(nome, telas, db, ui, navItems) {
+  const idx = telas.findIndex(t => t.nome === nome);
+  if (idx < 0) return;
+
+  navItems.forEach((btn, i) => btn.classList.toggle('jade-nav-ativo', i === idx));
 
   const tela = telas[idx];
   const container = document.getElementById('jade-conteudo');
   container.innerHTML = '';
 
-  // Carrega dados do banco local para cada entidade referenciada nesta tela
   const dadosMap = {};
   for (const el of tela.elementos || []) {
     for (const prop of el.propriedades || []) {
@@ -302,37 +375,30 @@ async function mudarTela(idx, telas, db, ui) {
 }
 
 async function iniciar() {
-  // 1. Carrega descritores de tela compilados (.jade-ui.json)
   const telas = await fetch(UI_FILE).then(r => r.json()).catch(() => []);
 
-  // 2. Inicializa banco local com as entidades declaradas nas telas
   const entidades = coletarEntidades(telas);
   const db = new LocalDatastore(NOME_APP, entidades);
   await db.init();
 
-  // 3. Carrega seeds.json na primeira execução (tabelas vazias)
   try {
     const seeds = await fetch(SEEDS_FILE).then(r => { if (!r.ok) throw 0; return r.json(); });
     for (const [entidade, registros] of Object.entries(seeds)) {
       const existentes = await db.find(entidade).catch(() => []);
       if (existentes.length === 0) {
-        for (const reg of registros) {
-          await db.insert(entidade, reg).catch(() => {});
-        }
+        for (const reg of registros) await db.insert(entidade, reg).catch(() => {});
       }
     }
   } catch { /* sem seeds ou já populado */ }
 
-  // 4. Carrega WASM (lógica de negócio compilada)
   const runtime = new JadeRuntime();
   try {
     const resp = await fetch(WASM_FILE);
     if (resp.ok) await runtime.load(resp);
-  } catch { /* WASM ausente se o arquivo só tem telas */ }
+  } catch { /* WASM ausente */ }
 
   const ui = new UIEngine(runtime.getMemory());
 
-  // 5. Remove tela de carregamento
   document.getElementById('jade-carregando')?.remove();
   document.getElementById('jade-app').style.display = '';
 
@@ -342,21 +408,51 @@ async function iniciar() {
     return;
   }
 
-  // 6. Constrói nav a partir dos descritores
+  // Constrói nav apenas com telas navegáveis
   const nav = document.getElementById('jade-nav-lista');
-  telas.forEach((tela, i) => {
+  const telasNav = telas.filter(ehTelaDeNav);
+  const navItems = [];
+
+  telasNav.forEach((tela, i) => {
     const btn = document.createElement('button');
     btn.className = 'jade-nav-item' + (i === 0 ? ' jade-nav-ativo' : '');
-    btn.dataset.idx = String(i);
-    btn.innerHTML =
-      '<span class="jade-nav-icone">' + icone(tela.nome) + '</span>' +
-      '<span>' + (tela.titulo || tela.nome) + '</span>';
-    btn.addEventListener('click', () => mudarTela(i, telas, db, ui));
+    btn.dataset.tela = tela.nome;
+
+    const svgIcone = criarElementoIcone(nomeIcone(tela.nome), 18);
+    const spanIcone = document.createElement('span');
+    spanIcone.className = 'jade-nav-icone';
+    if (svgIcone) spanIcone.appendChild(svgIcone);
+    btn.appendChild(spanIcone);
+
+    const spanLabel = document.createElement('span');
+    spanLabel.textContent = tela.titulo || tela.nome;
+    btn.appendChild(spanLabel);
+
+    btn.addEventListener('click', () => mudarTela(tela.nome, telas, db, ui, navItems));
     nav.appendChild(btn);
+    navItems.push(btn);
   });
 
-  // 7. Renderiza primeira tela
-  await mudarTela(0, telas, db, ui);
+  // Handler: jade:navegar — gaveta e navegar disparam este evento
+  window.addEventListener('jade:navegar', (e) => {
+    const nomeTela = e.detail?.tela;
+    if (nomeTela) mudarTela(nomeTela, telas, db, ui, navItems);
+  });
+
+  // Handler: jade:acao — dispara jade:acao:concluido após processar
+  // (evita spinner eterno em botões sem implementação WASM real)
+  window.addEventListener('jade:acao', (e) => {
+    const acao = e.detail?.acao;
+    // Navegar via router.navegar() é tratado pelo runtime interno —
+    // aqui garantimos que o botão sai do estado de carregamento
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('jade:acao:concluido', { detail: { acao } }));
+    }, 300);
+  });
+
+  // Renderiza primeira tela navegável
+  const primeiraNome = telasNav[0]?.nome ?? telas[0]?.nome;
+  if (primeiraNome) await mudarTela(primeiraNome, telas, db, ui, navItems);
 }
 
 iniciar().catch(e => {
@@ -461,7 +557,10 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request).then(hit => hit ?? fetch(e.request).then(res => {
-      if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+      if (res.ok) {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
       return res;
     })).catch(() => new Response('<h1>Sem conexão</h1>', { headers: { 'Content-Type': 'text/html' } }))
   );

@@ -39,14 +39,14 @@ function validar(arquivo: string) {
 }
 
 describe('Exemplos funcionais', () => {
-  it('calculadora.jd — parse e semântica sem erros', () => {
-    const { parse, semantic } = validar('calculadora.jd');
+  it('fundamentos/operacoes_matematicas.jd — parse e semântica sem erros', () => {
+    const { parse, semantic } = validar('fundamentos/operacoes_matematicas.jd');
     expect(parse.errors).toHaveLength(0);
     expect(semantic.erros).toHaveLength(0);
   });
 
-  it('calculadora.jd — contém funções matemáticas básicas', () => {
-    const { parse } = validar('calculadora.jd');
+  it('fundamentos/operacoes_matematicas.jd — contém funções matemáticas básicas', () => {
+    const { parse } = validar('fundamentos/operacoes_matematicas.jd');
     const nomes = parse.program!.declaracoes
       .filter(d => d.kind === 'Funcao')
       .map(d => (d as any).nome);
@@ -56,14 +56,14 @@ describe('Exemplos funcionais', () => {
     expect(nomes).toContain('maximo');
   });
 
-  it('estoque.jd — parse e semântica sem erros', () => {
-    const { parse, semantic } = validar('estoque.jd');
+  it('estruturas/estoque.jd — parse e semântica sem erros', () => {
+    const { parse, semantic } = validar('estruturas/estoque.jd');
     expect(parse.errors).toHaveLength(0);
     expect(semantic.erros).toHaveLength(0);
   });
 
-  it('estoque.jd — contém entidades, eventos e serviço', () => {
-    const { parse } = validar('estoque.jd');
+  it('estruturas/estoque.jd — contém entidades, eventos e serviço', () => {
+    const { parse } = validar('estruturas/estoque.jd');
     const decls = parse.program!.declaracoes;
     const kinds = decls.map(d => d.kind);
     expect(kinds).toContain('Entidade');
@@ -71,8 +71,8 @@ describe('Exemplos funcionais', () => {
     expect(kinds).toContain('Servico');
   });
 
-  it('estoque.jd — Produto tem campo id', () => {
-    const { parse } = validar('estoque.jd');
+  it('estruturas/estoque.jd — Produto tem campo id', () => {
+    const { parse } = validar('estruturas/estoque.jd');
     const produto = parse.program!.declaracoes.find(
       d => d.kind === 'Entidade' && (d as any).nome === 'Produto'
     ) as any;
@@ -81,14 +81,14 @@ describe('Exemplos funcionais', () => {
     expect(nomesCampos).toContain('id');
   });
 
-  it('pedidos.jd — parse e semântica sem erros', () => {
-    const { parse, semantic } = validar('pedidos.jd');
+  it('estruturas/pedidos.jd — parse e semântica sem erros', () => {
+    const { parse, semantic } = validar('estruturas/pedidos.jd');
     expect(parse.errors).toHaveLength(0);
     expect(semantic.erros).toHaveLength(0);
   });
 
-  it('pedidos.jd — enum StatusPedido com valores UPPER_CASE', () => {
-    const { parse } = validar('pedidos.jd');
+  it('estruturas/pedidos.jd — enum StatusPedido com valores UPPER_CASE', () => {
+    const { parse } = validar('estruturas/pedidos.jd');
     const statusEnum = parse.program!.declaracoes.find(
       d => d.kind === 'Enum' && (d as any).nome === 'StatusPedido'
     ) as any;
@@ -97,22 +97,27 @@ describe('Exemplos funcionais', () => {
     expect(statusEnum.valores).toContain('CANCELADO');
   });
 
-  it('financeiro.jd — parse e semântica sem erros', () => {
-    const { parse, semantic } = validar('financeiro.jd');
+  it('servicos/financeiro.jd — parse e semântica sem erros', () => {
+    const { parse, semantic } = validar('servicos/financeiro.jd');
     expect(parse.errors).toHaveLength(0);
     expect(semantic.erros).toHaveLength(0);
   });
 
-  it('financeiro.jd — interface Calculavel declarada', () => {
-    const { parse } = validar('financeiro.jd');
-    const iface = parse.program!.declaracoes.find(
-      d => d.kind === 'Interface' && (d as any).nome === 'Calculavel'
-    );
-    expect(iface).toBeDefined();
+  it('fundamentos/variaveis.jd — parse e semântica sem erros', () => {
+    const { parse, semantic } = validar('fundamentos/variaveis.jd');
+    expect(parse.errors).toHaveLength(0);
+    expect(semantic.erros).toHaveLength(0);
   });
 
   it('todos os exemplos passam pelo linter sem erros de severity error', () => {
-    const arquivos = ['calculadora.jd', 'estoque.jd', 'pedidos.jd', 'financeiro.jd'];
+    const arquivos = [
+      'fundamentos/operacoes_matematicas.jd',
+      'estruturas/estoque.jd',
+      'estruturas/pedidos.jd',
+      'servicos/financeiro.jd',
+      'fundamentos/variaveis.jd',
+      'fundamentos/controle_de_fluxo.jd',
+    ];
 
     for (const arquivo of arquivos) {
       const { parse } = validar(arquivo);

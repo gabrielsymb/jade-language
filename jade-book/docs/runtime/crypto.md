@@ -17,7 +17,8 @@ salvar usuario
 
 ```jd
 funcao autenticar(email: texto, senha: texto) -> booleano
-  usuario = EntityManager.buscar(Usuario, { onde: { email: email } }).obter(0)
+  usuarios = EntityManager.buscar(Usuario)
+  usuario = usuarios.obter(0)
 
   se nao usuario
     retornar falso
@@ -31,14 +32,16 @@ fim
 ## Criptografar dados sensíveis
 
 ```jd
-chave = Session.get("encryption_key")
+funcao criptografarDados(dadosSensiveis: texto) -> texto
+  variavel chave = Session.get("encryption_key")
 
-// Criptografar
-dadosCriptografados = Crypto.encrypt(dadosSensiveis, chave)
-salvar dadosCriptografados no banco
+  // Criptografar
+  dadosCriptografados = Crypto.encrypt(dadosSensiveis, chave)
 
-// Descriptografar
-original = Crypto.decrypt(dadosCriptografados, chave)
+  // Descriptografar
+  original = Crypto.decrypt(dadosCriptografados, chave)
+  retornar dadosCriptografados
+fim
 ```
 
 ## Geração de chaves seguras

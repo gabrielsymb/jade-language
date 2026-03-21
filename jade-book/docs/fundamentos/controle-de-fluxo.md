@@ -179,7 +179,7 @@ fim
 
 ```jd
 funcao totalVendas(pedidos: lista<Pedido>) -> decimal
-  total: decimal = 0
+  variavel total: decimal = 0
 
   para pedido em pedidos
     total = total + pedido.valorTotal

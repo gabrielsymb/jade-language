@@ -21,7 +21,7 @@ Verifique a instalação:
 
 ```bash
 jadec --version
-# jadec 0.1.3
+# jadec 0.1.6
 ```
 
 ## 2. Instale a extensão VS Code

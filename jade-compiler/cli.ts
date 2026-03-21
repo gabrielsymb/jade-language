@@ -19,6 +19,7 @@ import { Lexer } from './lexer/lexer.js';
 import { Parser } from './parser/parser.js';
 import { Formatter } from './formatter/formatter.js';
 import { Linter } from './linter/linter.js';
+import { SemanticAnalyzer } from './semantic/semantic_analyzer.js';
 
 const VERSION = '0.1.6';
 
@@ -271,6 +272,40 @@ async function main() {
 
   process.stderr.write(c.dim(`jadec ${VERSION} — compilando ${inputFile}...\n\n`));
 
+  // ── Modo --check: só parse + semântica, sem gerar WASM ───────────────────
+  if (checkOnly) {
+    let source: string;
+    try {
+      source = readFileSync(resolve(inputFile), 'utf-8');
+    } catch {
+      e(c.red('erro') + `: não foi possível ler '${inputFile}'.`);
+      process.exit(1);
+    }
+    const tokens = new Lexer(source).tokenize();
+    const parseResult = new Parser(tokens).parse();
+    if (!parseResult.success || !parseResult.program) {
+      e('');
+      for (const err of parseResult.errors) {
+        renderError({ phase: 'parse', message: err.message, hint: err.dica, line: err.line, column: err.column }, source.split('\n'), inputFile);
+      }
+      const n = parseResult.errors.length;
+      e(c.red(`${n} erro${n > 1 ? 's' : ''} encontrado${n > 1 ? 's' : ''}`) + c.bold('. Compilação interrompida.'));
+      process.exit(1);
+    }
+    const semanticResult = new SemanticAnalyzer().analisar(parseResult.program);
+    if (!semanticResult.sucesso) {
+      e('');
+      for (const err of semanticResult.erros) {
+        renderError({ phase: 'semantic', message: err.mensagem, hint: err.dica, line: err.linha, column: err.coluna }, source.split('\n'), inputFile);
+      }
+      const n = semanticResult.erros.length;
+      e(c.red(`${n} erro${n > 1 ? 's' : ''} encontrado${n > 1 ? 's' : ''}`) + c.bold('. Compilação interrompida.'));
+      process.exit(1);
+    }
+    console.log(c.green('ok') + ' — nenhum erro encontrado.');
+    process.exit(0);
+  }
+
   const result = await compileFile(resolve(inputFile), basename(inputFile, '.jd'));
 
   if (!result.success) {
@@ -282,11 +317,6 @@ async function main() {
     const n = result.errors.length;
     e(c.red(`${n} erro${n > 1 ? 's' : ''} encontrado${n > 1 ? 's' : ''}`) + c.bold('. Compilação interrompida.'));
     process.exit(1);
-  }
-
-  if (checkOnly) {
-    console.log(c.green('ok') + ' — nenhum erro encontrado.');
-    process.exit(0);
   }
 
   // Escrever descritores de tela (UI declarativa)

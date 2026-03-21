@@ -79,7 +79,7 @@ fim
 
 servico EstoqueService
   funcao reduzir(produtoId: id, qtd: numero)
-    produto = buscar Produto onde id = produtoId
+    produto = EntityManager.buscarPorId(Produto, produtoId)
     produto.estoque = produto.estoque - qtd
     salvar produto
 

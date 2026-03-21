@@ -25,8 +25,22 @@ export { WASMGenerator } from './codegen/wasm_generator.js';
 export * as AST from './ast/nodes.js';
 export * as IR from './codegen/ir_nodes.js';
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve, dirname, basename } from 'path';
+
+/** Sobe na árvore de diretórios a partir de `startDir` até encontrar package.json ou jade.config.json.
+ *  Retorna o diretório raiz do projeto, ou `fallback` se não encontrar. */
+function encontrarRaizProjeto(startDir: string, fallback: string): string {
+  let dir = startDir;
+  while (true) {
+    if (existsSync(resolve(dir, 'package.json')) || existsSync(resolve(dir, 'jade.config.json'))) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) return fallback; // chegou na raiz do sistema
+    dir = parent;
+  }
+}
 import { Lexer } from './lexer/lexer.js';
 import { Parser } from './parser/parser.js';
 import { SemanticAnalyzer } from './semantic/semantic_analyzer.js';
@@ -154,9 +168,10 @@ export async function compileFile(
     };
   }
 
-  // Resolve imports — basePath = dir do arquivo atual, rootPath = dir do arquivo de entrada
+  // Resolve imports — basePath = dir do arquivo atual, rootPath = raiz do projeto
   const baseDir = dirname(absPath);
-  const { declarations, errors: importErrors } = resolveImports(parseResult.program, baseDir, baseDir);
+  const rootDir = encontrarRaizProjeto(baseDir, process.cwd());
+  const { declarations, errors: importErrors } = resolveImports(parseResult.program, baseDir, rootDir);
 
   if (importErrors.length > 0) {
     return {

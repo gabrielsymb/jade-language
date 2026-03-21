@@ -103,7 +103,7 @@ Também pode usar `para/em` com `se` para lógica mais complexa:
 
 ```jd
 funcao filtrarAtivos(produtos: lista<Produto>) -> lista<Produto>
-  ativos: lista<Produto> = lista()
+  variavel ativos: lista<Produto> = lista()
   para produto em produtos
     se produto.ativo
       ativos.adicionar(produto)
@@ -124,7 +124,7 @@ porPreco = produtos.ordenar(preco)
 
 ```jd
 funcao somarPedidos(pedidos: lista<Pedido>) -> decimal
-  total: decimal = 0
+  variavel total: decimal = 0
   para pedido em pedidos
     total = total + pedido.valorTotal
   fim

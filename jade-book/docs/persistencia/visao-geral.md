@@ -59,11 +59,8 @@ todos = EntityManager.buscar(Produto)
 ### Buscar com filtros
 
 ```jd
-ativos = EntityManager.buscar(Produto, {
-  onde: { ativo: verdadeiro },
-  ordenarPor: { nome: "asc" },
-  limite: 20
-})
+ativos = EntityManager.buscar(Produto)
+// filtre na lógica do serviço após buscar
 ```
 
 ### Contar

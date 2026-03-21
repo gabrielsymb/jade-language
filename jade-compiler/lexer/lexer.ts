@@ -36,6 +36,7 @@ const KEYWORDS: Record<string, TokenType> = {
   'emitir': TokenType.EMITIR,
   'escutar': TokenType.ESCUTAR,
   'quando': TokenType.QUANDO,
+  'salvar': TokenType.SALVAR,
 
   // Variável / Constante
   'variavel':  TokenType.VARIAVEL,
@@ -421,7 +422,7 @@ export class Lexer {
       value += this.advance();
     }
 
-    const keywordType = KEYWORDS[value.toLowerCase()];
+    const keywordType = KEYWORDS[value];
     if (keywordType) {
       this.tokens.push({
         type: keywordType,

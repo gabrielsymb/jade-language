@@ -24,8 +24,8 @@ variavel nome: texto
 variavel idade: numero = 30
 variavel preco: decimal = 99.90
 variavel ativo: booleano = verdadeiro
-variavel hoje: data = 2024-03-15
-variavel abertura: hora = 08:00
+variavel hoje: data = DateTime.today()
+variavel abertura: hora = DateTime.horaAtual()
 ```
 
 ### Com inferência de tipo
@@ -175,8 +175,8 @@ fim
 Datas no formato `AAAA-MM-DD`:
 
 ```jd
-variavel aniversario: data = 1995-08-20
-variavel lancamento: data = 2024-01-01
+variavel aniversario = DateTime.today()
+variavel lancamento = DateTime.today()
 ```
 
 Use `DateTime.today()` para a data de hoje:
@@ -190,8 +190,8 @@ variavel hoje = DateTime.today()
 Horas no formato `HH:MM`:
 
 ```jd
-variavel abertura: hora = 08:00
-variavel fechamento: hora = 18:00
+variavel abertura = DateTime.horaAtual()
+variavel fechamento = DateTime.horaAtual()
 ```
 
 ## O tipo `id`

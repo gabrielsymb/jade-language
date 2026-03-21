@@ -37,8 +37,8 @@ Console.avisar("Token expira em 5 minutos")
 Para registrar erros e falhas.
 
 ```jd
-Console.erro("Falha ao conectar com o servidor")
-Console.erro("Operação falhou: " + motivo)
+Console.registrarErro("Falha ao conectar com o servidor")
+Console.registrarErro("Operação falhou")
 ```
 
 ### `Console.depurar` — debug

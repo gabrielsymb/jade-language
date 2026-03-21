@@ -1,6 +1,6 @@
 {
   "name": "@yakuzaa/jade",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Jade DSL — linguagem empresarial em português compilada para WebAssembly. Instala compilador + runtime + CLI.",
   "type": "module",
   "bin": {

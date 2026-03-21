@@ -63,7 +63,7 @@
       "patterns": [
         {
           "name": "storage.type.class.jade",
-          "match": "\\b(classe|entidade|servico|evento|interface|enum|modulo)\\b"
+          "match": "\\b(classe|entidade|servico|evento|interface|enum|modulo|tela)\\b"
         },
         {
           "name": "storage.type.function.jade",
@@ -76,6 +76,10 @@
         {
           "name": "keyword.other.variable.jade",
           "match": "\\b(variavel)\\b"
+        },
+        {
+          "name": "keyword.other.ui.jade",
+          "match": "\\b(tabela|formulario|botao|cartao|modal|grafico|abas|lista|acordeao|navegar|gaveta|separador)\\b"
         }
       ]
     },

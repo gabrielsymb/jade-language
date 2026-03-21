@@ -120,7 +120,7 @@ classe Animal
   fim
 
   funcao emitirSom()
-    Console.escrever("...")
+    Console.escrever("(som genérico)")
   fim
 fim
 
@@ -139,8 +139,8 @@ classe Cachorro extends Mamifero
     Console.escrever(nome + " faz: Au au!")
   fim
 
-  funcao buscar(objeto: texto)
-    Console.escrever(nome + " foi buscar o " + objeto)
+  funcao buscar(coisa: texto)
+    Console.escrever(nome + " foi buscar o " + coisa)
   fim
 fim
 ```
@@ -204,7 +204,7 @@ classe RelatorioVendas extends Relatorio implements Exportavel
   fim
 
   funcao exportarJSON() -> texto
-    retornar '{"mes":' + mes + ',"ano":' + ano + ',"total":' + totalVendas + '}'
+    retornar "{\"mes\":" + mes + ",\"ano\":" + ano + ",\"total\":" + totalVendas + "}"
   fim
 fim
 ```

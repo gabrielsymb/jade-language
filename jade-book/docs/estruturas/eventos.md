@@ -123,7 +123,7 @@ evento FaturaEmitida
 fim
 
 servico FaturaService
-  funcao emitir(pedidoId: id) -> Fatura
+  funcao gerarFatura(pedidoId: id) -> Fatura
     pedido = EntityManager.buscarPorId(Pedido, pedidoId)
 
     fatura = Fatura()
@@ -134,14 +134,7 @@ servico FaturaService
     fatura.status = "pendente"
     salvar fatura
 
-    emitir FaturaEmitida(
-      fatura.id,
-      pedidoId,
-      pedido.clienteId,
-      pedido.valorTotal,
-      fatura.vencimento,
-      "pendente"
-    )
+    emitir FaturaEmitida(fatura.id, pedidoId, pedido.clienteId, pedido.valorTotal, fatura.vencimento, "pendente")
 
     retornar fatura
   fim
@@ -179,7 +172,7 @@ Isso é uma proteção importante — o compilador impede loops infinitos de eve
 evento AcaoRealizada
   usuarioId: id
   acao: texto
-  entidade: texto
+  tipoEntidade: texto
   entidadeId: id
   detalhes: texto
 fim
@@ -189,7 +182,7 @@ servico AuditoriaService
     log = LogAuditoria()
     log.usuarioId = usuarioId
     log.acao = acao
-    log.entidade = entidade
+    log.tipoEntidade = tipoEntidade
     log.entidadeId = entidadeId
     log.detalhes = detalhes
     log.realizadoEm = DateTime.now()
@@ -204,13 +197,7 @@ servico ProdutoService
     produto.ativo = falso
     salvar produto
 
-    emitir AcaoRealizada(
-      sessaoAtual.usuarioId,
-      "exclusao",
-      "Produto",
-      produtoId,
-      "Produto '" + produto.nome + "' desativado"
-    )
+    emitir AcaoRealizada(sessaoAtual.usuarioId, "exclusao", "Produto", produtoId, "Produto '" + produto.nome + "' desativado")
   fim
 fim
 ```
@@ -245,11 +232,9 @@ servico RetryService
   escutar ProcessamentoFalhou
     se tentativa < 3
       Console.escrever("Tentativa " + tentativa + " falhou. Reagendando...")
-      EventLoop.schedule(() ->
-        reprocessar(operacaoId, tentativa + 1)
-      , 5000)
+      reprocessar(operacaoId, tentativa + 1)
     senao
-      Console.erro("Operação falhou após 3 tentativas: " + operacaoId)
+      Console.escrever("ERRO: Operação falhou após 3 tentativas: " + operacaoId)
       emitir OperacaoAbortada(operacaoId, motivo)
     fim
   fim

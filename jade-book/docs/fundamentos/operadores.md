@@ -151,7 +151,11 @@ Separa o nome do tipo em declarações:
 
 ```jd
 variavel idade: numero = 30
+
 funcao calcular(valor: decimal) -> decimal
+  retornar valor * 2
+fim
+
 entidade Produto
   preco: decimal
 fim

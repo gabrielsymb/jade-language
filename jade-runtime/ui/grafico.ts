@@ -37,11 +37,20 @@ function fmtNum(v: number): string {
   return Number.isInteger(v) ? String(v) : v.toFixed(2);
 }
 
+/** Formata label: datas ISO (YYYY-MM-DD) viram DD/MM, resto trunca */
+function fmtLabel(s: string, maxLen = 7): string {
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [, m, d] = s.split('-');
+    return `${d}/${m}`;
+  }
+  return s.length > maxLen ? s.slice(0, maxLen - 1) + '…' : s;
+}
+
 // ── Layout padrão ─────────────────────────────────────────────────────────────
 
 const W   = 400;
 const H   = 260;
-const PAD = { top: 24, right: 20, bottom: 56, left: 54 };
+const PAD = { top: 24, right: 20, bottom: 64, left: 54 };
 const CW  = W - PAD.left - PAD.right;  // 326
 const CH  = H - PAD.top  - PAD.bottom; // 180
 
@@ -104,11 +113,13 @@ function renderBarras(dados: any[], config: GraficoConfig, vb: Element): void {
       rx: 4, fill: CORES[i % CORES.length], opacity: 0.85,
     }));
 
-    const labelTrunc = label.length > 10 ? label.slice(0, 9) + '…' : label;
-    vb.appendChild(txt(labelTrunc, {
-      x: cx, y: PAD.top + CH + 14,
-      'font-size': 11, 'text-anchor': 'middle', fill: '#6b7280',
-    }));
+    const labelFmt = fmtLabel(label);
+    const labelEl = txt(labelFmt, {
+      x: cx, y: PAD.top + CH + (n > 5 ? 6 : 14),
+      'font-size': 10, 'text-anchor': n > 5 ? 'end' : 'middle', fill: '#6b7280',
+    });
+    if (n > 5) labelEl.setAttribute('transform', `rotate(-40 ${cx} ${PAD.top + CH + 6})`);
+    vb.appendChild(labelEl);
 
     if (bh > 18) {
       vb.appendChild(txt(fmtNum(val), {
@@ -165,11 +176,13 @@ function renderLinha(dados: any[], config: GraficoConfig, vb: Element): void {
       fill: '#fff', stroke: CORES[0], 'stroke-width': 2,
     }));
 
-    const labelTrunc = p.label.length > 8 ? p.label.slice(0, 7) + '…' : p.label;
-    vb.appendChild(txt(labelTrunc, {
-      x: p.x.toFixed(1), y: PAD.top + CH + 14,
-      'font-size': 11, 'text-anchor': 'middle', fill: '#6b7280',
-    }));
+    const labelFmt = fmtLabel(p.label);
+    const labelEl = txt(labelFmt, {
+      x: p.x.toFixed(1), y: PAD.top + CH + (n > 5 ? 6 : 14),
+      'font-size': 10, 'text-anchor': n > 5 ? 'end' : 'middle', fill: '#6b7280',
+    });
+    if (n > 5) labelEl.setAttribute('transform', `rotate(-40 ${p.x.toFixed(1)} ${PAD.top + CH + 6})`);
+    vb.appendChild(labelEl);
   });
 }
 

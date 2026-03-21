@@ -45,12 +45,21 @@ export interface GavetaHandle {
 export function criarGaveta(config: GavetaConfig): GavetaHandle {
   const id = `jade-gaveta-${config.nome}`;
 
-  // Reutiliza painel existente
+  // Reutiliza painel existente — mas sempre cria novo toggle (o anterior foi removido com o conteúdo da tela)
   const painelExistente = document.getElementById(id) as HTMLElement | null;
   if (painelExistente) {
-    const toggleExistente = document.getElementById(`${id}-toggle`) as HTMLButtonElement;
     const overlayExistente = document.getElementById(`${id}-overlay`) as HTMLElement;
-    return _handle(painelExistente, overlayExistente, toggleExistente);
+    const novoToggle = document.createElement('button');
+    novoToggle.id = `${id}-toggle`;
+    novoToggle.className = 'jade-gaveta-toggle';
+    novoToggle.setAttribute('aria-label', 'Abrir menu');
+    novoToggle.setAttribute('aria-expanded', 'false');
+    novoToggle.setAttribute('aria-controls', id);
+    const iconeMenuReutilizado = criarElementoIcone('menu', 22);
+    if (iconeMenuReutilizado) novoToggle.appendChild(iconeMenuReutilizado);
+    const handleReutilizado = _handle(painelExistente, overlayExistente, novoToggle);
+    novoToggle.addEventListener('click', handleReutilizado.toggle);
+    return handleReutilizado;
   }
 
   // ── Overlay ────────────────────────────────────────────────────────────

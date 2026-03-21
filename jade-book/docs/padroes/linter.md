@@ -138,10 +138,8 @@ fim
 Funções com mais de 5 parâmetros ficam difíceis de usar. Prefira um objeto/entidade:
 
 ```jd
-// ❌ aviso PARAM001 — 6 parâmetros
-funcao criar(nome: texto, cpf: texto, email: texto, telefone: texto, cidade: texto, estado: texto) -> Cliente
-  ...
-fim
+// ❌ aviso PARAM001 — 6 parâmetros (evite)
+// funcao criar(nome, cpf, email, telefone, cidade, estado) — muitos parâmetros
 
 // ✅ correto — use uma entidade
 entidade DadosCliente
@@ -155,7 +153,10 @@ entidade DadosCliente
 fim
 
 funcao criar(dados: DadosCliente) -> Cliente
-  ...
+  c = Cliente()
+  c.nome = dados.nome
+  salvar c
+  retornar c
 fim
 ```
 

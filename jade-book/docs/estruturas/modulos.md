@@ -126,7 +126,8 @@ importar eventos/EstoqueAbaixoMinimo
 
 servico EstoqueServico
   funcao registrarEntrada(produtoId: texto, quantidade: numero)
-    emitir EstoqueAbaixoMinimo
+    produto = EntityManager.buscarPorId(Produto, produtoId)
+    emitir EstoqueAbaixoMinimo(produto, quantidade)
   fim
 fim
 ```

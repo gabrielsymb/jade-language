@@ -22,32 +22,16 @@ fim
 // Todos os registros
 todos = EntityManager.buscar(Produto)
 
-// Com filtros
-ativos = EntityManager.buscar(Produto, {
-  onde: { ativo: verdadeiro }
-})
-
-// Com ordenação
-ordenados = EntityManager.buscar(Produto, {
-  onde: { ativo: verdadeiro },
-  ordenarPor: { nome: "asc" }
-})
-
-// Com limite e paginação
-pagina = EntityManager.buscar(Produto, {
-  onde: { categoria: "eletronicos" },
-  ordenarPor: { preco: "desc" },
-  limite: 10,
-  offset: 20   // pular os 20 primeiros (página 3)
-})
+// Com filtros (via serviço — filtre na lógica)
+ativos = EntityManager.buscar(Produto)
+// filtre na lógica do serviço após buscar
 ```
 
 ### `contar` — contar registros
 
 ```jd
 total = EntityManager.contar(Produto)
-ativos = EntityManager.contar(Produto, { onde: { ativo: verdadeiro } })
-Console.escrever(ativos + " de " + total + " produtos ativos")
+Console.escrever(total + " produtos cadastrados")
 ```
 
 ### `criar` / `atualizar` — salvar registros
@@ -98,10 +82,7 @@ servico ClienteService
   fim
 
   funcao listar() -> lista<Cliente>
-    retornar EntityManager.buscar(Cliente, {
-      onde: { ativo: verdadeiro },
-      ordenarPor: { nome: "asc" }
-    })
+    retornar EntityManager.buscar(Cliente)
   fim
 
   funcao buscar(id: id) -> Cliente
@@ -133,13 +114,9 @@ fim
 ```jd
 funcao gerarResumoEstoque() -> texto
   total = EntityManager.contar(Produto)
-  ativos = EntityManager.contar(Produto, { onde: { ativo: verdadeiro } })
-  semEstoque = EntityManager.contar(Produto, { onde: { estoque: 0 } })
 
   resumo = "=== ESTOQUE ===\n"
   resumo = resumo + "Total de produtos: " + total + "\n"
-  resumo = resumo + "Ativos: " + ativos + "\n"
-  resumo = resumo + "Sem estoque: " + semEstoque + "\n"
 
   retornar resumo
 fim
@@ -149,14 +126,8 @@ fim
 
 ```jd
 funcao listarPaginado(pagina: numero, tamPagina: numero) -> lista<Produto>
-  offset = (pagina - 1) * tamPagina
-
-  retornar EntityManager.buscar(Produto, {
-    onde: { ativo: verdadeiro },
-    ordenarPor: { nome: "asc" },
-    limite: tamPagina,
-    offset: offset
-  })
+  // busca todos e aplica paginação na lógica
+  retornar EntityManager.buscar(Produto)
 fim
 
 // Página 1: offset 0, 20 itens

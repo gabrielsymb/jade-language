@@ -822,12 +822,12 @@ fim`);
 
   it('rejeita propriedade "click" com dica para usar "clique"', () => {
     const r = analisarCodigo(`
-funcao salvar()
+funcao persistir()
 fim
 
 tela Dashboard "Painel"
   botao Salvar
-    click: salvar
+    click: persistir
   fim
 fim`);
     expect(r.sucesso).toBe(false);
@@ -836,7 +836,7 @@ fim`);
 
   it('rejeita propriedade "submit" com dica para usar "enviar"', () => {
     const r = analisarCodigo(`
-funcao salvar()
+funcao persistir()
 fim
 
 entidade Produto
@@ -847,7 +847,7 @@ fim
 tela Dashboard "Painel"
   formulario FormProduto
     entidade: Produto
-    submit: salvar
+    submit: persistir
   fim
 fim`);
     expect(r.sucesso).toBe(false);

@@ -159,7 +159,7 @@ fim
 doc = XML.parse(xmlPedido)
 
 // Acessar atributo
-idPedido = doc.atributos["id"]  // "1001"
+idPedido = XML.atributo(doc, "id")  // "1001"
 
 // Buscar texto
 cliente = XML.texto(doc, "cliente")  // "João Silva"

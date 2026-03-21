@@ -19,10 +19,34 @@ fim
 // Serviço: define o comportamento
 servico ProdutoService
   funcao criar(nome: texto, preco: decimal) -> Produto
-  funcao buscar(id: id) -> Produto
+    p = Produto()
+    p.nome = nome
+    p.preco = preco
+    salvar p
+    retornar p
+  fim
+
+  funcao buscar(produtoId: id) -> Produto
+    retornar EntityManager.buscarPorId(Produto, produtoId)
+  fim
+
   funcao listar() -> lista<Produto>
-  funcao atualizar(id: id, nome: texto, preco: decimal) -> Produto
-  funcao excluir(id: id)
+    retornar EntityManager.buscar(Produto)
+  fim
+
+  funcao atualizar(produtoId: id, nome: texto, preco: decimal) -> Produto
+    p = EntityManager.buscarPorId(Produto, produtoId)
+    p.nome = nome
+    p.preco = preco
+    salvar p
+    retornar p
+  fim
+
+  funcao excluir(produtoId: id)
+    p = EntityManager.buscarPorId(Produto, produtoId)
+    p.ativo = falso
+    salvar p
+  fim
 fim
 ```
 
@@ -33,17 +57,39 @@ Separe operações de **leitura** (Query) de operações de **escrita** (Command
 ```jd
 // Escritas — modificam estado, emitem eventos
 servico PedidoCommands
-  funcao criar(clienteId: id, itens: lista<ItemDados>) -> Pedido
+  funcao criar(clienteId: id) -> Pedido
+    p = Pedido()
+    p.clienteId = clienteId
+    salvar p
+    retornar p
+  fim
+
   funcao confirmar(pedidoId: id)
+    p = EntityManager.buscarPorId(Pedido, pedidoId)
+    p.status = "confirmado"
+    salvar p
+  fim
+
   funcao cancelar(pedidoId: id, motivo: texto)
+    p = EntityManager.buscarPorId(Pedido, pedidoId)
+    p.status = "cancelado"
+    salvar p
+  fim
 fim
 
 // Leituras — só consultam, nunca modificam
 servico PedidoQueries
-  funcao buscar(id: id) -> Pedido
+  funcao buscar(pedidoId: id) -> Pedido
+    retornar EntityManager.buscarPorId(Pedido, pedidoId)
+  fim
+
   funcao listarPorCliente(clienteId: id) -> lista<Pedido>
-  funcao listarPorStatus(status: StatusPedido) -> lista<Pedido>
+    retornar EntityManager.buscar(Pedido)
+  fim
+
   funcao totalVendasPorMes(mes: numero, ano: numero) -> decimal
+    retornar 0
+  fim
 fim
 ```
 
@@ -62,7 +108,7 @@ servico ValidacaoService
   fim
 
   funcao validarProduto(nome: texto, preco: decimal, estoque: numero) -> lista<texto>
-    erros: lista<texto> = lista()
+    variavel erros: lista<texto> = lista()
 
     se nome.aparar().tamanho() < 2
       erros.adicionar("Nome muito curto (mínimo 2 caracteres)")
@@ -87,17 +133,16 @@ Toda ação importante emite um evento de auditoria:
 
 ```jd
 evento AuditoriaRegistrada
-  entidade: texto
+  tipoEntidade: texto
   operacao: texto
   entidadeId: id
   usuarioId: id
   detalhes: texto
-  realizadoEm: data
 fim
 
 entidade LogAuditoria
   id: id
-  entidade: texto
+  tipoEntidade: texto
   operacao: texto
   entidadeId: id
   usuarioId: id
@@ -108,7 +153,7 @@ fim
 servico AuditoriaService
   escutar AuditoriaRegistrada
     log = LogAuditoria()
-    log.entidade = entidade
+    log.tipoEntidade = tipoEntidade
     log.operacao = operacao
     log.entidadeId = entidadeId
     log.usuarioId = usuarioId

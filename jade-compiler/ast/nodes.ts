@@ -168,6 +168,7 @@ export type InstrucaoNode =
   | EnquantoNode
   | ParaNode
   | EmissaoEventoNode
+  | SalvarNode
   | ErroNode;
 
 export interface BlocoNode extends Node {
@@ -218,6 +219,11 @@ export interface EmissaoEventoNode extends Node {
   kind: 'EmissaoEvento';
   evento: string;
   argumentos: ExpressaoNode[];
+}
+
+export interface SalvarNode extends Node {
+  kind: 'Salvar';
+  entidade: ExpressaoNode;
 }
 
 export interface ErroNode extends Node {

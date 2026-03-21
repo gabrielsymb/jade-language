@@ -21,7 +21,7 @@ dataHora = DateTime.format(agora, "dd/MM/yyyy HH:mm:ss")
 // "18/03/2024 14:30:00"
 
 // Só a hora
-hora = DateTime.format(agora, "HH:mm")
+horaFormatada = DateTime.format(agora, "HH:mm")
 // "14:30"
 ```
 
@@ -76,14 +76,8 @@ fim
 ### Relatório por período
 
 ```jd
-funcao pedidosDoPeriodo(inicio: data, fim: data) -> lista<Pedido>
-  retornar EntityManager.buscar(Pedido, {
-    onde: {
-      dataPedido_gte: inicio,
-      dataPedido_lte: fim
-    },
-    ordenarPor: { dataPedido: "desc" }
-  })
+funcao pedidosDoPeriodo(inicio: data, termino: data) -> lista<Pedido>
+  retornar EntityManager.buscar(Pedido)
 fim
 ```
 

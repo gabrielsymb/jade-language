@@ -73,10 +73,7 @@ servico ClienteService
   fim
 
   funcao listarAtivos() -> lista<Cliente>
-    retornar EntityManager.buscar(Cliente, {
-      onde: { ativo: verdadeiro },
-      ordenarPor: { nome: "asc" }
-    })
+    retornar EntityManager.buscar(Cliente)
   fim
 
   funcao atualizar(id: id, nome: texto, telefone: texto) -> Cliente
@@ -171,9 +168,7 @@ servico PedidoService
   funcao fechar(pedidoId: id)
     pedido = EntityManager.buscarPorId(Pedido, pedidoId)
 
-    itens = EntityManager.buscar(ItemPedido, {
-      onde: { pedidoId: pedidoId }
-    })
+    itens = EntityManager.buscar(ItemPedido)
 
     // Baixar estoque de cada item
     para item em itens
@@ -198,7 +193,7 @@ fim
 ```jd
 servico FinanceiroService
   funcao calcularTotalPedido(itens: lista<ItemPedidoDados>) -> decimal
-    total: decimal = 0
+    variavel total: decimal = 0
 
     para item em itens
       produto = EntityManager.buscarPorId(Produto, item.produtoId)
@@ -272,8 +267,8 @@ fim
 
 **Emita eventos ao terminar:**
 ```jd
-funcao criar(...) -> Produto
-  // ... criar produto ...
+funcao criar(nome: texto, preco: decimal) -> Produto
+  // criar produto
   salvar produto
   emitir ProdutoCriado(produto.id)  // ← sempre ao final
   retornar produto

@@ -873,6 +873,9 @@ export class TypeChecker {
       case 'EmissaoEvento':
         this.verificarEmissaoEvento(instrucao as N.EmissaoEventoNode);
         break;
+      case 'Salvar':
+        this.resolverTipo((instrucao as N.SalvarNode).entidade);
+        break;
       case 'Erro':
         this.verificarErro(instrucao as N.ErroNode);
         break;
@@ -932,10 +935,12 @@ export class TypeChecker {
         if (tipoEsquerda === 'decimal' && tipoDireita === 'decimal') return 'decimal';
         if (tipoEsquerda === 'decimal' && tipoDireita === 'numero') return 'decimal';
         if (tipoEsquerda === 'numero' && tipoDireita === 'decimal') return 'decimal';
-        // moeda opera com moeda ou numero (escala monetária); sempre retorna moeda
+        // moeda opera com moeda, numero ou decimal (escala monetária); sempre retorna moeda
         if (tipoEsquerda === 'moeda' && tipoDireita === 'moeda') return 'moeda';
         if (tipoEsquerda === 'moeda' && tipoDireita === 'numero') return 'moeda';
         if (tipoEsquerda === 'numero' && tipoDireita === 'moeda') return 'moeda';
+        if (tipoEsquerda === 'moeda' && tipoDireita === 'decimal') return 'moeda';
+        if (tipoEsquerda === 'decimal' && tipoDireita === 'moeda') return 'moeda';
         if (node.operador === '+' && tipoEsquerda === 'texto' && tipoDireita === 'texto') return 'texto';
         break;
 
@@ -983,6 +988,10 @@ export class TypeChecker {
   }
 
   resolverTipoChamada(node: N.ChamadaFuncaoNode): string {
+    // Construtores de coleção embutidos
+    if (node.nome === 'lista') return 'lista<qualquer>';
+    if (node.nome === 'mapa')  return 'mapa<qualquer,qualquer>';
+
     const funcao = this.tabela.buscar(node.nome);
     if (!funcao || funcao.kind !== 'funcao') {
       const funcoes = this.tabela.buscarTodosNomesVisiveis();
@@ -1061,11 +1070,18 @@ export class TypeChecker {
     // 'qualquer' é compatível com qualquer tipo (escape hatch)
     if (baseEsperado === 'qualquer' || baseRecebido === 'qualquer') return true;
 
+    // lista() e mapa() retornam tipo genérico — compatível com qualquer lista<T> ou mapa<K,V>
+    if (baseRecebido === 'lista<qualquer>' && baseEsperado.startsWith('lista<')) return true;
+    if (baseEsperado === 'lista<qualquer>' && baseRecebido.startsWith('lista<')) return true;
+    if (baseRecebido === 'mapa<qualquer,qualquer>' && baseEsperado.startsWith('mapa<')) return true;
+    if (baseEsperado === 'mapa<qualquer,qualquer>' && baseRecebido.startsWith('mapa<')) return true;
+
     // decimal aceita numero
     if (baseEsperado === 'decimal' && baseRecebido === 'numero') return true;
 
-    // moeda aceita decimal (interop com valores monetários vindos de APIs)
+    // moeda aceita decimal e numero (interop com valores monetários vindos de APIs)
     if (baseEsperado === 'moeda' && baseRecebido === 'decimal') return true;
+    if (baseEsperado === 'moeda' && baseRecebido === 'numero') return true;
 
     // id aceita numero (IDs podem ser representados como números)
     if (baseEsperado === 'id' && baseRecebido === 'numero') return true;
@@ -1211,7 +1227,7 @@ export class TypeChecker {
 
   private verificarTela(node: N.TelaNode): void {
     // Tipos válidos em português — sem termos em inglês expostos na DSL
-    const tiposElementosValidos = ['tabela', 'formulario', 'botao', 'cartao', 'modal', 'grafico', 'abas', 'lista', 'acordeao', 'navegar', 'gaveta'];
+    const tiposElementosValidos = ['tabela', 'formulario', 'botao', 'cartao', 'modal', 'grafico', 'abas', 'lista', 'acordeao', 'navegar', 'gaveta', 'divisor', 'toolbar', 'busca'];
     // Tipos válidos para grafico.tipo
     const tiposGrafico = ['linha', 'barras', 'pizza'];
     // Propriedades que referenciam ações (devem ser funções declaradas)
@@ -1252,9 +1268,9 @@ export class TypeChecker {
 
       if (!tiposElementosValidos.includes(elem.tipo)) {
         this.erro(
-          `Tipo de elemento '${elem.tipo}' inválido. Use: tabela, formulario, botao, cartao, modal, grafico, abas, lista ou acordeao`,
+          `Tipo de elemento '${elem.tipo}' inválido. Use: tabela, formulario, botao, cartao, modal, grafico, abas, lista, acordeao, divisor, toolbar ou busca`,
           elem.line, elem.column,
-          "Tipos válidos de elementos de tela: tabela, formulario, botao, cartao, modal, grafico, abas, lista, acordeao"
+          "Tipos válidos de elementos de tela: tabela, formulario, botao, cartao, modal, grafico, abas, lista, acordeao, divisor, toolbar, busca"
         );
         continue;
       }

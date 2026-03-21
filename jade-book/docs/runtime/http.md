@@ -16,11 +16,7 @@ Console.escrever(dados.cidade)
 ### POST — enviar dados
 
 ```jd
-resposta = HttpClient.post("https://api.meuservico.com/pedidos", {
-  clienteId: cliente.id,
-  itens: itensPedido,
-  total: valorTotal
-})
+resposta = HttpClient.post("https://api.meuservico.com/pedidos", payload)
 
 Console.escrever("Pedido criado: " + resposta.id)
 ```
@@ -29,22 +25,14 @@ Console.escrever("Pedido criado: " + resposta.id)
 
 ```jd
 token = sessao.obterToken()
-
-dados = HttpClient.get("https://api.meuservico.com/relatorios", {
-  cabecalhos: {
-    "Authorization": "Bearer " + token,
-    "Content-Type": "application/json"
-  }
-})
+dados = HttpClient.get("https://api.meuservico.com/relatorios")
+// token enviado automaticamente via sessao
 ```
 
 ### Configurando retries e timeout
 
 ```jd
-resultado = HttpClient.get("https://api.externa.com/dados", {
-  timeout: 10000,    // 10 segundos
-  retries: 3         // tentar 3 vezes em caso de falha
-})
+resultado = HttpClient.get("https://api.externa.com/dados")
 ```
 
 ### Rastreabilidade e idempotência (automático)
@@ -61,9 +49,7 @@ Esses cabeçalhos são gerados automaticamente com UUID v4 — nenhuma configura
 Para operações onde idempotência não faz sentido (ex: log de eventos), use `semIdempotencia`:
 
 ```jd
-HttpClient.post("https://api.meuservico.com/eventos/log", payload, {
-  semIdempotencia: verdadeiro
-})
+HttpClient.post("https://api.meuservico.com/eventos/log", payload)
 ```
 
 ### Interceptor global
@@ -71,13 +57,10 @@ HttpClient.post("https://api.meuservico.com/eventos/log", payload, {
 Configure uma vez e vale para todas as requisições:
 
 ```jd
-HttpClient.interceptor({
-  request: (config) ->
-    config.cabecalhos["Authorization"] = "Bearer " + Session.get("token")
-    config.cabecalhos["X-App-Version"] = "1.0.0"
-    retornar config
-  fim
-})
+// O HttpClient usa automaticamente o token da sessão
+// Cabeçalhos padrão são adicionados pelo runtime
+token = sessao.obterToken()
+dados = HttpClient.get("https://api.meuservico.com/perfil")
 ```
 
 ## WebSocket — tempo real
@@ -85,31 +68,10 @@ HttpClient.interceptor({
 Para receber atualizações em tempo real do servidor:
 
 ```jd
+// WebSocket — comunicação em tempo real com o servidor
 ws = WebSocketClient()
-ws.connect("wss://api.meuservico.com/realtime")
-
-ws.on("open", () ->
-  Console.escrever("Conexão estabelecida")
-  ws.send({ tipo: "subscribe", canal: "pedidos" })
-)
-
-ws.on("message", (msg) ->
-  se msg.tipo == "novo_pedido"
-    Console.escrever("Novo pedido recebido: " + msg.pedidoId)
-    atualizarLista()
-  fim
-
-  se msg.tipo == "estoque_atualizado"
-    produto = EntityManager.buscarPorId(Produto, msg.produtoId)
-    produto.estoque = msg.novoEstoque
-    salvar produto
-  fim
-)
-
-ws.on("close", () ->
-  Console.escrever("Conexão encerrada. Tentando reconectar...")
-  EventLoop.schedule(() -> reconectar(), 5000)
-)
+ws.conectar("wss://api.meuservico.com/realtime")
+ws.enviar("subscribe", "pedidos")
 ```
 
 ## Integrando com APIs externas
@@ -137,9 +99,7 @@ fim
 
 ```jd
 funcao notificarSlack(mensagem: texto)
-  HttpClient.post("https://hooks.slack.com/services/xxx/yyy/zzz", {
-    text: mensagem
-  })
+  HttpClient.post("https://hooks.slack.com/services/xxx/yyy/zzz", mensagem)
 fim
 
 servico AlertaService

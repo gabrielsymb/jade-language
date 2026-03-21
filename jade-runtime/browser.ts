@@ -20,6 +20,7 @@ export { Router }             from './ui/router.js';
 export { Signal, Store, createEffect } from './ui/reactive.js';
 export { aplicarTema }        from './ui/theme.js';
 export { Session, sessao }    from './ui/session.js';
+export { criarElementoIcone, listarIcones } from './ui/icones.js';
 
 // PWA
 export { PWAGenerator }       from './pwa/pwa_generator.js';

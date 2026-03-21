@@ -1,5 +1,7 @@
 src/
 node_modules/
+**/node_modules/
+../
 .git/
 **/*.ts
 **/*.map
@@ -8,3 +10,5 @@ esbuild.mjs
 .vscodeignore
 **/.DS_Store
 assets/icon.svg
+*.vsix
+.vscode/

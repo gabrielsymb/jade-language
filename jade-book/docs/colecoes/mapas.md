@@ -63,7 +63,7 @@ fim
 
 ```jd
 funcao contarCategorias(produtos: lista<Produto>) -> mapa<texto, numero>
-  contagem: mapa<texto, numero> = mapa()
+  variavel contagem: mapa<texto, numero> = mapa()
 
   para produto em produtos
     se contagem.contem(produto.categoria)

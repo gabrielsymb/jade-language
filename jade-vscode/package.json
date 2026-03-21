@@ -2,7 +2,7 @@
   "name": "jade-lang-vscode",
   "displayName": "Jade DSL",
   "description": "Suporte à Jade DSL — linguagem empresarial em português compilada para WebAssembly",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "publisher": "yakuzaa",
   "license": "MIT",
   "icon": "assets/icon.png",
@@ -115,12 +115,12 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
-    "@vscode/vsce": "^3.0.0",
+    "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.24.0",
+    "jade-compiler": "file:../jade-compiler",
     "typescript": "^5.0.0",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.11",
-    "jade-compiler": "file:../jade-compiler"
+    "vscode-languageserver-textdocument": "^1.0.11"
   },
   "engines_node": {
     "node": ">=20.0.0"

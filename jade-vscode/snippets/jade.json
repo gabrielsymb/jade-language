@@ -156,18 +156,19 @@
     ],
     "description": "Declara um módulo"
   },
-  "Tela": {
+  "Tela com tabela": {
     "prefix": "tela",
     "body": [
       "tela ${1:Nome} \"${2:Título}\"",
-      "  ${3:tabela ${4:Lista}}",
-      "    entidade: ${5:Entidade}",
-      "    colunas: ${6:campo1}, ${7:campo2}",
+      "  tabela ${3:Lista}",
+      "    entidade: ${4:Entidade}",
+      "    colunas: ${5:campo1}, ${6:campo2}",
       "    filtravel: verdadeiro",
+      "    ordenavel: verdadeiro",
       "  fim",
       "fim"
     ],
-    "description": "Declara uma tela com interface declarativa"
+    "description": "Tela com tabela de dados"
   },
   "Tela com formulário": {
     "prefix": "tela-form",
@@ -176,16 +177,166 @@
       "  formulario ${3:Form}",
       "    entidade: ${4:Entidade}",
       "    campos: ${5:campo1}, ${6:campo2}",
+      "    enviar: ${7:salvar}",
       "  fim",
       "  botao Salvar",
-      "    acao: ${7:salvar}()",
+      "    acao: ${7:salvar}",
+      "    icone: salvar",
       "  fim",
       "  botao Cancelar",
-      "    acao: ${8:voltar}()",
+      "    acao: ${8:voltar}",
+      "    tipo: secundario",
       "  fim",
       "fim"
     ],
     "description": "Tela com formulário e botões"
+  },
+  "Tabela": {
+    "prefix": "tabela",
+    "body": [
+      "tabela ${1:Nome}",
+      "  entidade: ${2:Entidade}",
+      "  colunas: ${3:campo1}, ${4:campo2}",
+      "  filtravel: verdadeiro",
+      "  ordenavel: verdadeiro",
+      "  paginacao: verdadeiro",
+      "fim"
+    ],
+    "description": "Tabela de dados com filtro e paginação"
+  },
+  "Formulário": {
+    "prefix": "formulario",
+    "body": [
+      "formulario ${1:Form}",
+      "  entidade: ${2:Entidade}",
+      "  campos: ${3:campo1}, ${4:campo2}",
+      "  enviar: ${5:salvar}",
+      "fim"
+    ],
+    "description": "Formulário vinculado a uma entidade"
+  },
+  "Botão": {
+    "prefix": "botao",
+    "body": [
+      "botao ${1:Nome}",
+      "  acao: ${2:funcao}",
+      "  icone: ${3:salvar}",
+      "  tipo: ${4|primario,secundario,perigo,sucesso|}",
+      "fim"
+    ],
+    "description": "Botão com ação, ícone e variante visual"
+  },
+  "Cartão": {
+    "prefix": "cartao",
+    "body": [
+      "cartao ${1:Nome}",
+      "  titulo: \"${2:Título}\"",
+      "  conteudo: ${3:valor}",
+      "  variante: ${4|neutro,destaque,sucesso,alerta,perigo|}",
+      "fim"
+    ],
+    "description": "Cartão de métrica ou informação"
+  },
+  "Modal": {
+    "prefix": "modal",
+    "body": [
+      "modal ${1:Nome}",
+      "  titulo: \"${2:Título}\"",
+      "  mensagem: \"${3:Conteúdo do modal}\"",
+      "  variante: ${4|info,alerta,perigo|}",
+      "fim"
+    ],
+    "description": "Diálogo modal"
+  },
+  "Gráfico": {
+    "prefix": "grafico",
+    "body": [
+      "grafico ${1:Nome}",
+      "  tipo: ${2|linha,barras,pizza|}",
+      "  entidade: ${3:Entidade}",
+      "  eixoX: ${4:data}",
+      "  eixoY: ${5:valor}",
+      "fim"
+    ],
+    "description": "Gráfico SVG de linha, barras ou pizza"
+  },
+  "Abas": {
+    "prefix": "abas",
+    "body": [
+      "abas ${1:Nome}",
+      "  aba: ${2:PrimeiraAba}",
+      "  aba: ${3:SegundaAba}",
+      "  aba: ${4:TerceiraAba}",
+      "fim"
+    ],
+    "description": "Navegação por abas dentro de uma tela"
+  },
+  "Lista com swipe": {
+    "prefix": "lista-swipe",
+    "body": [
+      "lista ${1:Nome}",
+      "  entidade: ${2:Entidade}",
+      "  campo: ${3:nome}",
+      "  subcampo: ${4:descricao}",
+      "  deslizar: excluir, editar",
+      "fim"
+    ],
+    "description": "Lista mobile com ações reveladas por swipe"
+  },
+  "Acordeão": {
+    "prefix": "acordeao",
+    "body": [
+      "acordeao ${1:Nome}",
+      "  secao: ${2:PrimeiraSecao}",
+      "  secao: ${3:SegundaSecao}",
+      "  secao: ${4:TerceiraSecao}",
+      "fim"
+    ],
+    "description": "Seções expansíveis/colapsáveis"
+  },
+  "Navegar (barra inferior)": {
+    "prefix": "navegar",
+    "body": [
+      "navegar ${1:AppNav}",
+      "  aba: ${2:Inicio}|${3:casa}|${4:TelaInicio}",
+      "  aba: ${5:Produtos}|${6:caixa}|${7:TelaProdutos}",
+      "  aba: ${8:Relatorios}|${9:grafico}|${10:TelaRelatorios}",
+      "  aba: ${11:Perfil}|${12:usuario}|${13:TelaPerfil}",
+      "fim"
+    ],
+    "description": "Barra de navegação inferior mobile-first"
+  },
+  "Gaveta (menu lateral)": {
+    "prefix": "gaveta",
+    "body": [
+      "gaveta ${1:MenuPrincipal}",
+      "  item: ${2:Dashboard}|${3:grafico}|${4:TelaDashboard}",
+      "  item: ${5:Produtos}|${6:caixa}|${7:TelaProdutos}",
+      "  item: ${8:Clientes}|${9:usuarios}|${10:TelaClientes}",
+      "  separador",
+      "  item: ${11:Configuracoes}|${12:configuracoes}|${13:TelaConfig}",
+      "  item: ${14:Sair}|${15:sair}|acao:${16:logout}",
+      "fim"
+    ],
+    "description": "Menu lateral deslizante com ícones SVG"
+  },
+  "Tela app mobile completo": {
+    "prefix": "tela-app",
+    "body": [
+      "tela ${1:AppPrincipal} \"${2:Meu App}\"",
+      "  navegar ${3:AppNav}",
+      "    aba: ${4:Inicio}|casa|${5:TelaInicio}",
+      "    aba: ${6:Dados}|grafico|${7:TelaDados}",
+      "    aba: ${8:Perfil}|usuario|${9:TelaPerfil}",
+      "  fim",
+      "  gaveta ${10:Menu}",
+      "    item: ${11:Configuracoes}|configuracoes|${12:TelaConfig}",
+      "    separador",
+      "    item: ${13:Sair}|sair|acao:${14:logout}",
+      "  fim",
+      "fim"
+    ],
+    "description": "Estrutura completa de app mobile com navegar e gaveta"
   },
   "Importar": {
     "prefix": "importar",

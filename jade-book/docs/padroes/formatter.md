@@ -63,11 +63,13 @@ fim
 As importações são sempre movidas para o início do arquivo:
 
 ```jd
-importar modelos.Produto
-importar modelos.Categoria
+importar modelos/Produto
+importar modelos/Categoria
 
 servico estoqueService
-  ...
+  funcao listar() -> lista<Produto>
+    retornar EntityManager.buscar(Produto)
+  fim
 fim
 ```
 

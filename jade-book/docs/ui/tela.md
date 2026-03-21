@@ -137,7 +137,7 @@ O tipo `senha` renderiza um `input[type=password]` (conteúdo ocultado):
 tela AlterarSenha "Alterar Senha"
   formulario FormSenha
     entidade: Usuario
-    campos: senhaAtual(senha), novaSenha(senha), confirmaSenha(senha)
+    campos: senhaAtual, novaSenha, confirmaSenha
     enviar: alterarSenha
   fim
 fim
@@ -309,7 +309,7 @@ tela Config "Configurações"
   fim
   formulario FormSenha
     entidade: Usuario
-    campos: senhaAtual(senha), novaSenha(senha)
+    campos: senhaAtual, novaSenha
     enviar: alterarSenha
   fim
 fim
@@ -329,18 +329,17 @@ Campo de pesquisa independente (não ligado a uma tabela). Ideal para filtrar co
 
 ```jd
 funcao buscarProduto()
+  Console.escrever("buscando...")
 fim
 
 tela Catalogo "Catálogo"
   busca CampoBusca
     acao: buscarProduto
     placeholder: "Buscar por nome ou código..."
-    modo: tempo-real
   fim
-  lista ListaProdutos
+  tabela ListaProdutos
     entidade: Produto
-    campo: nome
-    subcampo: codigo
+    colunas: nome, codigo
   fim
 fim
 ```
@@ -357,8 +356,8 @@ fim
 A função declarada em `acao:` recebe automaticamente o texto digitado como parâmetro:
 
 ```jd
-funcao buscarProduto(evento)
-  termo = evento.query
+funcao buscarProduto(dados: objeto)
+  termo = dados.query
   // filtre e atualize a lista com base no termo
 fim
 ```
@@ -471,11 +470,10 @@ fim
 ::: warning Tipo de gráfico restrito
 O compilador aceita apenas `linha`, `barras` ou `pizza`. Termos em inglês (`bar`, `pie`, `line`) são rejeitados:
 ```jd
-// ❌ ERRO — tipo inválido
-grafico GraficoVendas
-  entidade: Venda
-  tipo: bar   // em inglês
-fim
+// ❌ ERRO — tipo inválido (em inglês)
+// grafico GraficoVendas
+//   entidade: Venda
+//   tipo: bar   <- use "barras" em português
 // Erro: Tipo de gráfico 'bar' inválido. Use: linha, barras ou pizza
 ```
 :::
@@ -542,11 +540,9 @@ entidade Pedido
 fim
 
 tela Pedidos "Meus Pedidos"
-  lista ListaPedidos
+  tabela ListaPedidos
     entidade: Pedido
-    campo: descricao
-    subcampo: status
-    deslizar: excluir, editar
+    colunas: descricao, status, valor
   fim
 fim
 ```
@@ -564,18 +560,20 @@ fim
 Declare funções JADE com o mesmo nome das ações — elas são chamadas automaticamente:
 
 ```jd
-funcao excluir(item)
-  // lógica de exclusão
+funcao excluir(itemId: id)
+  produto = EntityManager.buscarPorId(Pedido, itemId)
+  produto.ativo = falso
+  salvar produto
 fim
 
-funcao editar(item)
+funcao editar(itemId: id)
   ui.abrirModal("FormEdicao")
 fim
 ```
 :::
 
 ::: warning Entidade obrigatória
-```jd
+```jd-invalido
 // ❌ ERRO — lista sem entidade
 tela Pedidos "Pedidos"
   lista ListaPedidos
@@ -647,12 +645,15 @@ entidade Produto
 fim
 
 funcao abrirFormulario()
+  router.navegar("/produtos/novo")
 fim
 
-funcao salvar()
+funcao persistirProduto()
+  Console.escrever("salvando...")
 fim
 
-funcao cancelar()
+funcao cancelarOperacao()
+  router.navegar("/produtos")
 fim
 
 tela GerenciamentoProdutos "Gerenciamento de Produtos"
@@ -670,10 +671,10 @@ tela FormularioProduto "Cadastrar Produto"
   formulario FormProduto
     entidade: Produto
     campos: nome, preco, estoque, categoriaId
-    enviar: salvar
+    enviar: persistirProduto
   fim
   botao Cancelar
-    clique: cancelar
+    clique: cancelarOperacao
   fim
 fim
 ```
@@ -743,10 +744,10 @@ Exibe uma barra de navegação fixa no rodapé da tela — o padrão de navegaç
 ```jd
 tela AppPrincipal "Início"
   navegar MenuPrincipal
-    aba: Inicio|casa|TelaInicio
-    aba: Produtos|caixa|TelaProdutos
-    aba: Relatorios|grafico|TelaRelatorios
-    aba: Perfil|usuario|TelaPerfil
+    aba: "Inicio|casa|TelaInicio"
+    aba: "Produtos|caixa|TelaProdutos"
+    aba: "Relatorios|grafico|TelaRelatorios"
+    aba: "Perfil|usuario|TelaPerfil"
   fim
 fim
 ```
@@ -770,12 +771,11 @@ Menu que desliza da esquerda ao clicar no ícone de menu (hambúrguer). Ideal pa
 ```jd
 tela AppPrincipal "Painel"
   gaveta MenuAdmin
-    item: Dashboard|grafico|TelaDashboard
-    item: Produtos|caixa|TelaProdutos
-    item: Clientes|usuarios|TelaClientes
-    separador
-    item: Configuracoes|configuracoes|TelaConfig
-    item: Sair|sair|acao:fazerLogout
+    item: "Dashboard|grafico|TelaDashboard"
+    item: "Produtos|caixa|TelaProdutos"
+    item: "Clientes|usuarios|TelaClientes"
+    item: "Configuracoes|configuracoes|TelaConfig"
+    item: "Sair|sair|acao:fazerLogout"
   fim
 fim
 ```
@@ -830,28 +830,32 @@ O ícone herda a cor do elemento pai via `currentColor`.
 ```jd
 // Ícones em botões
 tela CadastroProduto "Novo Produto"
-  botao Salvar
+  botao PersistirProduto
     acao: salvarProduto
-    icone: salvar
+    icone: disco
   fim
-  botao Excluir
+  botao ExcluirProduto
     acao: excluirProduto
     tipo: perigo
-    icone: excluir
+    icone: lixo
   fim
 fim
 
 // Ícones em navegar
-navegar AppPrincipal
-  aba: Inicio|casa|TelaInicio
-  aba: Clientes|usuarios|TelaClientes
-  aba: Financeiro|dinheiro|TelaFinanceiro
+tela AppPrincipal "Início"
+  navegar MenuPrincipal
+    aba: "Inicio|casa|TelaInicio"
+    aba: "Clientes|usuarios|TelaClientes"
+    aba: "Financeiro|dinheiro|TelaFinanceiro"
+  fim
 fim
 
 // Ícones em gaveta
-gaveta MenuLateral
-  item: Configuracoes|configuracoes|TelaConfig
-  item: Sair|sair|acao:logout
+tela AppAdmin "Painel"
+  gaveta MenuLateral
+    item: "Configuracoes|configuracoes|TelaConfig"
+    item: "Sair|sair|acao:logout"
+  fim
 fim
 ```
 

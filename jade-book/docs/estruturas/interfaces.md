@@ -6,9 +6,9 @@ Uma **interface** define um contrato — um conjunto de métodos que uma classe 
 
 ```jd
 interface Repositorio
-  funcao salvar(entidade: objeto) -> booleano
-  funcao buscar(id: id) -> objeto
-  funcao excluir(id: id) -> booleano
+  funcao persistir(item: objeto) -> booleano
+  funcao buscar(itemId: id) -> objeto
+  funcao excluir(itemId: id) -> booleano
 fim
 ```
 
@@ -16,17 +16,17 @@ fim
 
 ```jd
 classe ProdutoRepositorio implements Repositorio
-  funcao salvar(entidade: objeto) -> booleano
-    EntityManager.criar(entidade)
+  funcao persistir(item: objeto) -> booleano
+    EntityManager.criar(item)
     retornar verdadeiro
   fim
 
-  funcao buscar(id: id) -> objeto
-    retornar EntityManager.buscarPorId(Produto, id)
+  funcao buscar(itemId: id) -> objeto
+    retornar EntityManager.buscarPorId(Produto, itemId)
   fim
 
-  funcao excluir(id: id) -> booleano
-    produto = EntityManager.buscarPorId(Produto, id)
+  funcao excluir(itemId: id) -> booleano
+    produto = EntityManager.buscarPorId(Produto, itemId)
     se nao produto
       retornar falso
     fim
@@ -54,7 +54,8 @@ classe FormularioCadastro implements Validavel
   senha: texto
 
   funcao validar() -> booleano
-    retornar erros().tamanho() == 0
+    problemas = erros()
+    retornar problemas.tamanho() == 0
   fim
 
   funcao erros() -> lista<texto>
@@ -84,15 +85,18 @@ fim
 Usando:
 
 ```jd
-form = FormularioCadastro()
-form.nome = "Jo"
-form.email = "sem-arroba"
-form.cpf = "000.000.000-00"
-form.senha = "123"
+funcao testarFormulario()
+  form = FormularioCadastro()
+  form.nome = "Jo"
+  form.email = "sem-arroba"
+  form.cpf = "000.000.000-00"
+  form.senha = "123"
 
-se nao form.validar()
-  para erro em form.erros()
-    Console.escrever("Erro: " + erro)
+  problemas = form.erros()
+  se nao form.validar()
+    para msg em problemas
+      Console.escrever("Erro: " + msg)
+    fim
   fim
 fim
 ```
@@ -126,10 +130,7 @@ classe RelatorioMensal implements Exportavel
   fim
 
   funcao paraJSON() -> texto
-    retornar '{"mes":' + mes
-      + ',"ano":' + ano
-      + ',"totalVendas":' + totalVendas
-      + ',"totalPedidos":' + totalPedidos + '}'
+    retornar "{\"mes\":" + mes + ",\"ano\":" + ano + ",\"totalVendas\":" + totalVendas + ",\"totalPedidos\":" + totalPedidos + "}"
   fim
 fim
 ```
@@ -140,12 +141,12 @@ Uma classe pode implementar várias interfaces ao mesmo tempo:
 
 ```jd
 interface Auditavel
-  funcao registrarAcao(acao: texto)
+  funcao registrarAcao(acao: texto) -> booleano
   funcao historico() -> lista<texto>
 fim
 
 interface Notificavel
-  funcao notificar(mensagem: texto)
+  funcao notificar(mensagem: texto) -> booleano
   funcao canaisNotificacao() -> lista<texto>
 fim
 
@@ -167,18 +168,20 @@ classe UsuarioAdmin implements Validavel, Auditavel, Notificavel
     retornar erros
   fim
 
-  funcao registrarAcao(acao: texto)
+  funcao registrarAcao(acao: texto) -> booleano
     acoes.adicionar(DateTime.now() + " — " + acao)
+    retornar verdadeiro
   fim
 
   funcao historico() -> lista<texto>
     retornar acoes
   fim
 
-  funcao notificar(mensagem: texto)
+  funcao notificar(mensagem: texto) -> booleano
     para canal em canais
       enviarNotificacao(canal, mensagem)
     fim
+    retornar verdadeiro
   fim
 
   funcao canaisNotificacao() -> lista<texto>
