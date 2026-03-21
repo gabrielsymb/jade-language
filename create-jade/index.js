@@ -27,11 +27,11 @@ const templates = {
     description: `Projeto Jade DSL — ${nome}`,
     type: 'module',
     scripts: {
-      compilar:   'jadec src/app.jd -o dist/',
-      verificar:  'jadec src/app.jd --check',
-      formatar:   'jadec src/app.jd --format-write',
-      lint:       'jadec src/app.jd --lint',
-      servir:     'jade servir',
+      compilar:  'jade compilar src/app.jd',
+      verificar: 'jadec src/app.jd --check',
+      formatar:  'jadec src/app.jd --format-write',
+      lint:      'jadec src/app.jd --lint',
+      servir:    'jade servir',
     },
     devDependencies: {
       '@yakuzaa/jade': 'latest',

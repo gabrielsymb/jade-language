@@ -555,7 +555,11 @@ export class Parser {
   }
 
   private parseTelaElemento(): N.TelaElementoNode {
-    const tipoToken = this.consume(TokenType.IDENTIFICADOR, "Esperado tipo do elemento (tabela, formulario, botao, cartao)");
+    // Aceita IDENTIFICADOR e palavras-chave de tipo usadas como elementos (ex: lista, busca)
+    const tipoToken = this.consumeAny([
+      TokenType.IDENTIFICADOR,
+      TokenType.TIPO_LISTA,
+    ], "Esperado tipo do elemento (tabela, formulario, botao, cartao, lista, etc.)");
     const tipo = tipoToken.value;
 
     // O nome do elemento pode colidir com palavras-chave de tipo (ex: lista, mapa, texto)
@@ -585,6 +589,8 @@ export class Parser {
       if (this.check(TokenType.LITERAL_TEXTO)) {
         // Remove aspas: '"Texto aqui"' → 'Texto aqui'
         valor = this.advance().value.slice(1, -1);
+      } else if (this.check(TokenType.LITERAL_NUMERO)) {
+        valor = this.advance().value;
       } else if (this.check(TokenType.VERDADEIRO)) {
         this.advance();
         valor = 'verdadeiro';

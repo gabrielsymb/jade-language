@@ -1,6 +1,6 @@
 {
   "name": "create-jade",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cria um projeto Jade DSL com estrutura completa e dependências instaladas",
   "type": "module",
   "bin": {

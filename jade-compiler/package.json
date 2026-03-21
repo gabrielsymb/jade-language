@@ -1,6 +1,6 @@
 {
   "name": "@yakuzaa/jade-compiler",
-  "version": "0.1.12",
+  "version": "0.1.14",
   "description": "Compilador da Jade DSL — linguagem empresarial em português compilada para WebAssembly",
   "type": "module",
   "main": "./dist/index.js",
@@ -47,11 +47,13 @@
     "start": "node dist/index.js",
     "validate": "bash validar.sh"
   },
+  "dependencies": {
+    "wabt": "^1.0.39"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^4.1.0",
-    "wabt": "^1.0.39"
+    "vitest": "^4.1.0"
   },
   "keywords": [
     "compiler",
