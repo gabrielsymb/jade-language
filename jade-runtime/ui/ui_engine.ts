@@ -83,7 +83,8 @@ export class UIEngine {
   private responsivo: Responsivo;
   private modais: ModalManager;
   private telaAtiva: string | null = null;
-  private toastContainer: HTMLElement | null = null;
+  private bannerTimer: ReturnType<typeof setTimeout> | null = null;
+  private filtrosPorTela = new Map<string, Signal<string>>();
   private acoesPendentes: Map<string, HTMLButtonElement> = new Map();
 
   constructor(memory: MemoryManager, tema?: Tema) {
@@ -149,18 +150,24 @@ export class UIEngine {
    *   desktop → grid com colunas, ordenação, paginação (responsivo.ts)
    * O runtime decide automaticamente — o usuário não controla o layout.
    */
-  criarTabela(config: TabelaConfig, container: HTMLElement, dados: any[]): void {
+  /** Retorna o Signal de filtro de busca para uma tela, se ela tiver tabela filtrável. */
+  getFiltroPorTela(nome: string): Signal<string> | undefined {
+    return this.filtrosPorTela.get(nome);
+  }
+
+  criarTabela(config: TabelaConfig, container: HTMLElement, dados: any[], filtroBusca?: Signal<string>): void {
     setEffectOwner(this.telaAtiva);
 
     const wrapper = document.createElement('div');
     wrapper.className = 'jade-tabela-wrapper';
     if (config.altura) wrapper.style.maxHeight = config.altura;
 
-    // Barra de busca (acima da tabela/lista, visível em ambos os layouts)
-    const termoBusca  = new Signal('');
+    // Se filtroBusca externo foi fornecido (ex: header search), usa ele sem criar UI inline
+    const termoBusca  = filtroBusca ?? new Signal('');
     const paginaAtual = new Signal(0);
 
-    if (config.filtravel) {
+    if (config.filtravel && !filtroBusca) {
+      // Busca inline — fallback quando não há header search (uso standalone)
       const controles = document.createElement('div');
       controles.className = 'jade-tabela-controles';
       const busca = document.createElement('input');
@@ -357,28 +364,21 @@ export class UIEngine {
     skeleton.remove();
   }
 
-  // ── Toast / Notificações ──────────────────────────────────────────────────
+  // ── Banner de notificação (push) ─────────────────────────────────────────
 
   /**
-   * Exibe uma notificação temporária no canto da tela.
-   * Desaparece automaticamente após `duracao` ms (padrão 3s).
+   * Exibe um banner no topo da tela que empurra o header e o conteúdo para baixo.
+   * Tipo 'erro' permanece até o usuário fechar. Os demais somem após `duracao` ms.
    */
   mostrarNotificacao(
     mensagem: string,
     tipo: TipoNotificacao = 'info',
-    duracao: number = 3000
+    duracao: number = 4000
   ): void {
-    if (!this.toastContainer) {
-      this.toastContainer = document.createElement('div');
-      this.toastContainer.id = 'jade-toasts';
-      document.body.appendChild(this.toastContainer);
-    }
+    const banner = document.getElementById('jade-banner');
+    if (!banner) return;
 
-    // Ignora se já há um toast visível com a mesma mensagem e tipo
-    const duplicado = Array.from(this.toastContainer.children).some(
-      t => t.classList.contains(`jade-toast-${tipo}`) && t.textContent?.includes(mensagem)
-    );
-    if (duplicado) return;
+    if (this.bannerTimer) { clearTimeout(this.bannerTimer); this.bannerTimer = null; }
 
     const iconesNomes: Record<TipoNotificacao, string> = {
       sucesso: 'sucesso_icone',
@@ -387,27 +387,39 @@ export class UIEngine {
       info:    'info',
     };
 
-    const toast = document.createElement('div');
-    toast.className = `jade-toast jade-toast-${tipo}`;
-    toast.setAttribute('role', 'alert');
+    const inner = document.createElement('div');
+    inner.className = `jade-banner-inner jade-banner-${tipo}`;
 
-    const icon = document.createElement('span');
-    icon.className = 'jade-toast-icone';
-    const iconeEl = criarElementoIcone(iconesNomes[tipo], 16);
-    if (iconeEl) icon.appendChild(iconeEl);
-    toast.appendChild(icon);
+    const iconeEl = criarElementoIcone(iconesNomes[tipo], 18);
+    if (iconeEl) inner.appendChild(iconeEl);
 
-    const msg = document.createTextNode(mensagem);
-    toast.appendChild(msg);
+    const msg = document.createElement('span');
+    msg.className = 'jade-banner-msg';
+    msg.textContent = mensagem;
+    inner.appendChild(msg);
 
-    this.toastContainer.appendChild(toast);
+    const fechar = document.createElement('button');
+    fechar.className = 'jade-banner-fechar';
+    fechar.setAttribute('aria-label', 'Fechar notificação');
+    const xIcon = criarElementoIcone('fechar', 16);
+    if (xIcon) fechar.appendChild(xIcon);
+    inner.appendChild(fechar);
 
-    const remover = (): void => {
-      toast.classList.add('jade-toast-saindo');
-      toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    banner.innerHTML = '';
+    banner.appendChild(inner);
+    banner.classList.add('jade-banner-visivel');
+    document.body.classList.add('jade-com-banner');
+
+    const dismiss = (): void => {
+      banner.classList.remove('jade-banner-visivel');
+      document.body.classList.remove('jade-com-banner');
     };
 
-    setTimeout(remover, duracao);
+    fechar.addEventListener('click', dismiss);
+
+    if (tipo !== 'erro') {
+      this.bannerTimer = setTimeout(dismiss, duracao);
+    }
   }
 
   // ── Bridge: descriptor do compilador → componentes ───────────────────────
@@ -455,22 +467,32 @@ export class UIEngine {
       switch (el.tipo) {
         case 'tabela': {
           // Converte propriedades do descriptor em TabelaConfig
-          const entidade = String(props['entidade'] ?? el.nome);
-          const colunas  = Array.isArray(props['colunas'])
+          const entidade  = String(props['entidade'] ?? el.nome);
+          const colunas   = Array.isArray(props['colunas'])
             ? (props['colunas'] as string[]).map(c => ({ campo: c, titulo: c }))
             : [];
+          const filtravel = props['filtravel'] === 'verdadeiro';
+
+          // Se filtrável, cria signal e registra para o header search conectar
+          let filtroBusca: Signal<string> | undefined;
+          if (filtravel) {
+            filtroBusca = new Signal('');
+            this.filtrosPorTela.set(descriptor.nome, filtroBusca);
+          }
+
           this.criarTabela(
             {
               entidade,
               colunas,
-              filtravel:  props['filtravel'] === 'verdadeiro',
+              filtravel,
               ordenavel:  props['ordenavel'] === 'verdadeiro',
               paginacao:  props['paginacao'] === 'verdadeiro' ? true
                         : Number(props['paginacao']) || false,
               altura:     props['altura'] ? String(props['altura']) : undefined,
             },
             div,
-            dadosMap[entidade] ?? []
+            dadosMap[entidade] ?? [],
+            filtroBusca
           );
           break;
         }

@@ -99,6 +99,25 @@ function gerarCSS(tema = {}) {
     }
 
     /* ── Header fixo ─────────────────────────────── */
+    /* ── Banner de notificação (empurra layout) ─── */
+    #jade-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 0;
+      overflow: hidden;
+      z-index: 400;
+      transition: height 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    #jade-banner.jade-banner-visivel { height: 48px; }
+    body.jade-com-banner #jade-header {
+      top: 48px;
+      transition: top 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    body.jade-com-banner #jade-app {
+      margin-top: calc(52px + 48px);
+      transition: margin-top 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+
     #jade-header {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -111,6 +130,7 @@ function gerarCSS(tema = {}) {
       z-index: 300;
       box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.2);
       flex-shrink: 0;
+      transition: top 0.28s cubic-bezier(0.4,0,0.2,1);
     }
 
     #jade-hamburger {
@@ -138,7 +158,34 @@ function gerarCSS(tema = {}) {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: opacity 0.2s;
     }
+    body.jade-com-busca #jade-header-titulo { opacity: 0; pointer-events: none; }
+
+    /* ── Search bar centralizado no header ─────── */
+    #jade-header-busca-wrapper {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(380px, calc(100% - 180px));
+      display: flex;
+      align-items: center;
+    }
+    #jade-header-busca {
+      width: 100%;
+      height: 34px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.13);
+      color: #fff;
+      font-size: 0.875rem;
+      font-family: var(--jade-fonte);
+      outline: none;
+      transition: background 0.15s;
+    }
+    #jade-header-busca::placeholder { color: rgba(255,255,255,0.45); }
+    #jade-header-busca:focus { background: rgba(255,255,255,0.2); }
 
     /* ── Layout principal (abaixo do header) ─────── */
     #jade-app {
@@ -146,6 +193,11 @@ function gerarCSS(tema = {}) {
       height: calc(100dvh - 52px);
       margin-top: 52px;
       overflow: hidden;
+      transition: margin-top 0.28s cubic-bezier(0.4,0,0.2,1),
+                  height 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    body.jade-com-banner #jade-app {
+      height: calc(100dvh - 52px - 48px);
     }
 
     /* ── Nav lateral ─────────────────────────────── */
@@ -473,6 +525,24 @@ async function mudarTela(nome, telas, db, ui, navItems) {
   resolverAgregacoes(tela, dadosMap);
 
   ui.renderizarTela(tela, container, dadosMap);
+
+  // Conecta search bar do header ao filtro da tela, se existir
+  const buscaWrapper = document.getElementById('jade-header-busca-wrapper');
+  const buscaInput   = document.getElementById('jade-header-busca');
+  if (buscaWrapper && buscaInput) {
+    const signal = ui.getFiltroPorTela?.(nome);
+    if (signal) {
+      buscaWrapper.style.display = '';
+      document.body.classList.add('jade-com-busca');
+      buscaInput.value = '';
+      signal.set('');
+      buscaInput.oninput = () => signal.set(buscaInput.value.toLowerCase());
+    } else {
+      buscaWrapper.style.display = 'none';
+      document.body.classList.remove('jade-com-busca');
+      buscaInput.oninput = null;
+    }
+  }
 }
 
 async function iniciar() {
@@ -510,8 +580,8 @@ async function iniciar() {
   const navEl     = document.getElementById('jade-nav');
   const isMobile  = () => window.innerWidth <= 768;
 
-  const iconeMenu   = criarElementoIcone('menu', 22);
-  const iconeFechar = criarElementoIcone('fechar', 22);
+  const iconeMenu   = criarElementoIcone('menu', 24);
+  const iconeFechar = criarElementoIcone('fechar', 24);
   if (iconeMenu) hamburger.appendChild(iconeMenu);
 
   function abrirDrawer() {
@@ -643,9 +713,14 @@ ${gerarCSS(tema)}
     Carregando...
   </div>
 
+  <div id="jade-banner" role="status" aria-live="polite"></div>
+
   <header id="jade-header" style="display:none">
     <button id="jade-hamburger" aria-label="Abrir menu" aria-expanded="false"></button>
     <span id="jade-header-titulo">${nome}</span>
+    <div id="jade-header-busca-wrapper" style="display:none" role="search">
+      <input id="jade-header-busca" type="search" placeholder="Buscar..." autocomplete="off" aria-label="Buscar na tela atual">
+    </div>
   </header>
 
   <div id="jade-overlay" role="presentation"></div>

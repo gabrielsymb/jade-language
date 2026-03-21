@@ -1,6 +1,6 @@
 {
   "name": "@yakuzaa/jade",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Jade DSL — linguagem empresarial em português compilada para WebAssembly. Instala compilador + runtime + CLI.",
   "type": "module",
   "bin": {
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@yakuzaa/jade-compiler": "^0.1.15",
-    "@yakuzaa/jade-runtime": "^0.1.8"
+    "@yakuzaa/jade-runtime": "^0.1.10"
   },
   "keywords": [
     "jade",

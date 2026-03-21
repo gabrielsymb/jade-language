@@ -195,35 +195,31 @@ input[type="button"] {
 .jade-card-alerta   { border-left: 4px solid var(--jade-cor-aviso,   #d97706);  background: #fef9c3; }
 .jade-card-perigo   { border-left: 4px solid var(--jade-cor-erro,    #dc2626);  background: #fee2e2; }
 
-/* ── Toast ── */
-#jade-toasts {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: min(calc(100vw - 32px), 400px);
-}
-.jade-toast {
-  padding: 14px 18px;
-  border-radius: 10px;
-  font-size: 0.9375rem;
+/* ── Banner de notificação (push) ── */
+.jade-banner-inner {
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.15);
-  animation: jade-toast-entrar 0.2s ease;
+  padding: 0 16px;
+  border-left: 4px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
-.jade-toast-saindo { animation: jade-toast-sair 0.2s ease forwards; }
-.jade-toast-sucesso { background: #dcfce7; color: #166534; }
-.jade-toast-erro    { background: #fee2e2; color: #991b1b; }
-.jade-toast-aviso   { background: #fef9c3; color: #854d0e; }
-.jade-toast-info    { background: #dbeafe; color: #1e40af; }
-@keyframes jade-toast-entrar { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-@keyframes jade-toast-sair   { to   { opacity:0; transform:translateY(8px); } }
+.jade-banner-sucesso { background: #f0fdf4; border-left-color: #16a34a; color: #15803d; }
+.jade-banner-erro    { background: #fef2f2; border-left-color: #dc2626; color: #b91c1c; }
+.jade-banner-aviso   { background: #fffbeb; border-left-color: #d97706; color: #b45309; }
+.jade-banner-info    { background: #eff6ff; border-left-color: #2563eb; color: #1d4ed8; }
+.jade-banner-msg { flex: 1; min-width: 0; }
+.jade-banner-fechar {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex-shrink: 0;
+  border: none; background: transparent;
+  cursor: pointer; border-radius: 4px;
+  color: currentColor; opacity: 0.6;
+  transition: opacity 0.15s, background 0.15s;
+}
+.jade-banner-fechar:hover { opacity: 1; background: rgba(0,0,0,0.06); }
 
 /* ── Skeleton ── */
 .jade-skeleton {
