@@ -90,36 +90,36 @@ function gerarCSS(tema = {}) {
       ${gerarVariaveisCSS(tema)}
     }
 
-    body {
+    html, body {
+      height: 100%;
       font-family: var(--jade-fonte);
       background: var(--jade-cor-fundo);
       color: var(--jade-cor-texto);
-      min-height: 100dvh;
     }
 
-    /* Layout principal */
+    /* Layout principal — ocupa toda a tela, sem rolar o body */
     #jade-app {
       display: flex;
-      min-height: 100dvh;
+      height: 100dvh;
+      overflow: hidden;
     }
 
-    /* Nav lateral */
+    /* Nav lateral (desktop sempre visível) */
     #jade-nav {
       width: 240px;
-      min-height: 100dvh;
+      height: 100%;
       background: var(--jade-cor-fundo-nav);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      position: sticky;
-      top: 0;
-      height: 100dvh;
       overflow-y: auto;
+      z-index: 10;
     }
 
     #jade-nav-header {
       padding: 20px 16px 12px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
     }
 
     #jade-nav-titulo {
@@ -138,10 +138,11 @@ function gerarCSS(tema = {}) {
 
     #jade-nav-lista {
       flex: 1;
-      padding: 8px 8px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       gap: 2px;
+      overflow-y: auto;
     }
 
     .jade-nav-item {
@@ -159,6 +160,7 @@ function gerarCSS(tema = {}) {
       cursor: pointer;
       text-align: left;
       transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
     }
 
     .jade-nav-item:hover {
@@ -173,6 +175,51 @@ function gerarCSS(tema = {}) {
 
     .jade-nav-icone { display: flex; align-items: center; }
 
+    /* Área de conteúdo — rola de forma independente */
+    #jade-conteudo {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      padding: 24px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Overlay escuro para o drawer no mobile */
+    #jade-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 199;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    #jade-overlay.visivel {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Botão hambúrguer — só aparece no mobile */
+    #jade-hamburger {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 198;
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: var(--jade-raio);
+      background: var(--jade-cor-fundo-nav);
+      color: #fff;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      flex-shrink: 0;
+    }
+
     /* Toolbar */
     .jade-toolbar {
       display: flex;
@@ -186,6 +233,7 @@ function gerarCSS(tema = {}) {
     .jade-busca-form { display: flex; gap: 0; }
     .jade-busca-input {
       flex: 1;
+      min-width: 0;
       min-height: 44px;
       padding: 10px 14px;
       border: 1.5px solid var(--jade-cor-borda);
@@ -232,20 +280,12 @@ function gerarCSS(tema = {}) {
       letter-spacing: 0.05em;
     }
 
-    /* Área de conteúdo */
-    #jade-conteudo {
-      flex: 1;
-      min-width: 0;
-      padding: 24px;
-      overflow-y: auto;
-    }
-
     /* Carregando */
     #jade-carregando {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100dvh;
+      height: 100dvh;
       color: var(--jade-cor-texto-muted);
       font-size: 0.9rem;
       gap: 10px;
@@ -261,41 +301,29 @@ function gerarCSS(tema = {}) {
 
     @keyframes jade-giro { to { transform: rotate(360deg); } }
 
-    /* Mobile: nav vira barra inferior */
-    @media (max-width: 640px) {
-      #jade-app { flex-direction: column-reverse; }
+    /* Mobile: hamburger + drawer overlay */
+    @media (max-width: 768px) {
+      #jade-hamburger { display: flex; }
 
       #jade-nav {
-        width: 100%;
-        min-height: auto;
-        height: auto;
-        position: sticky;
-        bottom: 0;
-        top: auto;
-        border-top: 1px solid rgba(255,255,255,0.1);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        z-index: 200;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 4px 0 16px rgba(0,0,0,0.3);
       }
 
-      #jade-nav-header { display: none; }
-
-      #jade-nav-lista {
-        flex-direction: row;
-        overflow-x: auto;
-        padding: 6px 8px;
-        gap: 4px;
+      #jade-nav.jade-nav-aberto {
+        transform: translateX(0);
       }
 
-      .jade-nav-item {
-        flex-direction: column;
-        gap: 2px;
-        padding: 6px 12px;
-        font-size: 0.7rem;
-        white-space: nowrap;
-        flex-shrink: 0;
+      #jade-conteudo {
+        padding: 16px;
+        padding-top: 64px;
       }
-
-      .jade-nav-icone { font-size: 1.2rem; }
-
-      #jade-conteudo { padding: 16px; }
     }
   `.trim();
 }
@@ -402,6 +430,40 @@ async function iniciar() {
   document.getElementById('jade-carregando')?.remove();
   document.getElementById('jade-app').style.display = '';
 
+  // ── Hamburger (mobile) ──────────────────────────────────────────────────────
+  const hamburger = document.getElementById('jade-hamburger');
+  const overlay   = document.getElementById('jade-overlay');
+  const navEl     = document.getElementById('jade-nav');
+
+  // Mostra o botão (estava display:none para não piscar antes do app carregar)
+  hamburger.style.display = '';
+
+  const iconeMenu   = criarElementoIcone('menu', 22);
+  const iconeFechar = criarElementoIcone('fechar', 22);
+  if (iconeMenu) hamburger.appendChild(iconeMenu);
+
+  function abrirDrawer() {
+    navEl.classList.add('jade-nav-aberto');
+    overlay.classList.add('visivel');
+    hamburger.setAttribute('aria-expanded', 'true');
+    if (iconeMenu && iconeFechar) {
+      hamburger.replaceChild(iconeFechar, hamburger.firstChild);
+    }
+  }
+  function fecharDrawer() {
+    navEl.classList.remove('jade-nav-aberto');
+    overlay.classList.remove('visivel');
+    hamburger.setAttribute('aria-expanded', 'false');
+    if (iconeMenu && hamburger.firstChild !== iconeMenu) {
+      hamburger.replaceChild(iconeMenu, hamburger.firstChild);
+    }
+  }
+
+  hamburger.addEventListener('click', () =>
+    navEl.classList.contains('jade-nav-aberto') ? fecharDrawer() : abrirDrawer()
+  );
+  overlay.addEventListener('click', fecharDrawer);
+
   if (telas.length === 0) {
     document.getElementById('jade-conteudo').innerHTML =
       '<p style="color:var(--jade-cor-texto-muted);padding:2rem">Nenhuma tela declarada.</p>';
@@ -417,6 +479,7 @@ async function iniciar() {
     const btn = document.createElement('button');
     btn.className = 'jade-nav-item' + (i === 0 ? ' jade-nav-ativo' : '');
     btn.dataset.tela = tela.nome;
+    btn.setAttribute('role', 'listitem');
 
     const svgIcone = criarElementoIcone(nomeIcone(tela.nome), 18);
     const spanIcone = document.createElement('span');
@@ -428,7 +491,10 @@ async function iniciar() {
     spanLabel.textContent = tela.titulo || tela.nome;
     btn.appendChild(spanLabel);
 
-    btn.addEventListener('click', () => mudarTela(tela.nome, telas, db, ui, navItems));
+    btn.addEventListener('click', () => {
+      mudarTela(tela.nome, telas, db, ui, navItems);
+      fecharDrawer(); // fecha o drawer no mobile após navegar
+    });
     nav.appendChild(btn);
     navItems.push(btn);
   });
@@ -436,7 +502,10 @@ async function iniciar() {
   // Handler: jade:navegar — gaveta e navegar disparam este evento
   window.addEventListener('jade:navegar', (e) => {
     const nomeTela = e.detail?.tela;
-    if (nomeTela) mudarTela(nomeTela, telas, db, ui, navItems);
+    if (nomeTela) {
+      mudarTela(nomeTela, telas, db, ui, navItems);
+      fecharDrawer();
+    }
   });
 
   // Handler: jade:acao — dispara jade:acao:concluido após processar
@@ -496,13 +565,16 @@ ${gerarCSS(tema)}
     Carregando...
   </div>
 
+  <button id="jade-hamburger" aria-label="Abrir menu" aria-expanded="false" style="display:none"></button>
+  <div id="jade-overlay" role="presentation"></div>
+
   <div id="jade-app" style="display:none">
-    <nav id="jade-nav">
+    <nav id="jade-nav" aria-label="Menu de navegação">
       <div id="jade-nav-header">
         <div id="jade-nav-titulo">${nome}</div>
         <div id="jade-nav-versao">feito com Jade DSL</div>
       </div>
-      <div id="jade-nav-lista"></div>
+      <div id="jade-nav-lista" role="list"></div>
     </nav>
     <main id="jade-conteudo"></main>
   </div>
