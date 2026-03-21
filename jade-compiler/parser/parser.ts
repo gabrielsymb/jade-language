@@ -603,14 +603,27 @@ export class Parser {
         TokenType.TIPO_BOOLEANO, TokenType.TIPO_DATA, TokenType.TIPO_HORA,
         TokenType.TIPO_ID, TokenType.TIPO_LISTA, TokenType.TIPO_MAPA
       ])) {
-        // Pode ser: nome simples, nome() chamada, ou lista: a, b, c
-        // Aceita palavras-chave de tipo (data, texto, etc.) como valores
+        // Pode ser: nome simples, nome() chamada, agregação, ou lista: a, b, c
         const first = this.advance().value;
         if (this.check(TokenType.ABRE_PAREN)) {
-          // acao: funcao()
           this.advance(); // (
-          this.consume(TokenType.FECHA_PAREN, "Esperado ')'");
-          valor = first + '()';
+          // Agregações: soma(Entidade.campo), contagem(Entidade), media(Entidade.campo)
+          const AGRS = new Set(['soma', 'contagem', 'media', 'maximo', 'minimo']);
+          if (AGRS.has(first) && this.check(TokenType.IDENTIFICADOR)) {
+            const entidade = this.advance().value;
+            let campo: string | undefined;
+            if (this.check(TokenType.PONTO)) {
+              this.advance(); // .
+              campo = this.consume(TokenType.IDENTIFICADOR, "Esperado nome do campo após '.'").value;
+            }
+            this.consume(TokenType.FECHA_PAREN, "Esperado ')'");
+            // Serializa como marcador especial que o bootstrap resolve em tempo de execução
+            valor = campo ? `@${first}:${entidade}:${campo}` : `@${first}:${entidade}`;
+          } else {
+            // acao: funcao() ou chamada genérica
+            this.consume(TokenType.FECHA_PAREN, "Esperado ')'");
+            valor = first + '()';
+          }
         } else if (this.check(TokenType.VIRGULA)) {
           // lista: a, b, c (pode incluir palavras-chave de tipo como 'data')
           const lista: string[] = [first];
