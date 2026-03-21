@@ -5,6 +5,7 @@
  * Comandos disponíveis:
  *   jade init <nome>              → cria estrutura de projeto
  *   jade compilar <arquivo.jd>    → compila + gera index.html + runtime.js
+ *   jade formatar [arquivo.jd]    → formata arquivo(s) .jd (sem arg = todos)
  *   jade servir [pasta] [porta]   → servidor estático para testar no browser
  *   jade --version                → exibe versão
  *   jade --help                   → exibe ajuda
@@ -31,6 +32,7 @@ jade ${versao()} — JADE DSL em português
 Comandos:
   jade init <nome>                  Cria projeto JADE com estrutura completa
   jade compilar <arquivo.jd> [-o]   Compila e gera artefatos para o browser
+  jade formatar [arquivo.jd]        Formata arquivos .jd (sem arg = todo o projeto)
   jade servir [pasta] [porta]       Inicia servidor local para testar no browser
 
 Opções do compilar:
@@ -41,6 +43,8 @@ Exemplos:
   jade init meu-projeto
   jade compilar src/app.jd
   jade compilar src/app.jd -o dist/app
+  jade formatar src/estoque.jd
+  jade formatar
   jade servir dist
   jade servir dist 8080
 
@@ -71,6 +75,12 @@ async function main() {
   if (comando === 'compilar') {
     const { compilar } = await import('./commands/compilar.js');
     await compilar(args.slice(1));
+    return;
+  }
+
+  if (comando === 'formatar') {
+    const { formatar } = await import('./commands/formatar.js');
+    await formatar(args.slice(1));
     return;
   }
 

@@ -17,8 +17,8 @@ servico ProdutoService
     retornar p
   fim
 
-  funcao desativar(id: id)
-    p = EntityManager.buscarPorId(Produto, id)
+  funcao desativar(produtoId: id)
+    p = EntityManager.buscarPorId(Produto, produtoId)
     p.ativo = falso
     salvar p
   fim
@@ -60,8 +60,8 @@ servico ClienteService
     retornar c
   fim
 
-  funcao buscar(id: id) -> Cliente
-    cliente = EntityManager.buscarPorId(Cliente, id)
+  funcao buscar(clienteId: id) -> Cliente
+    cliente = EntityManager.buscarPorId(Cliente, clienteId)
     se nao cliente
       erro "Cliente não encontrado"
     fim
@@ -76,16 +76,16 @@ servico ClienteService
     retornar EntityManager.buscar(Cliente)
   fim
 
-  funcao atualizar(id: id, nome: texto, telefone: texto) -> Cliente
-    cliente = buscar(id)
+  funcao atualizar(clienteId: id, nome: texto, telefone: texto) -> Cliente
+    cliente = buscar(clienteId)
     cliente.nome = nome
     cliente.telefone = telefone
     salvar cliente
     retornar cliente
   fim
 
-  funcao excluir(id: id)
-    cliente = buscar(id)
+  funcao excluir(clienteId: id)
+    cliente = buscar(clienteId)
     cliente.ativo = falso
     salvar cliente
     emitir ClienteDesativado(cliente.id)

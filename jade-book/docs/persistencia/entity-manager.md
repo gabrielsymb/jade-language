@@ -85,24 +85,24 @@ servico ClienteService
     retornar EntityManager.buscar(Cliente)
   fim
 
-  funcao buscar(id: id) -> Cliente
-    c = EntityManager.buscarPorId(Cliente, id)
+  funcao buscar(clienteId: id) -> Cliente
+    c = EntityManager.buscarPorId(Cliente, clienteId)
     se nao c
       erro "Cliente não encontrado"
     fim
     retornar c
   fim
 
-  funcao atualizar(id: id, nome: texto, email: texto) -> Cliente
-    c = buscar(id)
+  funcao atualizar(clienteId: id, nome: texto, email: texto) -> Cliente
+    c = buscar(clienteId)
     c.nome = nome
     c.email = email
     salvar c
     retornar c
   fim
 
-  funcao excluir(id: id)
-    c = buscar(id)
+  funcao excluir(clienteId: id)
+    c = buscar(clienteId)
     c.ativo = falso
     salvar c
   fim

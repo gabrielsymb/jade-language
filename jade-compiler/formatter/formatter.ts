@@ -199,6 +199,7 @@ export class Formatter {
       case 'Para':          return this.formatPara(node, nivel);
       case 'EmissaoEvento': return this.formatEmissaoEvento(node, nivel);
       case 'Erro':          return `${ind}erro ${this.formatExpressao(node.mensagem)}`;
+      case 'Salvar':        return `${ind}salvar ${this.formatExpressao(node.entidade)}`;
     }
   }
 

@@ -202,8 +202,55 @@ fim
 |-------------|---------------------------------------------------|----------------------------------|
 | `acao`      | nome de função                                    | Função chamada ao clicar         |
 | `clique`    | nome de função                                    | Alias para `acao`                |
-| `icone`     | emoji ou símbolo                                  | Ícone exibido à esquerda do texto|
+| `icone`     | nome do catálogo SVG                              | Ícone exibido à esquerda do texto (veja [catálogo completo](#icones-svg-catalogo-em-portugues)) |
 | `tipo`      | `primario`, `secundario`, `perigo` ou `sucesso`   | Variante visual do botão (padrão: `primario`) |
+
+### Variantes visuais — comparativo
+
+```jd
+funcao salvar()
+fim
+funcao cancelar()
+fim
+funcao excluir()
+fim
+funcao confirmar()
+fim
+
+tela ExemplosBotoes "Variantes de Botão"
+  botao BotaoPrimario
+    tipo: primario      // fundo azul sólido — ação principal
+    acao: salvar
+    icone: salvar
+  fim
+  botao BotaoSecundario
+    tipo: secundario    // só borda, fundo transparente — ação secundária
+    acao: cancelar
+    icone: fechar
+  fim
+  botao BotaoPerigo
+    tipo: perigo        // fundo vermelho — ação destrutiva
+    acao: excluir
+    icone: excluir
+  fim
+  botao BotaoSucesso
+    tipo: sucesso       // fundo verde — confirmação
+    acao: confirmar
+    icone: sucesso_icone
+  fim
+fim
+```
+
+| `tipo:`      | Visual                              | Quando usar                         |
+|--------------|-------------------------------------|-------------------------------------|
+| `primario`   | Fundo azul + texto branco (padrão)  | Ação principal da tela (salvar, criar) |
+| `secundario` | Só borda, fundo transparente        | Ação secundária (cancelar, exportar) |
+| `perigo`     | Fundo vermelho + texto branco       | Ação destrutiva (excluir, desativar) |
+| `sucesso`    | Fundo verde + texto branco          | Confirmação positiva (aprovar, confirmar) |
+
+::: tip Hierarquia visual
+Use `primario` para a **ação mais importante** da tela e `secundario` para as demais. Isso cria hierarquia — o usuário sabe imediatamente qual botão é o principal. Evite ter dois botões `primario` na mesma tela.
+:::
 
 ::: tip Estado de carregamento automático
 Ao clicar, o botão é **desabilitado imediatamente** e exibe um spinner giratório — prevenindo duplo clique acidental. Ele volta ao normal automaticamente quando a função JADE termina de executar.
@@ -798,8 +845,13 @@ O runtime injeta automaticamente o botão de abrir a gaveta no topo da tela. Nen
 
 ## Ícones SVG — catálogo em português
 
-Todos os ícones em JADE são SVG vetorial — nenhum emoji, sem dependências externas.
-O ícone herda a cor do elemento pai via `currentColor`.
+JADE vem com **38 ícones SVG vetoriais** embutidos — nenhuma dependência externa, nenhum emoji, zero bytes extras no bundle.
+
+Todos os ícones herdam cor e tamanho do elemento pai via `currentColor`. Use o nome em português na propriedade `icone:` de qualquer `botao`, `toolbar`, `navegar` ou `gaveta`.
+
+::: tip Autocomplete no VS Code
+A extensão Jade DSL sugere automaticamente os nomes do catálogo ao digitar `icone:`. Digite o início do nome e pressione `Ctrl+Space` para ver as opções.
+:::
 
 ### Catálogo disponível
 

@@ -184,6 +184,7 @@ input[type="button"] {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  margin-bottom: 12px;
 }
 .jade-card-titulo { font-size: 0.875rem; color: var(--jade-texto-suave, #6b7280); margin-bottom: 8px; }
 .jade-card-valor  { font-size: 1.75rem; font-weight: 700; }
@@ -484,6 +485,13 @@ input[type="button"] {
   color: var(--jade-primaria, #2563eb);
 }
 .jade-navegar-icone { display: flex; }
+.jade-navegar-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
 
 /* ── Gaveta lateral (gaveta) ── */
 .jade-gaveta-overlay {

@@ -61,6 +61,7 @@ export default defineConfig({
         text: '💾 Persistência',
         items: [
           { text: 'Como a Jade DSL salva dados', link: '/persistencia/visao-geral' },
+          { text: 'Banco de Dados (banco)', link: '/persistencia/banco' },
           { text: 'EntityManager', link: '/persistencia/entity-manager' },
           { text: 'Sincronização Offline', link: '/persistencia/offline-sync' },
           { text: 'Protocolo de Sincronização', link: '/persistencia/protocolo-sync' },

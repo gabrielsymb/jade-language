@@ -172,8 +172,10 @@ describe('Linter — MORT001 (código morto)', () => {
 });
 
 describe('Linter — código limpo não tem avisos', () => {
-  it('programa bem estruturado retorna lista vazia', () => {
+  it('programa bem estruturado com módulo retorna lista vazia', () => {
     const src = `
+modulo estoque
+
 entidade Produto
   nome: texto
   preco: decimal
@@ -187,7 +189,82 @@ servico estoqueService
   funcao calcularTotal(preco: decimal, qtd: numero) -> decimal
     retornar preco
   fim
+fim
+
 fim`;
     expect(lint(src)).toHaveLength(0);
+  });
+
+  it('programa simples com 1 entidade não gera STRUCT001', () => {
+    expect(codes(`entidade Produto\nnome: texto\nfim`)).not.toContain('STRUCT001');
+  });
+
+  it('programa com 2 estruturas sem módulo não gera STRUCT001', () => {
+    const src = `
+entidade Produto
+  nome: texto
+fim
+servico estoqueService
+  funcao ver() -> numero
+    retornar 0
+  fim
+fim`;
+    expect(codes(src)).not.toContain('STRUCT001');
+  });
+});
+
+describe('Linter — VAR002 (shadowing local)', () => {
+  it('variável declarada uma vez não gera VAR002', () => {
+    expect(codes(`funcao f()\nvariavel x: numero = 1\nfim`)).not.toContain('VAR002');
+  });
+
+  it('variável declarada duas vezes no mesmo escopo gera VAR002', () => {
+    const src = `funcao f()\nvariavel produto = "abc"\nvariavel produto = "xyz"\nfim`;
+    expect(codes(src)).toContain('VAR002');
+  });
+
+  it('mesma variável em escopos diferentes não gera VAR002', () => {
+    const src = `funcao f()
+variavel x: numero = 1
+se x == 1
+  variavel x: numero = 2
+fim
+fim`;
+    expect(codes(src)).not.toContain('VAR002');
+  });
+});
+
+describe('Linter — STRUCT001 (muitas estruturas sem módulo)', () => {
+  it('3 ou mais estruturas sem módulo geram STRUCT001', () => {
+    const src = `
+entidade Produto
+  nome: texto
+fim
+entidade Cliente
+  nome: texto
+fim
+servico estoqueService
+  funcao ver() -> numero
+    retornar 0
+  fim
+fim`;
+    expect(codes(src)).toContain('STRUCT001');
+  });
+
+  it('3 estruturas dentro de módulo não geram STRUCT001', () => {
+    const src = `modulo estoque
+entidade Produto
+  nome: texto
+fim
+entidade Cliente
+  nome: texto
+fim
+servico estoqueService
+  funcao ver() -> numero
+    retornar 0
+  fim
+fim
+fim`;
+    expect(codes(src)).not.toContain('STRUCT001');
   });
 });

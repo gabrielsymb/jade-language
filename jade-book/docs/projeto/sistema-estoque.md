@@ -200,8 +200,8 @@ servico ProdutoService
     retornar p
   fim
 
-  funcao buscar(id: id) -> Produto
-    p = EntityManager.buscarPorId(Produto, id)
+  funcao buscar(produtoId: id) -> Produto
+    p = EntityManager.buscarPorId(Produto, produtoId)
     se nao p
       erro "Produto não encontrado"
     fim

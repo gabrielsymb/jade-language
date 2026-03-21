@@ -4,6 +4,24 @@ import { ParseResult, ParseError } from './parse_result.js';
 import * as N from '../ast/nodes.js';
 
 /**
+ * Tokens que são palavras-chave da linguagem Jade DSL.
+ * Usados para gerar mensagens de erro explícitas quando um usuário
+ * tenta usar uma palavra-chave como nome de variável, função ou entidade.
+ */
+const KEYWORDS_JADE = new Set<TokenType>([
+  TokenType.MODULO, TokenType.CLASSE, TokenType.ENTIDADE, TokenType.SERVICO,
+  TokenType.FUNCAO, TokenType.EVENTO, TokenType.REGRA, TokenType.INTERFACE,
+  TokenType.ENUM, TokenType.TELA, TokenType.BANCO, TokenType.FIM,
+  TokenType.SE, TokenType.ENTAO, TokenType.SENAO, TokenType.ENQUANTO,
+  TokenType.PARA, TokenType.EM, TokenType.RETORNAR, TokenType.ERRO,
+  TokenType.IMPORTAR, TokenType.COMO, TokenType.EXTENDS, TokenType.IMPLEMENTS,
+  TokenType.EMITIR, TokenType.ESCUTAR, TokenType.QUANDO, TokenType.SALVAR,
+  TokenType.VARIAVEL, TokenType.CONSTANTE,
+  TokenType.VERDADEIRO, TokenType.FALSO,
+  TokenType.E, TokenType.OU, TokenType.NAO,
+]);
+
+/**
  * Tabela de dicas educativas para erros de sintaxe.
  * Mapeamento: mensagem de erro → dica de como corrigir.
  */
@@ -1524,6 +1542,18 @@ export class Parser {
 
   private consume(type: TokenType, message: string, dica?: string): Token {
     if (this.check(type)) return this.advance();
+    // P2: se o token atual é uma palavra-chave da linguagem e o esperado é IDENTIFICADOR,
+    // gera mensagem explícita em vez do genérico "Esperado nome".
+    if (type === TokenType.IDENTIFICADOR && this.peek().type !== TokenType.EOF) {
+      const kwToken = this.peek();
+      if (KEYWORDS_JADE.has(kwToken.type)) {
+        throw this.error(
+          `'${kwToken.value}' é uma palavra-chave da linguagem e não pode ser usado como nome`,
+          kwToken,
+          `Escolha outro nome — '${kwToken.value}' faz parte da sintaxe da Jade DSL`
+        );
+      }
+    }
     throw this.error(message, undefined, dica);
   }
 

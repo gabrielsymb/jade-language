@@ -21,8 +21,10 @@ export interface LintWarning {
  *   VAZIO003 Serviço sem métodos nem ouvintes
  *   PARAM001 Função com mais de 5 parâmetros
  *   VAR001   Variável declarada sem tipo nem inicializador
+ *   VAR002   Variável declarada mais de uma vez no mesmo escopo (shadowing local)
  *   CONST001 Variável nunca reatribuída — sugerir 'constante'
  *   MORT001  Código morto — instrução após retornar
+ *   STRUCT001 Arquivo com múltiplas estruturas sem módulo declarado
  */
 export class Linter {
   private warnings: LintWarning[] = [];
@@ -32,7 +34,30 @@ export class Linter {
     for (const decl of program.declaracoes) {
       this.checkDeclaracao(decl);
     }
+    this.checkEstruturaSemModulo(program);
     return this.warnings;
+  }
+
+  /**
+   * STRUCT001 — Se o programa tem >2 declarações de estrutura (entidade, serviço, evento,
+   * classe) no nível raiz sem nenhum módulo, sugere organizar com módulos.
+   */
+  private checkEstruturaSemModulo(program: N.ProgramaNode): void {
+    const temModulo = program.declaracoes.some(d => d.kind === 'Modulo');
+    if (temModulo) return; // já organizado
+
+    const estruturas = program.declaracoes.filter(d =>
+      d.kind === 'Entidade' || d.kind === 'Servico' || d.kind === 'Evento' || d.kind === 'Classe'
+    );
+
+    if (estruturas.length > 2) {
+      const first = estruturas[0];
+      this.warn(
+        'STRUCT001',
+        `Arquivo com ${estruturas.length} estruturas (entidades, serviços, eventos) sem módulo — considere organizar com 'modulo nomeDoModulo ... fim'`,
+        first.line, first.column
+      );
+    }
   }
 
   // ── Declarações ──────────────────────────────────────────────────────────
@@ -115,10 +140,13 @@ export class Linter {
     // Pré-computar todos os nomes reatribuídos neste bloco (incluindo sub-blocos)
     const reatribuidas = this.coletarReatribuicoes(bloco);
 
+    // VAR002 — rastrear variáveis declaradas neste escopo para detectar shadowing local
+    const declaradasNoEscopo = new Map<string, number>(); // nome → linha da primeira declaração
+
     const instrucoes = bloco.instrucoes;
     for (let i = 0; i < instrucoes.length; i++) {
       const instr = instrucoes[i];
-      this.checkInstrucao(instr, reatribuidas);
+      this.checkInstrucao(instr, reatribuidas, declaradasNoEscopo);
 
       // MORT001 — código morto após retornar
       if (instr.kind === 'Retorno' && i < instrucoes.length - 1) {
@@ -163,7 +191,11 @@ export class Linter {
     }
   }
 
-  private checkInstrucao(node: N.InstrucaoNode, reatribuidas: Set<string>): void {
+  private checkInstrucao(
+    node: N.InstrucaoNode,
+    reatribuidas: Set<string>,
+    declaradasNoEscopo?: Map<string, number>
+  ): void {
     switch (node.kind) {
       case 'Variavel':
         this.assertCamelCase(node.nome, 'NOME004', 'Variável', node.line, node.column);
@@ -173,6 +205,18 @@ export class Linter {
             `Variável '${node.nome}' declarada sem tipo nem valor inicial`,
             node.line, node.column
           );
+        }
+        // VAR002 — shadowing local: mesma variável declarada duas vezes no mesmo escopo
+        if (declaradasNoEscopo) {
+          if (declaradasNoEscopo.has(node.nome)) {
+            this.warn(
+              'VAR002',
+              `'${node.nome}' já foi declarado neste escopo (linha ${declaradasNoEscopo.get(node.nome)}) — renomeie ou remova a declaração duplicada`,
+              node.line, node.column
+            );
+          } else {
+            declaradasNoEscopo.set(node.nome, node.line);
+          }
         }
         // CONST001 — sugerir 'constante' quando variável nunca é reatribuída
         if (!node.imutavel && node.inicializador && !reatribuidas.has(node.nome)) {

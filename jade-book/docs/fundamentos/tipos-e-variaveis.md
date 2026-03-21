@@ -59,6 +59,54 @@ contador = contador + 1
 Console.escrever(contador)  // 2
 ```
 
+## Constantes
+
+Use `constante` para valores que não devem mudar. O compilador gera erro se tentar reatribuir:
+
+```jd
+constante PI: decimal = 3.14159
+constante MAX_TENTATIVAS: numero = 3
+constante MOEDA_PADRAO: texto = "BRL"
+```
+
+### Inferência em constantes
+
+Assim como `variavel`, o tipo pode ser omitido quando o valor é fornecido:
+
+```jd
+constante PI = 3.14159         // decimal (inferido)
+constante MAX_TENTATIVAS = 3   // numero (inferido)
+constante MOEDA_PADRAO = "BRL" // texto (inferido)
+```
+
+### Erro de compilação ao reatribuir
+
+```jd-invalido
+constante MAX = 100
+MAX = 200  // ERRO: 'MAX' é uma constante e não pode ser reatribuída
+```
+
+### Quando usar `constante` vs `variavel`
+
+| Situação | Use |
+|----------|-----|
+| Valor muda ao longo da execução | `variavel` |
+| Valor é fixo (configuração, limite, taxa) | `constante` |
+| Acumulador de loop | `variavel` |
+| Taxa de imposto, tamanho máximo, nome do sistema | `constante` |
+
+```jd
+constante TAXA_ICMS: decimal = 0.12
+constante LIMITE_PARCELAS: numero = 12
+constante NOME_SISTEMA: texto = "Gestão Comercial"
+
+servico PedidoService
+  funcao calcularImpostos(valor: decimal): decimal
+    retornar valor * TAXA_ICMS
+  fim
+fim
+```
+
 ## O tipo `texto`
 
 Textos são delimitados por aspas duplas:

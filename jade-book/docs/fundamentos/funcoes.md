@@ -150,11 +150,11 @@ fim
 Use `erro` para interromper a execução quando algo deu errado:
 
 ```jd
-funcao buscarCliente(id: id) -> Cliente
-  cliente = EntityManager.buscarPorId(Cliente, id)
+funcao buscarCliente(clienteId: id) -> Cliente
+  cliente = EntityManager.buscarPorId(Cliente, clienteId)
 
   se nao cliente
-    erro "Cliente não encontrado: " + id
+    erro "Cliente não encontrado: " + clienteId
   fim
 
   retornar cliente
@@ -188,8 +188,8 @@ servico ProdutoService
     retornar p
   fim
 
-  funcao desativar(id: id)
-    p = EntityManager.buscarPorId(Produto, id)
+  funcao desativar(produtoId: id)
+    p = EntityManager.buscarPorId(Produto, produtoId)
     p.ativo = falso
     salvar p
     emitir ProdutoDesativado(p.id)

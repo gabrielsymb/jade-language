@@ -1,6 +1,24 @@
 import * as N from '../ast/nodes';
 import { TabelaSimbolos, Simbolo, SimboloKind } from './symbol_table';
 
+/**
+ * Nomes reservados pelo runtime da Jade DSL.
+ * Não podem ser usados como nomes de variáveis, constantes, funções ou entidades
+ * pelo usuário — fariam shadowing silencioso das APIs padrão.
+ */
+const NOMES_RESERVADOS_RUNTIME = new Set([
+  'Console',
+  'EntityManager',
+  'Matematica',
+  'Moeda',
+  'DateTime',
+  'HttpClient',
+  'Auth',
+  'Crypto',
+  'XML',
+  'SyncManager',
+]);
+
 export interface ErroSemantico {
   mensagem: string;
   linha: number;
@@ -188,6 +206,7 @@ export class TypeChecker {
   }
 
   private registrarClasse(node: N.ClasseNode): void {
+    if (this.nomeReservado(node.nome, 'classe', node.line, node.column)) return;
     const simbolo: Simbolo = {
       nome: node.nome,
       kind: 'classe' as SimboloKind,
@@ -200,6 +219,7 @@ export class TypeChecker {
   }
 
   private registrarEntidade(node: N.EntidadeNode): void {
+    if (this.nomeReservado(node.nome, 'entidade', node.line, node.column)) return;
     const simbolo: Simbolo = {
       nome: node.nome,
       kind: 'entidade' as SimboloKind,
@@ -212,6 +232,7 @@ export class TypeChecker {
   }
 
   private registrarServico(node: N.ServicoNode): void {
+    if (this.nomeReservado(node.nome, 'serviço', node.line, node.column)) return;
     const simbolo: Simbolo = {
       nome: node.nome,
       kind: 'servico' as SimboloKind,
@@ -273,6 +294,7 @@ export class TypeChecker {
   }
 
   private registrarFuncao(node: N.FuncaoNode): void {
+    if (this.nomeReservado(node.nome, 'função', node.line, node.column)) return;
     const simbolo: Simbolo = {
       nome: node.nome,
       kind: 'funcao' as SimboloKind,
@@ -592,6 +614,18 @@ export class TypeChecker {
     }
   }
 
+  private nomeReservado(nome: string, kind: string, line: number, col: number): boolean {
+    if (NOMES_RESERVADOS_RUNTIME.has(nome)) {
+      this.erro(
+        `'${nome}' é um identificador reservado do runtime da Jade DSL e não pode ser usado como nome de ${kind}`,
+        line, col,
+        `Escolha outro nome para o ${kind}`
+      );
+      return true;
+    }
+    return false;
+  }
+
   verificarBloco(node: N.BlocoNode): void {
     for (const instrucao of node.instrucoes) {
       this.verificarInstrucao(instrucao);
@@ -599,6 +633,15 @@ export class TypeChecker {
   }
 
   verificarVariavel(node: N.VariavelNode): void {
+    if (NOMES_RESERVADOS_RUNTIME.has(node.nome)) {
+      this.erro(
+        `'${node.nome}' é um identificador reservado do runtime da Jade DSL e não pode ser usado como ${node.imutavel ? 'constante' : 'variável'}`,
+        node.line, node.column,
+        `Escolha outro nome, por exemplo: 'meu${node.nome}' ou '${node.nome.charAt(0).toLowerCase() + node.nome.slice(1)}Local'`
+      );
+      return;
+    }
+
     if (node.imutavel && !node.inicializador) {
       this.erro(
         `Constante '${node.nome}' deve ter valor na declaração`,

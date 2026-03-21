@@ -148,12 +148,12 @@ fim
 
 ```jd
 servico ProdutoService
-  funcao excluir(id: id)
+  funcao excluir(produtoId: id)
     se nao PermissionService.hasPermission("produtos.excluir")
       erro "Sem permissão para excluir produtos"
     fim
 
-    produto = EntityManager.buscarPorId(Produto, id)
+    produto = EntityManager.buscarPorId(Produto, produtoId)
     produto.ativo = falso
     salvar produto
     emitir ProdutoExcluido(produto.id)

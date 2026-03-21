@@ -81,18 +81,38 @@ meu-projeto/
 A partir da v0.1.2, o compilador resolve importações entre arquivos `.jd` automaticamente. Organize seu projeto em múltiplos arquivos e use `importar modulo.Tipo` normalmente.
 :::
 
-## Comandos do compilador
+## Comandos do `jade`
+
+Esses são os comandos do dia a dia, usados no terminal dentro do seu projeto:
+
+| Comando | O que faz |
+|---------|-----------|
+| `jade init <nome>` | Cria projeto JADE com estrutura completa |
+| `jade compilar programa.jd` | Compila e gera artefatos para o browser |
+| `jade formatar` | Formata **todos** os arquivos `.jd` do projeto |
+| `jade formatar programa.jd` | Formata um arquivo específico |
+| `jade servir` | Inicia servidor local para testar no browser |
+
+```bash
+# Formatar tudo de uma vez (como prettier --write .)
+jade formatar
+
+# Formatar arquivo específico
+jade formatar src/estoque.jd
+```
+
+## Comandos avançados (`jadec`)
+
+Para acesso direto ao compilador:
 
 | Comando | O que faz |
 |---------|-----------|
 | `jadec programa.jd` | Compila e gera `programa.wasm` + `programa.wat` |
 | `jadec programa.jd -o saida` | Define prefixo dos arquivos de saída |
 | `jadec programa.jd --check` | Só verifica erros, não gera arquivos |
-| `jadec programa.jd --wat-only` | Gera apenas o texto WAT, sem o binário |
-| `jadec programa.jd --format` | Formata o código e imprime no terminal |
+| `jadec programa.jd --format` | Formata e imprime no terminal (sem sobrescrever) |
 | `jadec programa.jd --format-write` | Formata e sobrescreve o arquivo |
 | `jadec programa.jd --lint` | Analisa o código e exibe avisos de estilo |
-| `jadec --help` | Mostra ajuda |
 | `jadec --version` | Mostra a versão |
 
 ::: tip VS Code integrado
