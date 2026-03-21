@@ -144,9 +144,8 @@ fim
   <p>Três comandos e você tem um projeto completo rodando.</p>
 
 ```bash
-npm install -g @yakuzaa/jade
-jade init meu-erp
-cd meu-erp && jade compilar src/app.jd
+npm create jade@latest meu-erp
+cd meu-erp && npm run compilar
 ```
 
   <a href="/jade-language/introducao/instalacao" class="vitrine-btn-primario">Ver guia de instalação →</a>
