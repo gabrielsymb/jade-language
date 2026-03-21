@@ -1,34 +1,55 @@
 # @yakuzaa/jade
 
-Instalação completa da linguagem **JADE** — compilador + runtime em um único pacote.
+Compilador, runtime e CLI da **Jade DSL** — linguagem empresarial em português que compila para WebAssembly.
+
+## Criar um projeto
 
 ```bash
-npm install @yakuzaa/jade
+npm create jade@latest meu-projeto
+cd meu-projeto
+npm run compilar
 ```
 
-Após a instalação, o VS Code recomendará automaticamente a extensão **JADE Language** com syntax highlighting, autocomplete e diagnósticos em tempo real.
+Isso é tudo. O projeto já vem com estrutura completa, exemplos funcionais e dependências instaladas.
 
-## O que é instalado
+## Comandos disponíveis no projeto
 
-| Pacote | Função |
-|--------|--------|
-| `@yakuzaa/jade-compiler` | Compila arquivos `.jd` para WebAssembly |
-| `@yakuzaa/jade-runtime` | Executa o WebAssembly gerado (stdlib, APIs, UI engine) |
+| Comando | O que faz |
+|---------|-----------|
+| `npm run compilar` | Compila `src/app.jd` → `dist/` |
+| `npm run verificar` | Verifica erros sem gerar arquivos |
+| `npm run formatar` | Formata o código automaticamente |
+| `npm run lint` | Analisa estilo e boas práticas |
+| `npm run servir` | Servidor local para testar no browser |
 
-## Instalação individual
+## Exemplo de código
 
-Se precisar apenas de uma parte:
+```jd
+entidade Produto
+  id: id
+  nome: texto
+  preco: moeda
+  estoque: numero
+fim
 
-```bash
-npm install @yakuzaa/jade-compiler   # só o compilador
-npm install @yakuzaa/jade-runtime    # só o runtime
+tela ListaProdutos "Produtos"
+  tabela Produtos
+    entidade: Produto
+    filtravel: verdadeiro
+    ordenavel: verdadeiro
+    paginacao: 20
+  fim
+fim
 ```
 
 ## Extensão VS Code
 
-Instale manualmente pelo marketplace: `yakuzaa.jade-lang-vscode`
+Syntax highlighting, autocomplete e diagnósticos em tempo real:
 
-Ou via linha de comando:
 ```bash
 code --install-extension yakuzaa.jade-lang-vscode
 ```
+
+## Documentação completa
+
+→ https://gabrielsymb.github.io/jade-language

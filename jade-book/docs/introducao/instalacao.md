@@ -5,119 +5,84 @@
 - **Node.js 20 ou superior** — [nodejs.org](https://nodejs.org)
 - **VS Code** — [code.visualstudio.com](https://code.visualstudio.com)
 
-## 1. Instale o compilador
-
-O compilador Jade DSL (`jadec`) é instalado via npm:
+## Criar um projeto
 
 ```bash
-# Instalação completa (compilador + runtime)
-npm install -g @yakuzaa/jade
-
-# Ou só o compilador
-npm install -g @yakuzaa/jade-compiler
+npm create jade@latest meu-projeto
 ```
 
-Verifique a instalação:
+Isso cria a estrutura completa e instala as dependências automaticamente. Nenhuma instalação global necessária.
 
 ```bash
-jadec --version
-# jadec 0.1.6
+cd meu-projeto
+npm run compilar   # compila src/app.jd → dist/
 ```
 
-## 2. Instale a extensão VS Code
+Abra `dist/index.html` no browser — seu app está rodando.
 
-A extensão Jade DSL para VS Code oferece:
+::: tip Um comando só
+Igual ao `npm create vite@latest` — nada é instalado globalmente na sua máquina. As ferramentas ficam em `node_modules/` dentro do projeto.
+:::
 
-- Destaque de sintaxe para arquivos `.jd`
-- Snippets para estruturas comuns (`entidade`, `servico`, `funcao`, etc.)
-- Diagnósticos básicos em tempo real
+## Extensão VS Code
 
-### Via marketplace
-
-Procure por **"Jade DSL"** no marketplace do VS Code ou instale via terminal:
+Instale a extensão para ter syntax highlighting, autocomplete e diagnósticos em tempo real:
 
 ```bash
 code --install-extension yakuzaa.jade-lang-vscode
 ```
 
-## 3. Crie seu primeiro projeto
+Ou procure por **"Jade DSL"** no marketplace do VS Code.
 
-```bash
-mkdir meu-projeto-jade
-cd meu-projeto-jade
-```
-
-Crie o arquivo principal:
-
-```bash
-touch programa.jd
-```
-
-Abra no VS Code:
-
-```bash
-code .
-```
-
-## Estrutura recomendada de projeto
-
-Para projetos maiores, organize assim:
+## Estrutura gerada
 
 ```
 meu-projeto/
-├── modelos/
-│   ├── produto.jd
-│   ├── cliente.jd
-│   └── pedido.jd
-├── servicos/
-│   ├── estoque.jd
-│   └── pedidos.jd
-├── regras/
-│   └── negocio.jd
-└── principal.jd
+├── src/
+│   ├── app.jd              ← ponto de entrada
+│   ├── entidades/          ← estruturas de dados
+│   └── ui/telas/           ← interfaces declarativas
+├── dist/                   ← gerado pelo compilador (não commitar)
+├── package.json
+└── README.md
 ```
 
-::: tip Multi-arquivo disponível a partir da v0.1.2
-A partir da v0.1.2, o compilador resolve importações entre arquivos `.jd` automaticamente. Organize seu projeto em múltiplos arquivos e use `importar modulo.Tipo` normalmente.
-:::
-
-## Comandos do `jade`
-
-Esses são os comandos do dia a dia, usados no terminal dentro do seu projeto:
+## Comandos do projeto
 
 | Comando | O que faz |
 |---------|-----------|
-| `jade init <nome>` | Cria projeto JADE com estrutura completa |
-| `jade compilar programa.jd` | Compila e gera artefatos para o browser |
-| `jade formatar` | Formata **todos** os arquivos `.jd` do projeto |
-| `jade formatar programa.jd` | Formata um arquivo específico |
-| `jade servir` | Inicia servidor local para testar no browser |
-
-```bash
-# Formatar tudo de uma vez (como prettier --write .)
-jade formatar
-
-# Formatar arquivo específico
-jade formatar src/estoque.jd
-```
+| `npm run compilar` | Compila `src/app.jd` → `dist/` |
+| `npm run verificar` | Verifica erros sem gerar arquivos |
+| `npm run formatar` | Formata o código (como Prettier) |
+| `npm run lint` | Analisa estilo e boas práticas |
+| `npm run servir` | Servidor local para testar no browser |
 
 ## Comandos avançados (`jadec`)
 
-Para acesso direto ao compilador:
+Para acesso direto ao compilador — útil em CI/CD e integração com outras ferramentas:
 
 | Comando | O que faz |
 |---------|-----------|
-| `jadec programa.jd` | Compila e gera `programa.wasm` + `programa.wat` |
-| `jadec programa.jd -o saida` | Define prefixo dos arquivos de saída |
-| `jadec programa.jd --check` | Só verifica erros, não gera arquivos |
-| `jadec programa.jd --format` | Formata e imprime no terminal (sem sobrescrever) |
-| `jadec programa.jd --format-write` | Formata e sobrescreve o arquivo |
-| `jadec programa.jd --lint` | Analisa o código e exibe avisos de estilo |
-| `jadec --version` | Mostra a versão |
+| `npx jadec src/app.jd` | Compila e gera `dist/` |
+| `npx jadec src/app.jd --check` | Só verifica erros, não gera arquivos |
+| `npx jadec src/app.jd --format` | Formata e imprime no terminal |
+| `npx jadec src/app.jd --format-write` | Formata e sobrescreve o arquivo |
+| `npx jadec src/app.jd --lint` | Analisa o código e exibe avisos de estilo |
+| `npx jadec --version` | Mostra a versão |
 
 ::: tip VS Code integrado
-O formatter e o linter também funcionam automaticamente no VS Code com a extensão Jade DSL instalada. O formatter é executado ao salvar; os avisos do linter aparecem como sublinhados amarelos no editor.
+O formatter e o linter também funcionam automaticamente com a extensão instalada. O formatter é executado ao salvar; os avisos do linter aparecem como sublinhados amarelos.
 :::
+
+## Para quem integra em tooling
+
+Se você quer usar o compilador programaticamente (plugin Vite, CI, LSP):
+
+```bash
+npm install @yakuzaa/jade-compiler
+```
+
+Veja a [API do compilador](/referencia/compiler-api) para detalhes.
 
 ## Próximo passo
 

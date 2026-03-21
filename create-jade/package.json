@@ -1,0 +1,38 @@
+{
+  "name": "create-jade",
+  "version": "0.1.0",
+  "description": "Cria um projeto Jade DSL com estrutura completa e dependências instaladas",
+  "type": "module",
+  "bin": {
+    "create-jade": "index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "jade",
+    "jade-dsl",
+    "create",
+    "scaffold",
+    "portuguese",
+    "dsl",
+    "enterprise"
+  ],
+  "author": "yakuzaa",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrielsymb/jade-language.git",
+    "directory": "create-jade"
+  },
+  "homepage": "https://gabrielsymb.github.io/jade-language",
+  "bugs": {
+    "url": "https://github.com/gabrielsymb/jade-language/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
