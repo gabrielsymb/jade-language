@@ -1,6 +1,6 @@
 {
   "name": "@yakuzaa/jade-runtime",
-  "version": "0.1.14",
+  "version": "0.1.16",
   "description": "Runtime da Jade DSL — event loop, UI engine mobile-first, persistência IndexedDB/localStorage e APIs empresariais",
   "type": "module",
   "main": "./dist/index.js",

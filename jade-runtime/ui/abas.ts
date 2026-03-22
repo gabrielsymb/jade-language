@@ -8,29 +8,34 @@
  * Usado por: ui_engine.ts
  */
 
+import { el, on } from './dom.js';
+
 export interface AbasConfig {
   nome: string;
   abas: string[];
   tela: string;
 }
 
+// Contador global — garante IDs únicos mesmo com múltiplos componentes de mesmo nome
+let _uid = 0;
+
 export function criarAbas(config: AbasConfig, container: HTMLElement): HTMLElement {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'jade-abas';
+  const uid = ++_uid;
+  const idConteudo = `jade-abas-${config.nome}-${uid}`;
+
+  const wrapper = el('div', { class: 'jade-abas' });
 
   // ── Barra de abas ──────────────────────────────────────────────────────────
-  const barra = document.createElement('div');
-  barra.className = 'jade-abas-barra';
-  barra.setAttribute('role', 'tablist');
-  barra.setAttribute('aria-label', config.nome);
+  const barra = el('div', {
+    class: 'jade-abas-barra',
+    role: 'tablist',
+    'aria-label': config.nome,
+  });
 
   // ── Área de conteúdo ───────────────────────────────────────────────────────
-  const conteudo = document.createElement('div');
-  conteudo.className = 'jade-abas-conteudo';
-  conteudo.id = `jade-abas-${config.nome}`;
+  const conteudo = el('div', { class: 'jade-abas-conteudo', id: idConteudo });
 
   const ativar = (index: number): void => {
-    // Atualiza visual da barra
     barra.querySelectorAll<HTMLButtonElement>('.jade-aba-btn').forEach((btn, i) => {
       const ativo = i === index;
       btn.classList.toggle('jade-aba-ativa', ativo);
@@ -38,7 +43,6 @@ export function criarAbas(config: AbasConfig, container: HTMLElement): HTMLEleme
       btn.setAttribute('tabindex', ativo ? '0' : '-1');
     });
 
-    // Limpa conteúdo anterior e notifica o app
     conteudo.innerHTML = '';
     window.dispatchEvent(new CustomEvent('jade:aba', {
       detail: {
@@ -52,13 +56,16 @@ export function criarAbas(config: AbasConfig, container: HTMLElement): HTMLEleme
   };
 
   config.abas.forEach((aba, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'jade-aba-btn' + (i === 0 ? ' jade-aba-ativa' : '');
-    btn.textContent = aba;
-    btn.setAttribute('role', 'tab');
-    btn.setAttribute('aria-selected', String(i === 0));
-    btn.setAttribute('tabindex', i === 0 ? '0' : '-1');
-    btn.addEventListener('click', () => ativar(i));
+    const idPanel = `${idConteudo}-panel-${i}`;
+
+    const btn = on(el('button', {
+      class: 'jade-aba-btn' + (i === 0 ? ' jade-aba-ativa' : ''),
+      role: 'tab',
+      'aria-selected': String(i === 0),
+      'aria-controls': idPanel,
+      tabindex: i === 0 ? '0' : '-1',
+      textContent: aba,
+    }), 'click', () => ativar(i));
 
     // Navegação por teclado (←/→)
     btn.addEventListener('keydown', (e) => {
@@ -80,7 +87,6 @@ export function criarAbas(config: AbasConfig, container: HTMLElement): HTMLEleme
   wrapper.appendChild(conteudo);
   container.appendChild(wrapper);
 
-  // Ativa a primeira aba
   if (config.abas.length > 0) ativar(0);
 
   return conteudo;

@@ -18,7 +18,8 @@ export { EventLoop }          from './core/event_loop.js';
 export { UIEngine }           from './ui/ui_engine.js';
 export { Router }             from './ui/router.js';
 export { Signal, Store, createEffect } from './ui/reactive.js';
-export { aplicarTema }        from './ui/theme.js';
+export { aplicarTema, textoContraste } from './ui/theme.js';
+export { el, on }             from './ui/dom.js';
 export { Session, sessao }    from './ui/session.js';
 export { criarElementoIcone, listarIcones } from './ui/icones.js';
 
