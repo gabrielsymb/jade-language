@@ -111,10 +111,14 @@ function renderBarras(dados: any[], config: GraficoConfig, vb: Element): void {
     const by    = PAD.top + CH - bh;
     const label = String(d[campoX] ?? i);
 
-    vb.appendChild(el('rect', {
+    const rect = el('rect', {
       x: cx - barW / 2, y: by, width: barW, height: bh,
       rx: 4, fill: CORES[i % CORES.length], opacity: 0.85,
-    }));
+    });
+    const titleBarra = document.createElementNS(SVG_NS, 'title');
+    titleBarra.textContent = `${fmtLabel(label)}: ${fmtNum(val)}`;
+    rect.appendChild(titleBarra);
+    vb.appendChild(rect);
 
     const labelFmt = fmtLabel(label);
     const labelEl = txt(labelFmt, {
@@ -174,10 +178,14 @@ function renderLinha(dados: any[], config: GraficoConfig, vb: Element): void {
 
   // Pontos e labels do eixo X
   pts.forEach(p => {
-    vb.appendChild(el('circle', {
+    const circle = el('circle', {
       cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: 4,
       fill: '#fff', stroke: CORES[0], 'stroke-width': 2,
-    }));
+    });
+    const titlePonto = document.createElementNS(SVG_NS, 'title');
+    titlePonto.textContent = `${fmtLabel(p.label)}: ${fmtNum(p.val)}`;
+    circle.appendChild(titlePonto);
+    vb.appendChild(circle);
 
     const labelFmt = fmtLabel(p.label);
     const labelEl = txt(labelFmt, {
@@ -207,19 +215,23 @@ function renderPizza(dados: any[], config: GraficoConfig, vb: Element): void {
   let angulo  = -Math.PI / 2;
 
   itens.forEach(it => {
-    const slice = (it.val / total) * Math.PI * 2;
+    const angSlice = (it.val / total) * Math.PI * 2;
     const x1    = CX + R * Math.cos(angulo);
     const y1    = CY + R * Math.sin(angulo);
-    const x2    = CX + R * Math.cos(angulo + slice);
-    const y2    = CY + R * Math.sin(angulo + slice);
-    const large = slice > Math.PI ? 1 : 0;
+    const x2    = CX + R * Math.cos(angulo + angSlice);
+    const y2    = CY + R * Math.sin(angulo + angSlice);
+    const large = angSlice > Math.PI ? 1 : 0;
 
-    vb.appendChild(el('path', {
+    const sliceEl = el('path', {
       d: `M${CX},${CY} L${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z`,
       fill: it.cor, stroke: '#fff', 'stroke-width': 2,
-    }));
+    });
+    const titleSlice = document.createElementNS(SVG_NS, 'title');
+    titleSlice.textContent = `${it.label}: ${fmtNum(it.val)} (${((it.val / total) * 100).toFixed(1)}%)`;
+    sliceEl.appendChild(titleSlice);
+    vb.appendChild(sliceEl);
 
-    angulo += slice;
+    angulo += angSlice;
   });
 
   // Legenda
