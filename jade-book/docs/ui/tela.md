@@ -83,6 +83,43 @@ fim
 | `ordenavel`  | `verdadeiro/falso`| não         | Permite ordenar clicando nos cabeçalhos das colunas |
 | `paginacao`  | `verdadeiro/falso` ou número | não | `verdadeiro` = 20 por página; número = linhas por página |
 | `altura`     | valor CSS         | não         | Altura máxima da tabela com scroll interno (ex: `"400px"`) |
+| `acoes`      | lista de ações    | não         | Botões de ação por linha: `editar`, `excluir` (ou ambos) |
+
+### Ações por linha — CRUD automático
+
+Adicione `acoes: editar, excluir` para gerar botões de edição e exclusão em cada linha da tabela — sem nenhum código adicional:
+
+```jd
+tela TelaProdutos "Produtos"
+  toolbar AcoesProdutos
+    botao: "Novo Produto|novoProduto|mais|primario"
+    botao: "Exportar|exportarProduto|compartilhar|secundario"
+  fim
+  tabela ListaProdutos
+    entidade: Produto
+    colunas: nome, preco, estoque
+    filtravel: verdadeiro
+    acoes: editar, excluir
+  fim
+fim
+```
+
+O que acontece automaticamente ao declarar `acoes`:
+
+| Ação | Comportamento |
+|------|--------------|
+| `editar` | Abre modal com formulário preenchido com os dados da linha |
+| `excluir` | Exibe diálogo de confirmação nativo antes de deletar |
+
+Ao confirmar a exclusão ou salvar a edição, os dados são persistidos no IndexedDB e **todas as tabelas, cartões e gráficos da tela são atualizados reativamente** — sem recarregar a página.
+
+::: tip Botões novoXxx e exportar* no toolbar
+O runtime reconhece padrões nos nomes dos botões do toolbar:
+- `novoXxx` (ex: `novoProduto`) → abre modal de criação para a entidade `Xxx`
+- `exportar*` (ex: `exportarProduto`, `exportarCSV`) → gera download do CSV da entidade ativa
+
+Esses padrões funcionam automaticamente sem declarar funções JADE — o runtime gerencia tudo.
+:::
 
 ::: warning Entidade obrigatória
 O compilador exige `entidade:` em tabelas. Sem ela, o código não compila:
@@ -454,7 +491,7 @@ tela Dashboard "Painel"
 fim
 ```
 
-O runtime calcula os valores automaticamente do banco local (IndexedDB) a cada vez que a tela é aberta — os cartões sempre mostram dados reais.
+Os cartões são **reativos**: sempre que um registro é criado, editado ou excluído via CRUD, os valores são recalculados e a tela atualiza instantaneamente — sem reload.
 
 **Propriedades do cartão:**
 
@@ -555,6 +592,10 @@ fim
 | `eixoX`     | campo            | não         | Campo para o eixo X        |
 | `eixoY`     | campo            | não         | Campo para o eixo Y        |
 
+::: tip Gráficos são reativos
+Os gráficos re-renderizam automaticamente sempre que os dados da entidade mudam (CRUD, nova importação, atualização de seed). Nenhuma configuração extra necessária.
+:::
+
 ::: warning Tipo de gráfico restrito
 O compilador aceita apenas `linha`, `barras` ou `pizza`. Termos em inglês (`bar`, `pie`, `line`) são rejeitados:
 ```jd
@@ -564,6 +605,10 @@ O compilador aceita apenas `linha`, `barras` ou `pizza`. Termos em inglês (`bar
 //   tipo: bar   <- use "barras" em português
 // Erro: Tipo de gráfico 'bar' inválido. Use: linha, barras ou pizza
 ```
+:::
+
+::: tip Tooltips nativos
+Ao passar o mouse sobre barras, pontos de linha ou fatias de pizza, o browser exibe automaticamente o rótulo e o valor via tooltip nativo (`<title>` SVG) — sem JavaScript extra.
 :::
 
 ---
@@ -720,52 +765,76 @@ fim
 
 ## Tela completa — exemplo real
 
-Um CRUD completo de produtos com listagem, formulário e ações:
+CRUD completo de produtos com listagem reativa, ações por linha, criação via modal e exportação CSV — em ~15 linhas de DSL:
 
 ```jd
 entidade Produto
   id: id
   nome: texto
-  preco: decimal
+  preco: moeda
   estoque: numero
-  categoriaId: id
+  estoqueMinimo: numero
   ativo: booleano
 fim
 
-funcao abrirFormulario()
-  router.navegar("/produtos/novo")
-fim
-
-funcao persistirProduto()
-  Console.escrever("salvando...")
-fim
-
-funcao cancelarOperacao()
-  router.navegar("/produtos")
-fim
-
-tela GerenciamentoProdutos "Gerenciamento de Produtos"
+tela TelaProdutos "Produtos"
+  toolbar AcoesProdutos
+    botao: "Novo Produto|novoProduto|mais|primario"
+    botao: "Exportar CSV|exportarProduto|compartilhar|secundario"
+  fim
   tabela ListaProdutos
     entidade: Produto
-    colunas: nome, preco, estoque, ativo
+    colunas: nome, preco, estoque, estoqueMinimo, ativo
     filtravel: verdadeiro
-  fim
-  botao NovoProduto
-    acao: abrirFormulario
-  fim
-fim
-
-tela FormularioProduto "Cadastrar Produto"
-  formulario FormProduto
-    entidade: Produto
-    campos: nome, preco, estoque, categoriaId
-    enviar: persistirProduto
-  fim
-  botao Cancelar
-    clique: cancelarOperacao
+    ordenavel: verdadeiro
+    paginacao: 20
+    acoes: editar, excluir
   fim
 fim
 ```
+
+O que você ganha sem escrever mais nenhum código:
+
+| Feature | Como acionar |
+|---------|-------------|
+| Modal de criação | Clicar em "Novo Produto" |
+| Modal de edição | Clicar no ícone ✏️ da linha |
+| Confirmação de exclusão | Clicar no ícone 🗑️ da linha |
+| Busca em tempo real | Campo de busca acima da tabela |
+| Busca no header | Automática quando a tela tem `filtravel: verdadeiro` |
+| Download CSV | Clicar em "Exportar CSV" |
+| Cartões/gráficos atualizados | Automático após qualquer CRUD |
+
+### Dashboard + dados reativos
+
+```jd
+tela Dashboard "Painel"
+  cartao TotalVendas
+    titulo: "Total de Vendas"
+    conteudo: soma(Venda.total)
+    variante: sucesso
+  fim
+  cartao TicketMedio
+    titulo: "Ticket Médio"
+    conteudo: media(Venda.total)
+    variante: aviso
+  fim
+  grafico VendasMes
+    tipo: barras
+    entidade: Venda
+    eixoX: criadaEm
+    eixoY: total
+  fim
+  grafico DistribuicaoStatus
+    tipo: pizza
+    entidade: Venda
+    eixoX: status
+    eixoY: total
+  fim
+fim
+```
+
+Toda vez que uma venda é criada ou excluída em outra tela, ao voltar para o Dashboard os cartões e gráficos já mostram os valores atualizados.
 
 ---
 
@@ -819,6 +888,47 @@ tela Dashboard "Painel"
   fim
 fim
 // Erro: Campo 'preco' não existe na entidade 'Produto'
+```
+
+---
+
+## Busca global no header
+
+Quando a tela ativa contém uma `tabela` com `filtravel: verdadeiro`, o runtime exibe automaticamente um campo de busca **centralizado no header** da aplicação. O campo filtra a tabela em tempo real com debounce de 200ms — nenhuma configuração necessária.
+
+```jd
+tela TelaProdutos "Produtos"
+  tabela ListaProdutos
+    entidade: Produto
+    colunas: nome, preco, estoque
+    filtravel: verdadeiro   // ← ativa a busca no header automaticamente
+    acoes: editar, excluir
+  fim
+fim
+```
+
+O campo de busca aparece apenas quando a tela tem tabela filtrável e some automaticamente ao navegar para uma tela sem tabela.
+
+---
+
+## Notificações
+
+O runtime exibe notificações como um **banner** que desliza do topo e empurra o conteúdo para baixo — sem cobrir a interface. Desaparecem automaticamente após 4 segundos.
+
+| Variante  | Cor     | Quando usar                  |
+|-----------|---------|------------------------------|
+| `sucesso` | Verde   | Operação concluída com êxito |
+| `erro`    | Vermelho| Falha ou dado inválido       |
+| `aviso`   | Amarelo | Atenção requerida            |
+| `info`    | Azul    | Informação neutra            |
+
+As notificações são disparadas automaticamente pelo runtime nas operações CRUD (`criado com sucesso`, `atualizado`, `excluído`) e podem ser emitidas manualmente via JADE:
+
+```jd
+funcao salvarProduto()
+  // lógica de salvamento...
+  ui.notificar("Produto salvo com sucesso", "sucesso")
+fim
 ```
 
 ---
