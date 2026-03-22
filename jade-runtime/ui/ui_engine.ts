@@ -37,6 +37,7 @@ export interface TelaConfig {
 export interface ColunaConfig {
   campo: string;
   titulo: string;
+  tipo?: string;
   ordenavel?: boolean;
 }
 
@@ -52,6 +53,8 @@ export interface TabelaConfig {
   ordenavel?: boolean;
   /** Habilita paginação. true = 20 por página. number = linhas por página. */
   paginacao?: boolean | number;
+  /** Botões de ação por linha: 'editar', 'excluir' */
+  acoes?: Array<'editar' | 'excluir' | 'criar'>;
 }
 
 export interface CampoConfig {
@@ -87,6 +90,7 @@ export class UIEngine {
   private filtrosPorTela = new Map<string, Signal<string>>();
   /** Signals de dados por entidade — usados por cartões/gráficos reativos */
   private dadosSignals = new Map<string, Signal<any[]>>();
+  private colunasEntidades = new Map<string, ColunaConfig[]>();
   private acoesPendentes: Map<string, HTMLButtonElement> = new Map();
 
   constructor(memory: MemoryManager, tema?: Tema) {
@@ -103,6 +107,16 @@ export class UIEngine {
     // Escuta evento de conclusão para reabilitar botões automaticamente
     window.addEventListener('jade:acao:concluido', ((e: CustomEvent) => {
       if (e.detail?.acao) this.concluirAcao(e.detail.acao);
+    }) as EventListener);
+
+    window.addEventListener('jade:linha:editar', ((e: CustomEvent) => {
+      const { entidade, registro } = e.detail ?? {};
+      if (entidade && registro) this.abrirModalCRUD('editar', entidade, registro);
+    }) as EventListener);
+
+    window.addEventListener('jade:linha:excluir', ((e: CustomEvent) => {
+      const { entidade, id } = e.detail ?? {};
+      if (entidade && id) this.confirmarExclusao(entidade, id);
     }) as EventListener);
   }
 
@@ -125,6 +139,7 @@ export class UIEngine {
       this.acoesPendentes.clear();
       this.filtrosPorTela.clear();
       this.dadosSignals.clear();
+      this.colunasEntidades.clear();
     }
 
     this.telaAtiva = config.nome;
@@ -171,6 +186,65 @@ export class UIEngine {
   /** Retorna os nomes das entidades com signals ativos na tela atual. */
   getEntidadesAtivas(): string[] {
     return [...this.dadosSignals.keys()];
+  }
+
+  abrirModalCRUD(modo: 'criar' | 'editar', entidade: string, registro?: Record<string, any>): void {
+    const CAMPOS_INTERNOS = new Set(['id', '_rev', '_id', 'criadaEm', 'atualizadoEm', 'updatedAt', 'createdAt']);
+
+    let campos: Array<{ nome: string; titulo: string; valor?: any }>;
+
+    if (modo === 'editar' && registro) {
+      campos = Object.entries(registro)
+        .filter(([k]) => !CAMPOS_INTERNOS.has(k))
+        .map(([k, v]) => ({ nome: k, titulo: k, valor: v }));
+    } else {
+      const colunas = this.colunasEntidades.get(entidade) ?? [];
+      campos = colunas.map(c => ({ nome: c.campo, titulo: c.titulo, tipo: c.tipo }));
+    }
+
+    if (campos.length === 0) {
+      console.warn(`[JADE] Nenhum campo encontrado para ${entidade}. Defina colunas na tabela.`);
+      return;
+    }
+
+    const titulo = modo === 'criar' ? `Novo ${entidade}` : `Editar ${entidade}`;
+    const id = registro?.id ?? registro?._id;
+
+    this.modais.criarCRUD(titulo, campos, (dados) => {
+      if (modo === 'criar') {
+        window.dispatchEvent(new CustomEvent('jade:crud:criar', { detail: { entidade, dados } }));
+      } else {
+        window.dispatchEvent(new CustomEvent('jade:crud:atualizar', { detail: { entidade, id, dados } }));
+      }
+    });
+  }
+
+  private confirmarExclusao(entidade: string, id: string): void {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'jade-modal';
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+
+    dialog.innerHTML = `
+      <div class="jade-modal-header">
+        <h2 class="jade-modal-titulo">Confirmar exclusão</h2>
+      </div>
+      <div class="jade-modal-corpo" style="padding:16px 20px">
+        <p>Tem certeza que deseja excluir este registro?<br>Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="jade-modal-rodape">
+        <button class="jade-botao jade-botao-secundario" data-acao="cancelar">Cancelar</button>
+        <button class="jade-botao jade-botao-perigo" data-acao="confirmar">Excluir</button>
+      </div>`;
+
+    document.body.appendChild(dialog);
+    dialog.querySelector('[data-acao="cancelar"]')?.addEventListener('click', () => dialog.close());
+    dialog.querySelector('[data-acao="confirmar"]')?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('jade:crud:remover', { detail: { entidade, id } }));
+      dialog.close();
+    });
+    dialog.addEventListener('close', () => setTimeout(() => dialog.remove(), 300));
+    dialog.showModal();
   }
 
   /**
@@ -230,7 +304,8 @@ export class UIEngine {
     container.appendChild(wrapper);
 
     // Delega ao Responsivo — ele decide mobile vs desktop e troca quando viewport muda
-    this.responsivo.adaptarTabela(config, wrapper, dados, termoBusca, paginaAtual);
+    const dadosSignalTabela = this.dadosSignals.get(config.entidade) ?? new Signal<any[]>(dados);
+    this.responsivo.adaptarTabela(config, wrapper, dadosSignalTabela, termoBusca, paginaAtual);
 
     setEffectOwner(null);
   }
@@ -494,7 +569,7 @@ export class UIEngine {
 
       // Avisa sobre propriedades desconhecidas para facilitar depuração
       const propsConhecidas: Record<string, Set<string>> = {
-        tabela:     new Set(['entidade', 'colunas', 'filtravel', 'ordenavel', 'paginacao', 'altura']),
+        tabela:     new Set(['entidade', 'colunas', 'filtravel', 'ordenavel', 'paginacao', 'altura', 'acoes']),
         formulario: new Set(['entidade', 'campos', 'enviar']),
         botao:      new Set(['acao', 'clique', 'icone', 'tipo']),
         cartao:     new Set(['titulo', 'conteudo', 'variante']),
@@ -522,9 +597,16 @@ export class UIEngine {
           // Converte propriedades do descriptor em TabelaConfig
           const entidade  = String(props['entidade'] ?? el.nome);
           const colunas   = Array.isArray(props['colunas'])
-            ? (props['colunas'] as string[]).map(c => ({ campo: c, titulo: c }))
+            ? (props['colunas'] as Array<string | { campo: string; tipo?: string }>).map(c =>
+                typeof c === 'string'
+                  ? { campo: c, titulo: c }
+                  : { campo: c.campo, titulo: c.campo, tipo: c.tipo })
             : [];
           const filtravel = props['filtravel'] === 'verdadeiro';
+          const acoes = Array.isArray(props['acoes'])
+            ? (props['acoes'] as string[]).filter((a): a is 'editar' | 'excluir' | 'criar' =>
+                ['editar', 'excluir', 'criar'].includes(a))
+            : [];
 
           // Se filtrável, cria signal e registra para o header search conectar
           let filtroBusca: Signal<string> | undefined;
@@ -533,11 +615,15 @@ export class UIEngine {
             this.filtrosPorTela.set(descriptor.nome, filtroBusca);
           }
 
+          // Armazena colunas para uso no modal de CRUD (com tipo se disponível)
+          this.colunasEntidades.set(entidade, colunas.map(c => ({ campo: c.campo, titulo: c.titulo, tipo: c.tipo })));
+
           this.criarTabela(
             {
               entidade,
               colunas,
               filtravel,
+              acoes: acoes.length > 0 ? acoes : undefined,
               ordenavel:  props['ordenavel'] === 'verdadeiro',
               paginacao:  props['paginacao'] === 'verdadeiro' ? true
                         : Number(props['paginacao']) || false,

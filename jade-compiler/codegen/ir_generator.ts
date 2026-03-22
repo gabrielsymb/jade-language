@@ -9,6 +9,8 @@ export class IRGenerator {
   private blockCounter: number = 0;
   /** Mapeia nome de variável local → nome do tipo JADE (entidade/classe) para resolução de campos */
   private localEntityTypeMap: Map<string, string> = new Map();
+  /** Mapeia nome de entidade → mapa de campo → tipo JADE (para enriquecer colunas de tabela) */
+  private entidadeCampoTipos: Map<string, Map<string, string>> = new Map();
 
   constructor(moduleName: string) {
     this.module = {
@@ -77,6 +79,15 @@ export class IRGenerator {
       name: node.nome,
       fields
     });
+
+    // Registra tipos JADE dos campos para enriquecer colunas de tabela
+    const campoTipos = new Map<string, string>();
+    for (const campo of node.campos) {
+      const t = campo.tipo;
+      const nomeJade = t.kind === 'TipoSimples' ? t.nome : 'texto';
+      campoTipos.set(campo.nome, nomeJade);
+    }
+    this.entidadeCampoTipos.set(node.nome, campoTipos);
   }
 
   private generateEvento(node: N.EventoNode): void {
@@ -247,11 +258,28 @@ export class IRGenerator {
     const descriptor: IR.IRTelaDescriptor = {
       nome: node.nome,
       titulo: node.titulo,
-      elementos: node.elementos.map(el => ({
-        tipo: el.tipo,
-        nome: el.nome,
-        propriedades: el.propriedades
-      }))
+      elementos: node.elementos.map(el => {
+        // Enriquece colunas de tabela com tipo JADE de cada campo
+        if (el.tipo === 'tabela') {
+          const props = el.propriedades as Array<{ chave: string; valor: any }>;
+          const entidadeProp = props.find(p => p.chave === 'entidade');
+          const colunasProp  = props.find(p => p.chave === 'colunas');
+          if (entidadeProp && colunasProp && Array.isArray(colunasProp.valor)) {
+            const campoTipos = this.entidadeCampoTipos.get(String(entidadeProp.valor));
+            if (campoTipos) {
+              const colunasEnriquecidas = (colunasProp.valor as string[]).map(c => ({
+                campo: c,
+                tipo: campoTipos.get(c) ?? 'texto'
+              }));
+              const novasProps = props.map(p =>
+                p.chave === 'colunas' ? { chave: 'colunas', valor: colunasEnriquecidas } : p
+              );
+              return { tipo: el.tipo, nome: el.nome, propriedades: novasProps };
+            }
+          }
+        }
+        return { tipo: el.tipo, nome: el.nome, propriedades: el.propriedades };
+      })
     };
     this.module.telas.push(descriptor);
   }
