@@ -467,7 +467,7 @@ function exportarCSV(dados, nomeArquivo) {
     }).join(';'))
   ];
   const bom = '\uFEFF'; // UTF-8 BOM para Excel
-  const blob = new Blob([bom + linhas.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([bom + linhas.join('\\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

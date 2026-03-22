@@ -106,10 +106,10 @@ fim
 
 O que acontece automaticamente ao declarar `acoes`:
 
-| Ação | Comportamento |
-|------|--------------|
-| `editar` | Abre modal com formulário preenchido com os dados da linha |
-| `excluir` | Exibe diálogo de confirmação nativo antes de deletar |
+| Ação | Ícone | Comportamento |
+|------|-------|--------------|
+| `editar` | `editar` (lápis) | Abre modal com formulário preenchido com os dados da linha |
+| `excluir` | `excluir` (lixeira) | Exibe diálogo de confirmação nativo antes de deletar |
 
 Ao confirmar a exclusão ou salvar a edição, os dados são persistidos no IndexedDB e **todas as tabelas, cartões e gráficos da tela são atualizados reativamente** — sem recarregar a página.
 
@@ -798,8 +798,8 @@ O que você ganha sem escrever mais nenhum código:
 | Feature | Como acionar |
 |---------|-------------|
 | Modal de criação | Clicar em "Novo Produto" |
-| Modal de edição | Clicar no ícone ✏️ da linha |
-| Confirmação de exclusão | Clicar no ícone 🗑️ da linha |
+| Modal de edição | Clicar no ícone `editar` (lápis) da linha |
+| Confirmação de exclusão | Clicar no ícone `excluir` (lixeira) da linha |
 | Busca em tempo real | Campo de busca acima da tabela |
 | Busca no header | Automática quando a tela tem `filtravel: verdadeiro` |
 | Download CSV | Clicar em "Exportar CSV" |
