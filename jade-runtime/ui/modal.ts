@@ -122,8 +122,9 @@ export class ModalManager {
 
   criarCRUD(
     titulo: string,
-    campos: Array<{ nome: string; titulo: string; tipo?: string; valor?: any }>,
-    onSalvar: (dados: Record<string, any>) => void
+    campos: Array<{ nome: string; titulo: string; tipo?: string; valor?: any; opcoes?: Array<{valor: string; label: string}> }>,
+    onSalvar: (dados: Record<string, any>) => void,
+    formulaComputar?: string
   ): void {
     const dialog = document.createElement('dialog');
     dialog.className = 'jade-modal jade-modal-crud';
@@ -176,6 +177,21 @@ export class ModalManager {
         const boolVal = String(campo.valor);
         sel.value = (boolVal === 'true' || boolVal === 'verdadeiro') ? 'verdadeiro' : 'falso';
         input = sel;
+      } else if (tipo === 'seletor' && campo.opcoes && campo.opcoes.length > 0) {
+        const sel = document.createElement('select');
+        sel.id = `crud-${campo.nome}`;
+        sel.className = 'jade-campo-input';
+        const optVazio = document.createElement('option');
+        optVazio.value = ''; optVazio.textContent = '— selecionar —';
+        sel.appendChild(optVazio);
+        for (const op of campo.opcoes) {
+          const opt = document.createElement('option');
+          opt.value = op.valor;
+          opt.textContent = op.label;
+          sel.appendChild(opt);
+        }
+        if (campo.valor !== undefined && campo.valor !== null) sel.value = String(campo.valor);
+        input = sel;
       } else {
         const inp = document.createElement('input');
         inp.id = `crud-${campo.nome}`;
@@ -195,6 +211,45 @@ export class ModalManager {
       grupo.appendChild(input);
       form.appendChild(grupo);
     });
+
+    // ── Fórmula calculada (ex: "total = quantidade * precoUnitario") ──────────
+    if (formulaComputar) {
+      const m = formulaComputar.match(/^(\w+)\s*=\s*(.+)$/);
+      if (m) {
+        const [, campoDestino, exprStr] = m;
+        // Extrai variáveis (identificadores) da expressão
+        const variaveis = exprStr.match(/[a-zA-Z_]\w*/g) ?? [];
+
+        const recalcular = () => {
+          const vals: Record<string, number> = {};
+          for (const v of variaveis) {
+            const inp = inputRefs[v];
+            if (inp) vals[v] = parseFloat(inp.value) || 0;
+          }
+          // Avalia a expressão substituindo as variáveis pelos valores
+          let expr = exprStr;
+          for (const [k, v] of Object.entries(vals)) {
+            expr = expr.replace(new RegExp('\\b' + k + '\\b', 'g'), String(v));
+          }
+          try {
+            // eslint-disable-next-line no-new-func
+            const resultado = Function('"use strict"; return (' + expr + ')')();
+            const destInput = inputRefs[campoDestino] as HTMLInputElement;
+            if (destInput && typeof resultado === 'number') {
+              destInput.value = resultado.toFixed(2);
+              destInput.readOnly = true;
+              destInput.style.background = 'var(--jade-cor-fundo-alt, #f5f5f5)';
+            }
+          } catch { /* expressão inválida, ignora */ }
+        };
+
+        // Adiciona listener nos campos fonte
+        for (const v of variaveis) {
+          inputRefs[v]?.addEventListener('input', recalcular);
+        }
+        recalcular(); // calcula valor inicial se editando
+      }
+    }
 
     corpo.appendChild(form);
     dialog.appendChild(corpo);

@@ -18,6 +18,7 @@
 
 import type { TabelaConfig } from './ui_engine.js';
 import { Signal, createEffect } from './reactive.js';
+import { criarElementoIcone } from './icones.js';
 
 // ── Breakpoints internos (invisíveis na DSL) ─────────────────────────────────
 
@@ -231,6 +232,26 @@ input[type="button"] {
 .jade-skeleton-titulo { height: 28px; width: 40%; margin-bottom: 16px; }
 .jade-skeleton-linha  { height: 56px; margin-bottom: 8px; }
 @keyframes jade-shimmer { to { background-position: -200% 0; } }
+
+/* ── Ações por linha ── */
+.jade-col-acoes-th { width: 90px; text-align: center; }
+.jade-col-acoes { text-align: center; white-space: nowrap; padding: 4px 8px; }
+.jade-btn-acao {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; min-height: unset;
+  border: none; border-radius: 6px; cursor: pointer;
+  background: transparent; padding: 0;
+  transition: background 0.15s;
+}
+.jade-btn-editar { color: var(--jade-cor-primaria, #2563eb); }
+.jade-btn-editar:hover { background: var(--jade-cor-destaque, #dbeafe); }
+.jade-btn-excluir { color: var(--jade-cor-erro, #dc2626); }
+.jade-btn-excluir:hover { background: #fee2e2; }
+.jade-card-acoes {
+  display: flex; gap: 8px; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid var(--jade-cor-borda, #e2e8f0);
+  justify-content: flex-end;
+}
 
 /* ── Vazio ── */
 .jade-tabela-vazio { text-align: center; padding: 32px; color: var(--jade-texto-suave, #6b7280); }
@@ -660,12 +681,12 @@ export class Responsivo {
   adaptarTabela(
     config: TabelaConfig,
     wrapper: HTMLElement,
-    dados: any[],
+    dadosSignal: Signal<any[]>,
     termoBusca: Signal<string>,
     paginaAtual: Signal<number>
   ): void {
-    const renderMobile = () => this._renderLista(config, wrapper, dados, termoBusca, paginaAtual);
-    const renderDesktop = () => this._renderGrid(config, wrapper, dados, termoBusca, paginaAtual);
+    const renderMobile = () => this._renderLista(config, wrapper, dadosSignal, termoBusca, paginaAtual);
+    const renderDesktop = () => this._renderGrid(config, wrapper, dadosSignal, termoBusca, paginaAtual);
 
     const render = () => this.isMobile() ? renderMobile() : renderDesktop();
     render();
@@ -730,11 +751,10 @@ export class Responsivo {
   private _renderLista(
     config: TabelaConfig,
     wrapper: HTMLElement,
-    dados: any[],
+    dadosSignal: Signal<any[]>,
     termoBusca: Signal<string>,
     paginaAtual: Signal<number>
   ): void {
-    // Remove grid se existir
     wrapper.querySelector('.jade-tabela-grid-wrapper')?.remove();
 
     let listaEl = wrapper.querySelector<HTMLElement>('.jade-lista-cards');
@@ -742,61 +762,97 @@ export class Responsivo {
       listaEl = document.createElement('div');
       listaEl.className = 'jade-lista-cards';
       wrapper.appendChild(listaEl);
-    }
 
-    // createEffect: renderiza imediatamente e re-renderiza quando termoBusca ou paginaAtual mudam
-    createEffect(() => {
-      const termo = termoBusca.get();   // rastreia dependência
-      paginaAtual.get();                // rastreia dependência
-      const linhas = this._filtrarOrdenar(dados, config, termo, null, 'asc');
-      listaEl!.innerHTML = '';
+      createEffect(() => {
+        const registros = dadosSignal.get();
+        const termo = termoBusca.get();
+        paginaAtual.get();
+        const linhas = this._filtrarOrdenar(registros, config, termo, null, 'asc');
+        listaEl!.innerHTML = '';
 
-      if (linhas.length === 0) {
-        const vazio = document.createElement('p');
-        vazio.className = 'jade-tabela-vazio';
-        vazio.textContent = 'Nenhum registro encontrado.';
-        listaEl!.appendChild(vazio);
-        return;
-      }
+        if (linhas.length === 0) {
+          const vazio = document.createElement('p');
+          vazio.className = 'jade-tabela-vazio';
+          vazio.textContent = 'Nenhum registro encontrado.';
+          listaEl!.appendChild(vazio);
+          return;
+        }
 
-      linhas.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'jade-card-item';
+        linhas.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'jade-card-item';
 
-        config.colunas.forEach(col => {
-          const campo = document.createElement('div');
-          campo.className = 'jade-card-campo';
+          config.colunas.forEach(col => {
+            const campo = document.createElement('div');
+            campo.className = 'jade-card-campo';
 
-          const labelEl = document.createElement('span');
-          labelEl.className = 'jade-campo-label';
-          labelEl.textContent = col.titulo;
+            const labelEl = document.createElement('span');
+            labelEl.className = 'jade-campo-label';
+            labelEl.textContent = col.titulo;
 
-          const valorEl = document.createElement('span');
-          valorEl.className = 'jade-campo-valor';
-          valorEl.textContent = String(item[col.campo] ?? '');
+            const valorEl = document.createElement('span');
+            valorEl.className = 'jade-campo-valor';
+            valorEl.textContent = String(item[col.campo] ?? '');
 
-          campo.appendChild(labelEl);
-          campo.appendChild(valorEl);
-          card.appendChild(campo);
+            campo.appendChild(labelEl);
+            campo.appendChild(valorEl);
+            card.appendChild(campo);
+          });
+
+          if (config.acoes?.length) {
+            const acoesDiv = document.createElement('div');
+            acoesDiv.className = 'jade-card-acoes';
+
+            if (config.acoes.includes('editar')) {
+              const btn = document.createElement('button');
+              btn.className = 'jade-botao jade-botao-secundario';
+              btn.style.cssText = 'padding:6px 12px;font-size:0.8125rem;display:inline-flex;align-items:center;gap:6px;';
+              const icone = criarElementoIcone('editar', 14);
+              if (icone) btn.appendChild(icone);
+              btn.appendChild(document.createTextNode('Editar'));
+              btn.addEventListener('click', () => {
+                window.dispatchEvent(new CustomEvent('jade:linha:editar', {
+                  detail: { entidade: config.entidade, registro: item }
+                }));
+              });
+              acoesDiv.appendChild(btn);
+            }
+
+            if (config.acoes.includes('excluir')) {
+              const btn = document.createElement('button');
+              btn.className = 'jade-botao jade-botao-perigo';
+              btn.style.cssText = 'padding:6px 12px;font-size:0.8125rem;display:inline-flex;align-items:center;gap:6px;';
+              const icone = criarElementoIcone('excluir', 14);
+              if (icone) btn.appendChild(icone);
+              btn.appendChild(document.createTextNode('Excluir'));
+              btn.addEventListener('click', () => {
+                window.dispatchEvent(new CustomEvent('jade:linha:excluir', {
+                  detail: { entidade: config.entidade, id: item.id ?? item._id }
+                }));
+              });
+              acoesDiv.appendChild(btn);
+            }
+
+            card.appendChild(acoesDiv);
+          }
+
+          listaEl!.appendChild(card);
         });
-
-        listaEl!.appendChild(card);
       });
-    });
+    }
   }
 
   private _renderGrid(
     config: TabelaConfig,
     wrapper: HTMLElement,
-    dados: any[],
+    dadosSignal: Signal<any[]>,
     termoBusca: Signal<string>,
     paginaAtual: Signal<number>
   ): void {
-    // Remove lista se existir
     wrapper.querySelector('.jade-lista-cards')?.remove();
 
     let gridWrapper = wrapper.querySelector<HTMLElement>('.jade-tabela-grid-wrapper');
-    if (gridWrapper) return; // já existe
+    if (gridWrapper) return;
 
     gridWrapper = document.createElement('div');
     gridWrapper.className = 'jade-tabela-grid-wrapper';
@@ -807,7 +863,6 @@ export class Responsivo {
     const table = document.createElement('table');
     table.className = 'jade-tabela-grid';
 
-    // Cabeçalho
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
 
@@ -831,11 +886,18 @@ export class Responsivo {
         headerRow.querySelectorAll('th').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
         th.classList.add(direcaoOrdem.peek() === 'asc' ? 'sort-asc' : 'sort-desc');
         sortIcon.textContent = direcaoOrdem.peek() === 'asc' ? '↑' : '↓';
-        paginaAtual.set(0); // createEffect re-renderiza automaticamente
+        paginaAtual.set(0);
       });
 
       headerRow.appendChild(th);
     });
+
+    if (config.acoes?.length) {
+      const thAcoes = document.createElement('th');
+      thAcoes.textContent = 'Ações';
+      thAcoes.className = 'jade-col-acoes-th';
+      headerRow.appendChild(thAcoes);
+    }
 
     thead.appendChild(headerRow);
     table.appendChild(thead);
@@ -844,7 +906,6 @@ export class Responsivo {
     table.appendChild(tbody);
     gridWrapper.appendChild(table);
 
-    // Paginação
     const linhasPorPagina = config.paginacao === true ? 20
       : typeof config.paginacao === 'number' ? config.paginacao : 0;
 
@@ -857,14 +918,14 @@ export class Responsivo {
 
     wrapper.appendChild(gridWrapper);
 
-    // createEffect: renderiza imediatamente e re-renderiza quando signals mudam
     createEffect(() => {
-      const termo    = termoBusca.get();    // rastreia
-      const pagAtual = paginaAtual.get();   // rastreia
-      campOrdem.get();                      // rastreia
-      direcaoOrdem.get();                   // rastreia
+      const registros = dadosSignal.get();
+      const termo    = termoBusca.get();
+      const pagAtual = paginaAtual.get();
+      campOrdem.get();
+      direcaoOrdem.get();
 
-      let linhas = this._filtrarOrdenar(dados, config, termo, campOrdem.peek(), direcaoOrdem.peek());
+      let linhas = this._filtrarOrdenar(registros, config, termo, campOrdem.peek(), direcaoOrdem.peek());
 
       if (linhasPorPagina > 0 && paginacaoDiv) {
         const total = Math.max(1, Math.ceil(linhas.length / linhasPorPagina));
@@ -882,9 +943,75 @@ export class Responsivo {
           td.textContent = String(item[col.campo] ?? '');
           tr.appendChild(td);
         });
+
+        if (config.acoes?.length) {
+          const tdAcoes = document.createElement('td');
+          tdAcoes.className = 'jade-col-acoes';
+
+          if (config.acoes.includes('editar')) {
+            const btn = document.createElement('button');
+            btn.className = 'jade-btn-acao jade-btn-editar';
+            btn.setAttribute('aria-label', 'Editar');
+            btn.title = 'Editar';
+            const icone = criarElementoIcone('editar', 16);
+            if (icone) btn.appendChild(icone);
+            btn.addEventListener('click', e => {
+              e.stopPropagation();
+              window.dispatchEvent(new CustomEvent('jade:linha:editar', {
+                detail: { entidade: config.entidade, registro: item }
+              }));
+            });
+            tdAcoes.appendChild(btn);
+          }
+
+          if (config.acoes.includes('excluir')) {
+            const btn = document.createElement('button');
+            btn.className = 'jade-btn-acao jade-btn-excluir';
+            btn.setAttribute('aria-label', 'Excluir');
+            btn.title = 'Excluir';
+            const icone = criarElementoIcone('excluir', 16);
+            if (icone) btn.appendChild(icone);
+            btn.addEventListener('click', e => {
+              e.stopPropagation();
+              window.dispatchEvent(new CustomEvent('jade:linha:excluir', {
+                detail: { entidade: config.entidade, id: item.id ?? item._id }
+              }));
+            });
+            tdAcoes.appendChild(btn);
+          }
+
+          tr.appendChild(tdAcoes);
+        }
+
         tbody.appendChild(tr);
       });
     });
+  }
+
+  private _compilarFiltro(expr: string): ((item: any) => boolean) | null {
+    const e = expr.trim();
+    if (!e) return null;
+    const m = e.match(/^(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/);
+    if (!m) {
+      // campo simples → truthy
+      return item => !!item[e];
+    }
+    const [, c, op, rawVal] = m;
+    let val: any = rawVal.trim();
+    if (val === 'verdadeiro' || val === 'true')  val = true;
+    else if (val === 'falso' || val === 'false') val = false;
+    else if (!isNaN(Number(val)))               val = Number(val);
+    else val = val.replace(/^["']|["']$/g, '');
+
+    switch (op) {
+      case '==': return item => item[c] === val;
+      case '!=': return item => item[c] !== val;
+      case '>':  return item => item[c] >   val;
+      case '<':  return item => item[c] <   val;
+      case '>=': return item => item[c] >=  val;
+      case '<=': return item => item[c] <=  val;
+      default:   return null;
+    }
   }
 
   private _filtrarOrdenar(
@@ -895,6 +1022,12 @@ export class Responsivo {
     direcao: 'asc' | 'desc'
   ): any[] {
     let linhas = [...dados];
+
+    // Filtro permanente declarado na tabela (ex: ativo == verdadeiro)
+    if (config.filtro) {
+      const fn = this._compilarFiltro(config.filtro);
+      if (fn) linhas = linhas.filter(fn);
+    }
 
     if (termo) {
       linhas = linhas.filter(item =>

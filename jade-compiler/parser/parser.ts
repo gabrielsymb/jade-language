@@ -636,6 +636,28 @@ export class Parser {
             ], "Esperado identificador").value);
           }
           valor = lista;
+        } else if (this.checkAny([
+          TokenType.IGUAL_IGUAL, TokenType.DIFERENTE,
+          TokenType.MAIOR, TokenType.MENOR,
+          TokenType.MAIOR_IGUAL, TokenType.MENOR_IGUAL
+        ])) {
+          // filtro: campo op valor  (ex: ativo == verdadeiro, status != cancelado)
+          const op = this.advance().value;
+          let right: string;
+          if (this.check(TokenType.VERDADEIRO))       { this.advance(); right = 'verdadeiro'; }
+          else if (this.check(TokenType.FALSO))        { this.advance(); right = 'falso'; }
+          else if (this.check(TokenType.LITERAL_NUMERO)) { right = this.advance().value; }
+          else if (this.check(TokenType.LITERAL_TEXTO))  { right = this.advance().value.slice(1, -1); }
+          else { right = this.advance().value; }
+          valor = `${first} ${op} ${right}`;
+        } else if (this.match(TokenType.IGUAL)) {
+          // computar: campo = expr  (ex: total = quantidade * precoUnitario)
+          const termos: string[] = [];
+          const OPS_ARIT = new Set([TokenType.ASTERISCO, TokenType.BARRA, TokenType.MAIS, TokenType.MENOS]);
+          while (this.checkAny([TokenType.IDENTIFICADOR, ...OPS_ARIT])) {
+            termos.push(this.advance().value);
+          }
+          valor = `${first} = ${termos.join(' ')}`;
         } else {
           valor = first;
         }

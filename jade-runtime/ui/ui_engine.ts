@@ -55,6 +55,10 @@ export interface TabelaConfig {
   paginacao?: boolean | number;
   /** Botões de ação por linha: 'editar', 'excluir' */
   acoes?: Array<'editar' | 'excluir' | 'criar'>;
+  /** Filtro permanente: 'campo == verdadeiro', 'status != cancelado', etc. */
+  filtro?: string;
+  /** Fórmula calculada no modal CRUD: 'total = quantidade * precoUnitario' */
+  computar?: string;
 }
 
 export interface CampoConfig {
@@ -91,7 +95,10 @@ export class UIEngine {
   /** Signals de dados por entidade — usados por cartões/gráficos reativos */
   private dadosSignals = new Map<string, Signal<any[]>>();
   private colunasEntidades = new Map<string, ColunaConfig[]>();
+  private computarEntidades = new Map<string, string>();   // entidade → fórmula "total = a * b"
   private acoesPendentes: Map<string, HTMLButtonElement> = new Map();
+  /** Callback para carregar dados de qualquer entidade — configurado pelo html.js */
+  carregarEntidade?: (nome: string) => Promise<any[]>;
 
   constructor(memory: MemoryManager, tema?: Tema) {
     this.memory = memory;
@@ -191,7 +198,7 @@ export class UIEngine {
   abrirModalCRUD(modo: 'criar' | 'editar', entidade: string, registro?: Record<string, any>): void {
     const CAMPOS_INTERNOS = new Set(['id', '_rev', '_id', 'criadaEm', 'atualizadoEm', 'updatedAt', 'createdAt']);
 
-    let campos: Array<{ nome: string; titulo: string; valor?: any }>;
+    let campos: Array<{ nome: string; titulo: string; valor?: any; tipo?: string; opcoes?: Array<{valor: string; label: string}> }>;
 
     if (modo === 'editar' && registro) {
       campos = Object.entries(registro)
@@ -202,6 +209,29 @@ export class UIEngine {
       campos = colunas.map(c => ({ nome: c.campo, titulo: c.titulo, tipo: c.tipo }));
     }
 
+    // Enriquecer campos *Id com seletor (dropdown de outra entidade)
+    campos = campos.map(c => {
+      if (c.nome.endsWith('Id') && c.nome.length > 2) {
+        const nomeEntRef = c.nome.slice(0, -2);
+        // Capitaliza primeiro char para bater com o nome da entidade (produtoId → Produto)
+        const nomeEntCapit = nomeEntRef.charAt(0).toUpperCase() + nomeEntRef.slice(1);
+        const dados = this.dadosSignals.get(nomeEntCapit)?.peek()
+                   ?? this.dadosSignals.get(nomeEntRef)?.peek()
+                   ?? [];
+        if (dados.length > 0) {
+          return {
+            ...c,
+            tipo: 'seletor',
+            opcoes: dados.map((r: any) => ({
+              valor: String(r.id ?? r._id ?? ''),
+              label: r.nome ?? r.titulo ?? r.descricao ?? r.email ?? String(r.id ?? '')
+            }))
+          };
+        }
+      }
+      return c;
+    });
+
     if (campos.length === 0) {
       console.warn(`[JADE] Nenhum campo encontrado para ${entidade}. Defina colunas na tabela.`);
       return;
@@ -209,6 +239,7 @@ export class UIEngine {
 
     const titulo = modo === 'criar' ? `Novo ${entidade}` : `Editar ${entidade}`;
     const id = registro?.id ?? registro?._id;
+    const formulaComputar = this.computarEntidades.get(entidade);
 
     this.modais.criarCRUD(titulo, campos, (dados) => {
       if (modo === 'criar') {
@@ -216,7 +247,7 @@ export class UIEngine {
       } else {
         window.dispatchEvent(new CustomEvent('jade:crud:atualizar', { detail: { entidade, id, dados } }));
       }
-    });
+    }, formulaComputar);
   }
 
   private confirmarExclusao(entidade: string, id: string): void {
@@ -618,6 +649,10 @@ export class UIEngine {
           // Armazena colunas para uso no modal de CRUD (com tipo se disponível)
           this.colunasEntidades.set(entidade, colunas.map(c => ({ campo: c.campo, titulo: c.titulo, tipo: c.tipo })));
 
+          // Fórmula calculada (ex: "total = quantidade * precoUnitario")
+          const computar = props['computar'] ? String(props['computar']) : undefined;
+          if (computar) this.computarEntidades.set(entidade, computar);
+
           this.criarTabela(
             {
               entidade,
@@ -628,6 +663,8 @@ export class UIEngine {
               paginacao:  props['paginacao'] === 'verdadeiro' ? true
                         : Number(props['paginacao']) || false,
               altura:     props['altura'] ? String(props['altura']) : undefined,
+              filtro:     props['filtro'] ? String(props['filtro']) : undefined,
+              computar,
             },
             div,
             dadosMap[entidade] ?? [],
