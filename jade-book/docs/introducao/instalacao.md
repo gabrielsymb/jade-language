@@ -93,28 +93,40 @@ meu-projeto/
 | `npm run lint` | Analisa estilo e boas práticas |
 | `npm run servir` | Servidor local para testar no browser |
 
-## Comandos avançados (`jadec`)
+## Comandos avançados
 
 Para acesso direto ao compilador — útil em CI/CD e integração com outras ferramentas:
 
-**Via npx (recomendado):**
+**Via npx (compilador direto):**
 
 | Comando | O que faz |
 |---------|-----------|
-| `npx jadec src/app.jd` | Compila e gera `dist/` |
-| `npx jadec src/app.jd --check` | Só verifica erros, não gera arquivos |
-| `npx jadec src/app.jd --format` | Formata e imprime no terminal |
-| `npx jadec src/app.jd --format-write` | Formata e sobrescreve o arquivo |
-| `npx jadec src/app.jd --lint` | Analisa o código e exibe avisos de estilo |
-| `npx jadec --version` | Mostra a versão |
+| `npx jadec src/**/*.jd` | Compila e gera arquivos .wasm/.wat |
+| `npx jadec src/**/*.jd --check` | Só verifica erros, não gera arquivos |
+| `npx jadec src/**/*.jd --format` | Formata e imprime no terminal |
+| `npx jadec src/**/*.jd --format-write` | Formata e sobrescreve os arquivos |
+| `npx jadec src/**/*.jd --lint` | Analisa o código e exibe avisos de estilo |
+| `npx jadec --version` | Mostra a versão do compilador |
+
+**Comandos globais (CLI completa):**
+
+| Comando | O que faz |
+|---------|-----------|
+| `jade compilar src/**/*.jd` | Compila e gera HTML + runtime |
+| `jade formatar` | Formata todos os arquivos .jd do projeto |
+| `jade formatar src/entidades/Produto.jd` | Formata arquivo específico |
+| `jade --version` | Mostra a versão da CLI |
 
 **Instalação separada (opcional):**
 
-Se você usa `jadec` frequentemente fora de projetos:
+Se você usa os comandos com frequência fora de projetos:
 
 ```bash
+# CLI completa
+npm install -g @yakuzaa/jade
+
+# Apenas compilador
 npm install -g @yakuzaa/jade-compiler
-jadec --version
 ```
 
 ::: tip VS Code integrado
