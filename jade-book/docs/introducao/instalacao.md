@@ -5,48 +5,79 @@
 - **Node.js 20 ou superior** — [nodejs.org](https://nodejs.org)
 - **VS Code** — [code.visualstudio.com](https://code.visualstudio.com)
 
-## Instalação Global (Opcional)
+## Opção 1: Projeto Simples (Recomendado para iniciantes)
 
-Se você prefere ter os comandos disponíveis globalmente:
+Crie um projeto básico com um único arquivo para começar rapidamente:
 
 ```bash
-# Instalação completa (compilador + runtime + CLI)
+npm create jade@latest meu-primeiro-jade
+cd meu-primeiro-jade
+npm run compilar
+```
+
+Isso cria uma estrutura **simples**:
+
+```
+meu-primeiro-jade/
+├── src/
+│   ├── entidades/
+│   │   └── Produto.jd          ← entidade de exemplo
+│   ├── ui/
+│   │   └── telas/             ← pasta vazia
+│   └── app.jd                 ← SEU ARQUIVO PRINCIPAL
+├── dist/                      ← gerado na compilação
+├── package.json
+└── README.md
+```
+
+**O que acontece?**
+- `src/app.jd` contém um "Olá, Mundo!" funcional
+- `npm run compilar` gera `dist/index.html`
+- Abra `dist/index.html` no browser — seu app está rodando!
+
+## Opção 2: Projeto Enterprise (Para sistemas reais)
+
+Se você precisa de uma estrutura completa para sistemas empresariais:
+
+```bash
+# Instalação global necessária para este comando
 npm install -g @yakuzaa/jade
 
-# Verifique a instalação
-jade --version
+jade init meu-sistema
+cd meu-sistema
+npm install
+npm run compilar
 ```
 
-## Criar um projeto (Recomendado)
+Isso cria uma estrutura **completa**:
 
-```bash
-npm create jade@latest meu-projeto
 ```
-
-Isso cria a estrutura completa e instala as dependências automaticamente. Nenhuma instalação global necessária.
-
-```bash
-cd meu-projeto
-npm run compilar   # compila todos os arquivos .jd → dist/
+meu-sistema/
+├── src/
+│   ├── entidades/          ← Produto.jd, Cliente.jd
+│   ├── eventos/           ← eventos de domínio
+│   ├── modulos/           ← módulos de negócio
+│   ├── servicos/          ← lógica de negócio
+│   └── ui/
+│       ├── componentes/    ← componentes reutilizáveis
+│       └── telas/        ← telas da aplicação
+├── config/
+│   ├── database.json      ← configuração do banco
+│   ├── deploy.json       ← configuração de deploy
+│   └── jade.config.json  ← configuração do compilador
+├── dist/                ← gerado pelo compilador
+├── docs/                ← documentação do projeto
+├── tests/               ← testes automatizados
+├── package.json
+└── README.md
 ```
-
-Abra `dist/index.html` no browser — seu app está rodando.
 
 ::: tip Um comando só
 Igual ao `npm create vite@latest` — nada é instalado globalmente na sua máquina. As ferramentas ficam em `node_modules/` dentro do projeto.
 :::
 
-## Comandos Globais vs Comandos do Projeto
-
-| Comando Global | Comando do Projeto | Quando usar |
-|----------------|-------------------|-------------|
-| `jade init <nome>` | `npm create jade@latest <nome>` | Criar novos projetos |
-| `jade compilar arquivo.jd` | `npm run compilar` | Compilar código |
-| `jade formatar` | `npm run formatar` | Formatar código |
-| `jade servir` | `npm run servir` | Servidor local |
-
-::: tip Recomendação
-Use os comandos do projeto (`npm run`) sempre que possível. Eles garantem que todos os desenvolvedores usem a mesma versão das ferramentas.
+::: tip Recomendação para iniciantes
+Comece com a **Opção 1** (projeto simples). É mais fácil entender e você pode evoluir para a estrutura enterprise quando precisar.
 :::
 
 ## Extensão VS Code
@@ -59,31 +90,17 @@ code --install-extension yakuzaa.jade-lang-vscode
 
 Ou procure por **"Jade DSL"** no marketplace do VS Code.
 
-## Estrutura gerada
+## Comandos do Projeto Simples
 
-```
-meu-projeto/
-├── src/
-│   ├── entidades/          ← estruturas de dados (Produto.jd, Cliente.jd)
-│   ├── eventos/           ← eventos de domínio
-│   ├── modulos/           ← módulos de negócio
-│   ├── servicos/          ← lógica de negócio
-│   └── ui/
-│       ├── componentes/    ← componentes reutilizáveis
-│       └── telas/        ← telas da aplicação
-├── config/
-│   ├── database.json      ← configuração do banco
-│   ├── deploy.json       ← configuração de deploy
-│   └── jade.config.json  ← configuração do compilador
-├── dist/                ← gerado pelo compilador (não commitar)
-├── docs/                ← documentação do projeto
-├── tests/               ← testes automatizados
-├── package.json
-├── package-lock.json
-└── README.md
-```
+| Comando | O que faz |
+|---------|-----------|
+| `npm run compilar` | Compila `src/app.jd` → `dist/` |
+| `npm run verificar` | Verifica erros sem gerar arquivos |
+| `npm run formatar` | Formata o código (como Prettier) |
+| `npm run lint` | Analisa estilo e boas práticas |
+| `npm run servir` | Servidor local para testar no browser |
 
-## Comandos do projeto
+## Comandos do Projeto Enterprise
 
 | Comando | O que faz |
 |---------|-----------|
@@ -93,40 +110,35 @@ meu-projeto/
 | `npm run lint` | Analisa estilo e boas práticas |
 | `npm run servir` | Servidor local para testar no browser |
 
-## Comandos avançados
+## Comandos Avançados (Uso direto do compilador)
 
-Para acesso direto ao compilador — útil em CI/CD e integração com outras ferramentas:
+Para CI/CD, integração com outras ferramentas ou uso fora de projetos:
 
-**Via npx (compilador direto):**
-
-| Comando | O que faz |
-|---------|-----------|
-| `npx jadec src/**/*.jd` | Compila e gera arquivos .wasm/.wat |
-| `npx jadec src/**/*.jd --check` | Só verifica erros, não gera arquivos |
-| `npx jadec src/**/*.jd --format` | Formata e imprime no terminal |
-| `npx jadec src/**/*.jd --format-write` | Formata e sobrescreve os arquivos |
-| `npx jadec src/**/*.jd --lint` | Analisa o código e exibe avisos de estilo |
-| `npx jadec --version` | Mostra a versão do compilador |
-
-**Comandos globais (CLI completa):**
-
-| Comando | O que faz |
-|---------|-----------|
-| `jade compilar src/**/*.jd` | Compila e gera HTML + runtime |
-| `jade formatar` | Formata todos os arquivos .jd do projeto |
-| `jade formatar src/entidades/Produto.jd` | Formata arquivo específico |
-| `jade --version` | Mostra a versão da CLI |
-
-**Instalação separada (opcional):**
-
-Se você usa os comandos com frequência fora de projetos:
-
+**Compilador direto (jadec):**
 ```bash
-# CLI completa
+# Verificar erros sem compilar
+npx jadec src/app.jd --check
+
+# Formatar arquivo
+npx jadec src/app.jd --format-write
+
+# Analisar estilo
+npx jadec src/app.jd --lint
+```
+
+**CLI completa (jade):**
+```bash
+# Instalação global
 npm install -g @yakuzaa/jade
 
-# Apenas compilador
-npm install -g @yakuzaa/jade-compiler
+# Criar projeto enterprise
+jade init meu-sistema
+
+# Compilar qualquer arquivo
+jade compilar arquivo.jd
+
+# Formatar projeto inteiro
+jade formatar
 ```
 
 ::: tip VS Code integrado
