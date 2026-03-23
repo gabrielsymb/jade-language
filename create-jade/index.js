@@ -41,7 +41,7 @@ const templates = {
   gitignore: () => `dist/\nnode_modules/\n*.log\n`,
 
   appJd: (nome) => `\
-importar entidades/Produto
+importar ./entidades/Produto
 
 tela Principal "${nome}"
   cartao Bem_Vindo
