@@ -27,7 +27,7 @@ Isso cria a estrutura completa e instala as dependências automaticamente. Nenhu
 
 ```bash
 cd meu-projeto
-npm run compilar   # compila src/app.jd → dist/
+npm run compilar   # compila todos os arquivos .jd → dist/
 ```
 
 Abra `dist/index.html` no browser — seu app está rodando.
@@ -64,11 +64,22 @@ Ou procure por **"Jade DSL"** no marketplace do VS Code.
 ```
 meu-projeto/
 ├── src/
-│   ├── app.jd              ← ponto de entrada
-│   ├── entidades/          ← estruturas de dados
-│   └── ui/telas/           ← interfaces declarativas
-├── dist/                   ← gerado pelo compilador (não commitar)
+│   ├── entidades/          ← estruturas de dados (Produto.jd, Cliente.jd)
+│   ├── eventos/           ← eventos de domínio
+│   ├── modulos/           ← módulos de negócio
+│   ├── servicos/          ← lógica de negócio
+│   └── ui/
+│       ├── componentes/    ← componentes reutilizáveis
+│       └── telas/        ← telas da aplicação
+├── config/
+│   ├── database.json      ← configuração do banco
+│   ├── deploy.json       ← configuração de deploy
+│   └── jade.config.json  ← configuração do compilador
+├── dist/                ← gerado pelo compilador (não commitar)
+├── docs/                ← documentação do projeto
+├── tests/               ← testes automatizados
 ├── package.json
+├── package-lock.json
 └── README.md
 ```
 
@@ -76,7 +87,7 @@ meu-projeto/
 
 | Comando | O que faz |
 |---------|-----------|
-| `npm run compilar` | Compila `src/app.jd` → `dist/` |
+| `npm run compilar` | Compila todos os arquivos `.jd` → `dist/` |
 | `npm run verificar` | Verifica erros sem gerar arquivos |
 | `npm run formatar` | Formata o código (como Prettier) |
 | `npm run lint` | Analisa estilo e boas práticas |
