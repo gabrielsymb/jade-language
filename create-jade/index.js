@@ -10,13 +10,13 @@ import { execSync } from 'child_process';
 
 // ── Cores ─────────────────────────────────────────────────────────────────────
 
-const verde   = (s) => `\x1b[1;32m${s}\x1b[0m`;
-const azul    = (s) => `\x1b[34m${s}\x1b[0m`;
+const verde = (s) => `\x1b[1;32m${s}\x1b[0m`;
+const azul = (s) => `\x1b[34m${s}\x1b[0m`;
 const amarelo = (s) => `\x1b[1;33m${s}\x1b[0m`;
-const dim     = (s) => `\x1b[2m${s}\x1b[0m`;
+const dim = (s) => `\x1b[2m${s}\x1b[0m`;
 const negrito = (s) => `\x1b[1m${s}\x1b[0m`;
-const ok      = ()  => verde('✓');
-const erro    = ()  => `\x1b[1;31m✗\x1b[0m`;
+const ok = () => verde('✓');
+const erro = () => `\x1b[1;31m✗\x1b[0m`;
 
 // ── Templates ─────────────────────────────────────────────────────────────────
 
@@ -27,11 +27,11 @@ const templates = {
     description: `Projeto Jade DSL — ${nome}`,
     type: 'module',
     scripts: {
-      compilar:  'jade compilar src/app.jd',
+      compilar: 'jade compilar src/app.jd',
       verificar: 'jadec src/app.jd --check',
-      formatar:  'jadec src/app.jd --format-write',
-      lint:      'jadec src/app.jd --lint',
-      servir:    'jade servir',
+      formatar: 'jadec src/app.jd --format-write',
+      lint: 'jadec src/app.jd --lint',
+      servir: 'jade servir',
     },
     devDependencies: {
       '@yakuzaa/jade': 'latest',
@@ -41,7 +41,7 @@ const templates = {
   gitignore: () => `dist/\nnode_modules/\n*.log\n`,
 
   appJd: (nome) => `\
-importar entidades.Produto
+importar entidades/Produto
 
 tela Principal "${nome}"
   cartao Bem_Vindo
@@ -92,14 +92,14 @@ https://gabrielsymb.github.io/jade-language
 
 function estrutura(nome) {
   return [
-    ['src/entidades',              null],
-    ['src/entidades/Produto.jd',   templates.entidadeProduto()],
-    ['src/ui/telas',               null],
-    ['dist',                       null],
-    ['src/app.jd',                 templates.appJd(nome)],
-    ['package.json',               templates.packageJson(nome)],
-    ['.gitignore',                 templates.gitignore()],
-    ['README.md',                  templates.readme(nome)],
+    ['src/entidades', null],
+    ['src/entidades/Produto.jd', templates.entidadeProduto()],
+    ['src/ui/telas', null],
+    ['dist', null],
+    ['src/app.jd', templates.appJd(nome)],
+    ['package.json', templates.packageJson(nome)],
+    ['.gitignore', templates.gitignore()],
+    ['README.md', templates.readme(nome)],
   ];
 }
 
