@@ -49,7 +49,7 @@ variavel nome = "João"
 
 ## `fim` esquecido
 
-```jd-invalido
+```jd
 // ❌ ERRO
 entidade Produto
   id: id
@@ -125,7 +125,7 @@ fim
 
 ## Confundir `=` com `==`
 
-```jd-invalido
+```jd
 // ❌ ERRO — atribuição dentro de condicional
 se produto.ativo = verdadeiro   // isso tenta atribuir, não comparar
 ```

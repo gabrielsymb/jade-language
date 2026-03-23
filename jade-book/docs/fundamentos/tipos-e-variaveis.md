@@ -81,7 +81,7 @@ constante MOEDA_PADRAO = "BRL" // texto (inferido)
 
 ### Erro de compilação ao reatribuir
 
-```jd-invalido
+```jd
 constante MAX = 100
 MAX = 200  // ERRO: 'MAX' é uma constante e não pode ser reatribuída
 ```

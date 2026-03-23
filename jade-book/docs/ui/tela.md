@@ -706,7 +706,7 @@ fim
 :::
 
 ::: warning Entidade obrigatória
-```jd-invalido
+```jd
 // ❌ ERRO — lista sem entidade
 tela Pedidos "Pedidos"
   lista ListaPedidos

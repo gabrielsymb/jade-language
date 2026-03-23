@@ -58,7 +58,7 @@ fim
 
 Credenciais **nunca** devem estar em código-fonte. O compilador gera erro se você usar string literal:
 
-```jd-invalido
+```jd
 banco
   tipo: postgres
   url:  "postgresql://user:senha@localhost/db"  // ERRO: credenciais em código-fonte
@@ -146,7 +146,7 @@ fim
 
 O compilador valida que a entidade referenciada existe:
 
-```jd-invalido
+```jd
 banco
   tipo: postgres
   url:  env("DATABASE_URL")

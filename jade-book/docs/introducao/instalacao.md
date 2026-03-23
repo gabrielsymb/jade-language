@@ -5,7 +5,19 @@
 - **Node.js 20 ou superior** — [nodejs.org](https://nodejs.org)
 - **VS Code** — [code.visualstudio.com](https://code.visualstudio.com)
 
-## Criar um projeto
+## Instalação Global (Opcional)
+
+Se você prefere ter os comandos disponíveis globalmente:
+
+```bash
+# Instalação completa (compilador + runtime + CLI)
+npm install -g @yakuzaa/jade
+
+# Verifique a instalação
+jade --version
+```
+
+## Criar um projeto (Recomendado)
 
 ```bash
 npm create jade@latest meu-projeto
@@ -22,6 +34,19 @@ Abra `dist/index.html` no browser — seu app está rodando.
 
 ::: tip Um comando só
 Igual ao `npm create vite@latest` — nada é instalado globalmente na sua máquina. As ferramentas ficam em `node_modules/` dentro do projeto.
+:::
+
+## Comandos Globais vs Comandos do Projeto
+
+| Comando Global | Comando do Projeto | Quando usar |
+|----------------|-------------------|-------------|
+| `jade init <nome>` | `npm create jade@latest <nome>` | Criar novos projetos |
+| `jade compilar arquivo.jd` | `npm run compilar` | Compilar código |
+| `jade formatar` | `npm run formatar` | Formatar código |
+| `jade servir` | `npm run servir` | Servidor local |
+
+::: tip Recomendação
+Use os comandos do projeto (`npm run`) sempre que possível. Eles garantem que todos os desenvolvedores usem a mesma versão das ferramentas.
 :::
 
 ## Extensão VS Code
@@ -61,6 +86,8 @@ meu-projeto/
 
 Para acesso direto ao compilador — útil em CI/CD e integração com outras ferramentas:
 
+**Via npx (recomendado):**
+
 | Comando | O que faz |
 |---------|-----------|
 | `npx jadec src/app.jd` | Compila e gera `dist/` |
@@ -69,6 +96,15 @@ Para acesso direto ao compilador — útil em CI/CD e integração com outras fe
 | `npx jadec src/app.jd --format-write` | Formata e sobrescreve o arquivo |
 | `npx jadec src/app.jd --lint` | Analisa o código e exibe avisos de estilo |
 | `npx jadec --version` | Mostra a versão |
+
+**Instalação separada (opcional):**
+
+Se você usa `jadec` frequentemente fora de projetos:
+
+```bash
+npm install -g @yakuzaa/jade-compiler
+jadec --version
+```
 
 ::: tip VS Code integrado
 O formatter e o linter também funcionam automaticamente com a extensão instalada. O formatter é executado ao salvar; os avisos do linter aparecem como sublinhados amarelos.
@@ -82,7 +118,7 @@ Se você quer usar o compilador programaticamente (plugin Vite, CI, LSP):
 npm install @yakuzaa/jade-compiler
 ```
 
-Veja a [API do compilador](/referencia/compiler-api) para detalhes.
+Consulte a documentação do pacote `@yakuzaa/jade-compiler` no npm para detalhes da API.
 
 ## Próximo passo
 
